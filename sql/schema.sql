@@ -79,12 +79,19 @@ drop policy if exists "legacy_favorites_write_admin" on public.legacy_favorites;
 create policy "legacy_favorites_write_admin" on public.legacy_favorites for all
   using (public.is_admin()) with check (public.is_admin());
 
+-- Cuartos de temporadas anteriores (opciones fijas por temporada)
+alter table public.profiles add column if not exists legacy_room_t1 text check (legacy_room_t1 in ('Cielo','Infierno'));
+alter table public.profiles add column if not exists legacy_room_t2 text check (legacy_room_t2 in ('Mar','Tierra'));
+alter table public.profiles add column if not exists legacy_room_t3 text check (legacy_room_t3 in ('Día','Noche'));
+
 -- Permite que cada quien actualice SOLO su propio nombre, favorito, odiado,
--- cuarto favorito, foto, bio, color y favoritos de temporadas anteriores
--- (nunca su rol), sin necesitar una política de UPDATE abierta en profiles.
+-- cuarto favorito, foto, bio, color, favoritos y cuartos de temporadas
+-- anteriores (nunca su rol), sin necesitar una política de UPDATE abierta
+-- en profiles.
 drop function if exists public.update_my_profile(text, bigint, boolean, text);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text);
+drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean);
 create or replace function public.update_my_profile(
   new_display_name text default null,
   new_favorite_participant_id bigint default null,
@@ -100,7 +107,10 @@ create or replace function public.update_my_profile(
   new_fav_season2_id bigint default null,
   clear_fav_season2 boolean default false,
   new_fav_season3_id bigint default null,
-  clear_fav_season3 boolean default false
+  clear_fav_season3 boolean default false,
+  new_legacy_room_t1 text default null,
+  new_legacy_room_t2 text default null,
+  new_legacy_room_t3 text default null
 )
 returns public.profiles
 language plpgsql
@@ -120,14 +130,17 @@ begin
     bio = coalesce(new_bio, bio),
     fav_season1_id = case when clear_fav_season1 then null else coalesce(new_fav_season1_id, fav_season1_id) end,
     fav_season2_id = case when clear_fav_season2 then null else coalesce(new_fav_season2_id, fav_season2_id) end,
-    fav_season3_id = case when clear_fav_season3 then null else coalesce(new_fav_season3_id, fav_season3_id) end
+    fav_season3_id = case when clear_fav_season3 then null else coalesce(new_fav_season3_id, fav_season3_id) end,
+    legacy_room_t1 = coalesce(new_legacy_room_t1, legacy_room_t1),
+    legacy_room_t2 = coalesce(new_legacy_room_t2, legacy_room_t2),
+    legacy_room_t3 = coalesce(new_legacy_room_t3, legacy_room_t3)
   where id = auth.uid()
   returning * into result;
   return result;
 end;
 $$;
 
-grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean) to authenticated;
+grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text) to authenticated;
 
 -- ---------- SEMANAS ----------
 create table if not exists public.weeks (

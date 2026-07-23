@@ -287,6 +287,9 @@ export async function updateMyProfile({
   clearFavSeason2,
   fav_season3_id,
   clearFavSeason3,
+  legacy_room_t1,
+  legacy_room_t2,
+  legacy_room_t3,
 } = {}) {
   return unwrap(
     await supabase.rpc("update_my_profile", {
@@ -305,6 +308,9 @@ export async function updateMyProfile({
       clear_fav_season2: clearFavSeason2 ?? false,
       new_fav_season3_id: fav_season3_id ?? null,
       clear_fav_season3: clearFavSeason3 ?? false,
+      new_legacy_room_t1: legacy_room_t1 ?? null,
+      new_legacy_room_t2: legacy_room_t2 ?? null,
+      new_legacy_room_t3: legacy_room_t3 ?? null,
     })
   );
 }
