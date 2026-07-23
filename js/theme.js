@@ -1,6 +1,6 @@
 export const ACCENTS = {
   rojo: { label: "Rojo", accent: "#e30613", dim: "#7d0a10", text: "#ffffff" },
-  rosa: { label: "Rosa", accent: "#fde1f1", dim: "#f0a8ce", text: "#1a1a1a" },
+  rosa: { label: "Rosa", accent: "#ffbfde", dim: "#f0a8ce", text: "#1a1a1a" },
   amarillo: { label: "Amarillo", accent: "#f2c94c", dim: "#8a6d10", text: "#1a1a1a" },
   celeste: { label: "Celeste", accent: "#2596be", dim: "#123f52", text: "#ffffff" },
 };
