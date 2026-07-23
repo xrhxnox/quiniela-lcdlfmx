@@ -121,6 +121,7 @@ drop function if exists public.update_my_profile(text, bigint, boolean, text, bi
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean);
+drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean);
 create or replace function public.update_my_profile(
   new_display_name text default null,
   new_favorite_participant_id bigint default null,
@@ -161,7 +162,12 @@ create or replace function public.update_my_profile(
   new_disappointment_season2_id bigint default null,
   clear_disappointment_season2 boolean default false,
   new_disappointment_season3_id bigint default null,
-  clear_disappointment_season3 boolean default false
+  clear_disappointment_season3 boolean default false,
+  clear_favorite_room boolean default false,
+  clear_legacy_room_t1 boolean default false,
+  clear_legacy_room_t2 boolean default false,
+  clear_legacy_room_t3 boolean default false,
+  clear_avatar boolean default false
 )
 returns public.profiles
 language plpgsql
@@ -176,15 +182,15 @@ begin
     favorite_participant_id = case when clear_favorite then null else coalesce(new_favorite_participant_id, favorite_participant_id) end,
     accent_color = coalesce(new_accent_color, accent_color),
     hated_participant_id = case when clear_hated then null else coalesce(new_hated_participant_id, hated_participant_id) end,
-    favorite_room = coalesce(new_favorite_room, favorite_room),
-    avatar_url = coalesce(new_avatar_url, avatar_url),
+    favorite_room = case when clear_favorite_room then null else coalesce(new_favorite_room, favorite_room) end,
+    avatar_url = case when clear_avatar then null else coalesce(new_avatar_url, avatar_url) end,
     bio = coalesce(new_bio, bio),
     fav_season1_id = case when clear_fav_season1 then null else coalesce(new_fav_season1_id, fav_season1_id) end,
     fav_season2_id = case when clear_fav_season2 then null else coalesce(new_fav_season2_id, fav_season2_id) end,
     fav_season3_id = case when clear_fav_season3 then null else coalesce(new_fav_season3_id, fav_season3_id) end,
-    legacy_room_t1 = coalesce(new_legacy_room_t1, legacy_room_t1),
-    legacy_room_t2 = coalesce(new_legacy_room_t2, legacy_room_t2),
-    legacy_room_t3 = coalesce(new_legacy_room_t3, legacy_room_t3),
+    legacy_room_t1 = case when clear_legacy_room_t1 then null else coalesce(new_legacy_room_t1, legacy_room_t1) end,
+    legacy_room_t2 = case when clear_legacy_room_t2 then null else coalesce(new_legacy_room_t2, legacy_room_t2) end,
+    legacy_room_t3 = case when clear_legacy_room_t3 then null else coalesce(new_legacy_room_t3, legacy_room_t3) end,
     hated_season1_id = case when clear_hated_season1 then null else coalesce(new_hated_season1_id, hated_season1_id) end,
     hated_season2_id = case when clear_hated_season2 then null else coalesce(new_hated_season2_id, hated_season2_id) end,
     hated_season3_id = case when clear_hated_season3 then null else coalesce(new_hated_season3_id, hated_season3_id) end,
@@ -202,7 +208,7 @@ begin
 end;
 $$;
 
-grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean) to authenticated;
+grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, boolean, boolean, boolean, boolean, boolean) to authenticated;
 
 -- ---------- SEMANAS ----------
 create table if not exists public.weeks (

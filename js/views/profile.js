@@ -482,6 +482,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
   const nameInput = h("input", { type: "text", value: profile.display_name });
   const bioInput = h("textarea", { rows: "2", maxlength: "140", placeholder: "Una frase corta para tu perfil…" }, profile.bio || "");
   const avatarFile = h("input", { type: "file", accept: "image/*" });
+  const removeAvatarCheckbox = h("input", { type: "checkbox" });
 
   function pickSelect(currentId, options) {
     return h(
@@ -588,6 +589,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
             display_name: nameInput.value.trim() || undefined,
             bio: bioInput.value.trim() || " ",
             avatar_url,
+            clearAvatar: !file && removeAvatarCheckbox.checked,
             favorite_participant_id: favSelect.value ? Number(favSelect.value) : undefined,
             clearFavorite: !favSelect.value,
             hated_participant_id: hatedSelect.value ? Number(hatedSelect.value) : undefined,
@@ -596,7 +598,8 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
             clearSurprise: !surpriseSelect.value,
             disappointment_participant_id: disappointmentSelect.value ? Number(disappointmentSelect.value) : undefined,
             clearDisappointment: !disappointmentSelect.value,
-            favorite_room: roomSelect.value || null,
+            favorite_room: roomSelect.value || undefined,
+            clearFavoriteRoom: !roomSelect.value,
             fav_season1_id: t1Select.value ? Number(t1Select.value) : undefined,
             clearFavSeason1: !t1Select.value,
             fav_season2_id: t2Select.value ? Number(t2Select.value) : undefined,
@@ -604,8 +607,11 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
             fav_season3_id: t3Select.value ? Number(t3Select.value) : undefined,
             clearFavSeason3: !t3Select.value,
             legacy_room_t1: t1RoomSelect.value || undefined,
+            clearLegacyRoomT1: !t1RoomSelect.value,
             legacy_room_t2: t2RoomSelect.value || undefined,
+            clearLegacyRoomT2: !t2RoomSelect.value,
             legacy_room_t3: t3RoomSelect.value || undefined,
+            clearLegacyRoomT3: !t3RoomSelect.value,
             hated_season1_id: t1HatedSelect.value ? Number(t1HatedSelect.value) : undefined,
             clearHatedSeason1: !t1HatedSelect.value,
             hated_season2_id: t2HatedSelect.value ? Number(t2HatedSelect.value) : undefined,
@@ -641,6 +647,12 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
   return h("div", { class: "card" }, [
     h("label", { style: "margin-top:0;display:block" }, "Foto de perfil"),
     h("div", { style: "margin-bottom:14px" }, [avatarFile]),
+    profile.avatar_url
+      ? h("label", { class: "row-flex", style: "gap:8px;align-items:center;font-weight:400;margin-bottom:14px" }, [
+          removeAvatarCheckbox,
+          "Borrar foto de perfil actual",
+        ])
+      : null,
     h("label", {}, "Nombre para mostrar"),
     h("div", { style: "margin-bottom:14px" }, [nameInput]),
     h("label", {}, "Frase de perfil"),
