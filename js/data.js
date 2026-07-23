@@ -222,14 +222,31 @@ export async function updateProfileDisplayName(id, display_name) {
   return unwrap(await supabase.from("profiles").update({ display_name }).eq("id", id).select().single());
 }
 
+export async function getProfileByUsername(username) {
+  const { data, error } = await supabase.from("profiles").select("*").eq("username", username).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Mi perfil (self-service) ----------
-export async function updateMyProfile({ display_name, favorite_participant_id, clearFavorite, accent_color } = {}) {
+export async function updateMyProfile({
+  display_name,
+  favorite_participant_id,
+  clearFavorite,
+  accent_color,
+  hated_participant_id,
+  clearHated,
+  favorite_room,
+} = {}) {
   return unwrap(
     await supabase.rpc("update_my_profile", {
       new_display_name: display_name ?? null,
       new_favorite_participant_id: favorite_participant_id ?? null,
       clear_favorite: clearFavorite ?? false,
       new_accent_color: accent_color ?? null,
+      new_hated_participant_id: hated_participant_id ?? null,
+      clear_hated: clearHated ?? false,
+      new_favorite_room: favorite_room ?? null,
     })
   );
 }

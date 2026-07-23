@@ -21,10 +21,10 @@ import {
   updateProfileDisplayName,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
+import { ROOM_OPTIONS } from "../rooms.js";
 
 const STATUS_LABEL = { draft: "Borrador", voting_open: "Votación abierta", closed: "Cerrada" };
 const STATUS_BADGE = { draft: "gray", voting_open: "green", closed: "red" };
-const ROOM_OPTIONS = ["Ibiza", "Tulum", "Malibú"];
 
 function roomSelect(currentValue) {
   const options = [...ROOM_OPTIONS];

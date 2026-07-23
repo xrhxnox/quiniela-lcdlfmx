@@ -53,14 +53,21 @@ create table if not exists public.participants (
 -- columnas de perfil que dependen de que participants ya exista
 alter table public.profiles add column if not exists favorite_participant_id bigint references public.participants(id) on delete set null;
 alter table public.profiles add column if not exists accent_color text;
+alter table public.profiles add column if not exists hated_participant_id bigint references public.participants(id) on delete set null;
+alter table public.profiles add column if not exists favorite_room text;
 
--- Permite que cada quien actualice SOLO su propio nombre, favorito y color
--- (nunca su rol), sin necesitar una política de UPDATE abierta en profiles.
+-- Permite que cada quien actualice SOLO su propio nombre, favorito, odiado,
+-- cuarto favorito y color (nunca su rol), sin necesitar una política de
+-- UPDATE abierta en profiles.
+drop function if exists public.update_my_profile(text, bigint, boolean, text);
 create or replace function public.update_my_profile(
   new_display_name text default null,
   new_favorite_participant_id bigint default null,
   clear_favorite boolean default false,
-  new_accent_color text default null
+  new_accent_color text default null,
+  new_hated_participant_id bigint default null,
+  clear_hated boolean default false,
+  new_favorite_room text default null
 )
 returns public.profiles
 language plpgsql
@@ -73,14 +80,16 @@ begin
   set
     display_name = coalesce(new_display_name, display_name),
     favorite_participant_id = case when clear_favorite then null else coalesce(new_favorite_participant_id, favorite_participant_id) end,
-    accent_color = coalesce(new_accent_color, accent_color)
+    accent_color = coalesce(new_accent_color, accent_color),
+    hated_participant_id = case when clear_hated then null else coalesce(new_hated_participant_id, hated_participant_id) end,
+    favorite_room = coalesce(new_favorite_room, favorite_room)
   where id = auth.uid()
   returning * into result;
   return result;
 end;
 $$;
 
-grant execute on function public.update_my_profile(text, bigint, boolean, text) to authenticated;
+grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text) to authenticated;
 
 -- ---------- SEMANAS ----------
 create table if not exists public.weeks (
