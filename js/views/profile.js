@@ -181,18 +181,17 @@ const LEGACY_ROOM_BADGE_STYLES = {
   Día: { color: "#eab308", icon: "fa-sun" },
   Noche: { color: "#4338ca", icon: "fa-moon" },
   Eclipse: { color: "#ff8000", icon: "fa-circle-half-stroke" },
-  "Team Solo Wendy Guevara": { color: "#f472b6", icon: "fa-transgender" },
-  "Team Gomita Super Buena Onda": { color: "#22c55e", icon: "fa-thumbs-up" },
+  "Solo Wendy Guevara": { color: "#f472b6", icon: "fa-transgender" },
+  "Gomita Super Buena Onda": { color: "#22c55e", icon: "fa-thumbs-up" },
 };
 
 function legacyRoomBadgeNode(value) {
   if (!value) return null;
   const style = LEGACY_ROOM_BADGE_STYLES[value] || { color: "#e8c05a", icon: "fa-clock-rotate-left" };
-  const text = value.startsWith("Team ") ? value : `Team ${value}`;
   return h(
     "span",
     { class: "badge", style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color};margin-top:6px` },
-    [h("i", { class: `fa-solid ${style.icon}` }), ` ${text}`]
+    [h("i", { class: `fa-solid ${style.icon}` }), ` Team ${value}`]
   );
 }
 
@@ -664,7 +663,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [t1SurpriseSelect]),
     h("label", {}, "Decepción de Temporada 1"),
     h("div", { style: "margin-bottom:14px" }, [t1DisappointmentSelect]),
-    h("label", {}, "Team de Temporada 1 (Cielo, Infierno o Team Solo Wendy Guevara)"),
+    h("label", {}, "Team de Temporada 1 (Cielo, Infierno o Solo Wendy Guevara)"),
     h("div", { style: "margin-bottom:14px" }, [t1RoomSelect]),
     h("label", {}, "Favorito de Temporada 2"),
     h("div", { style: "margin-bottom:14px" }, [t2Select]),
@@ -674,7 +673,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [t2SurpriseSelect]),
     h("label", {}, "Decepción de Temporada 2"),
     h("div", { style: "margin-bottom:14px" }, [t2DisappointmentSelect]),
-    h("label", {}, "Team de Temporada 2 (Mar, Tierra o Team Gomita Super Buena Onda)"),
+    h("label", {}, "Team de Temporada 2 (Mar, Tierra o Gomita Super Buena Onda)"),
     h("div", { style: "margin-bottom:14px" }, [t2RoomSelect]),
     h("label", {}, "Favorito de Temporada 3"),
     h("div", { style: "margin-bottom:14px" }, [t3Select]),

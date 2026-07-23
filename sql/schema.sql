@@ -102,13 +102,13 @@ begin
   alter table public.profiles add constraint profiles_legacy_room_t3_check check (legacy_room_t3 in ('Día','Noche','Eclipse'));
 end $$;
 
--- Agrega los teams nuevos (Team Solo Wendy Guevara en T1, Team Gomita Super Buena Onda en T2)
+-- Agrega los teams nuevos (Solo Wendy Guevara en T1, Gomita Super Buena Onda en T2)
 do $$
 begin
   alter table public.profiles drop constraint if exists profiles_legacy_room_t1_check;
-  alter table public.profiles add constraint profiles_legacy_room_t1_check check (legacy_room_t1 in ('Cielo','Infierno','Team Solo Wendy Guevara'));
+  alter table public.profiles add constraint profiles_legacy_room_t1_check check (legacy_room_t1 in ('Cielo','Infierno','Solo Wendy Guevara'));
   alter table public.profiles drop constraint if exists profiles_legacy_room_t2_check;
-  alter table public.profiles add constraint profiles_legacy_room_t2_check check (legacy_room_t2 in ('Mar','Tierra','Team Gomita Super Buena Onda'));
+  alter table public.profiles add constraint profiles_legacy_room_t2_check check (legacy_room_t2 in ('Mar','Tierra','Gomita Super Buena Onda'));
 end $$;
 
 -- Permite que cada quien actualice SOLO su propio nombre, favorito, odiado,
