@@ -1,0 +1,249 @@
+-- =========================================================
+-- La Casa de los Famosos México T3 - Quiniela
+-- Esquema de base de datos para Supabase (Postgres)
+-- =========================================================
+-- Cómo usar: en tu proyecto de Supabase, abre "SQL Editor",
+-- pega TODO este archivo y dale "Run". Se puede correr una
+-- sola vez sobre un proyecto nuevo.
+-- =========================================================
+
+-- ---------- PERFILES (uno por usuario/jugador) ----------
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  username text unique not null,
+  display_name text not null,
+  role text not null default 'player' check (role in ('admin','player')),
+  created_at timestamptz not null default now()
+);
+
+-- Crea automáticamente un perfil cuando el admin da de alta un usuario
+-- en Authentication > Users (usando correo tipo usuario@lcdlfmx.app)
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, username, display_name)
+  values (
+    new.id,
+    split_part(new.email, '@', 1),
+    coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1))
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- ---------- PARTICIPANTES (habitantes de la casa) ----------
+create table if not exists public.participants (
+  id bigint generated always as identity primary key,
+  name text not null,
+  room text not null,
+  photo_url text,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+-- ---------- SEMANAS ----------
+create table if not exists public.weeks (
+  id bigint generated always as identity primary key,
+  week_number int not null unique,
+  label text,
+  nomination_date date,
+  elimination_date date,
+  status text not null default 'draft' check (status in ('draft','voting_open','closed')),
+  created_at timestamptz not null default now()
+);
+
+-- ---------- INMUNES de la semana ----------
+create table if not exists public.immunities (
+  week_id bigint not null references public.weeks(id) on delete cascade,
+  participant_id bigint not null references public.participants(id) on delete cascade,
+  primary key (week_id, participant_id)
+);
+
+-- ---------- NOMINADOS de la semana (con puntos de nominación) ----------
+create table if not exists public.nominations (
+  week_id bigint not null references public.weeks(id) on delete cascade,
+  participant_id bigint not null references public.participants(id) on delete cascade,
+  points int not null default 0,
+  primary key (week_id, participant_id)
+);
+
+-- ---------- ELIMINADOS confirmados de la semana ----------
+create table if not exists public.eliminations (
+  week_id bigint not null references public.weeks(id) on delete cascade,
+  participant_id bigint not null references public.participants(id) on delete cascade,
+  primary key (week_id, participant_id)
+);
+
+-- ---------- PREDICCIONES (los picks de cada jugador) ----------
+create table if not exists public.predictions (
+  week_id bigint not null references public.weeks(id) on delete cascade,
+  player_id uuid not null references public.profiles(id) on delete cascade,
+  participant_id bigint not null references public.participants(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (week_id, player_id)
+);
+
+-- =========================================================
+-- FUNCIÓN AUXILIAR: ¿el usuario actual es admin?
+-- =========================================================
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
+
+-- =========================================================
+-- RLS (Row Level Security)
+-- =========================================================
+alter table public.profiles enable row level security;
+alter table public.participants enable row level security;
+alter table public.weeks enable row level security;
+alter table public.immunities enable row level security;
+alter table public.nominations enable row level security;
+alter table public.eliminations enable row level security;
+alter table public.predictions enable row level security;
+
+-- profiles: todos pueden leer (para mostrar nombres en el ranking)
+drop policy if exists "profiles_select_all" on public.profiles;
+create policy "profiles_select_all" on public.profiles for select using (true);
+
+-- profiles: el admin puede editar nombre para mostrar / rol de cualquiera
+drop policy if exists "profiles_update_admin" on public.profiles;
+create policy "profiles_update_admin" on public.profiles for update
+  using (public.is_admin()) with check (public.is_admin());
+
+-- participants: lectura pública, escritura solo admin
+drop policy if exists "participants_select_all" on public.participants;
+create policy "participants_select_all" on public.participants for select using (true);
+drop policy if exists "participants_write_admin" on public.participants;
+create policy "participants_write_admin" on public.participants for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- weeks: lectura pública, escritura solo admin
+drop policy if exists "weeks_select_all" on public.weeks;
+create policy "weeks_select_all" on public.weeks for select using (true);
+drop policy if exists "weeks_write_admin" on public.weeks;
+create policy "weeks_write_admin" on public.weeks for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- immunities: lectura pública, escritura solo admin
+drop policy if exists "immunities_select_all" on public.immunities;
+create policy "immunities_select_all" on public.immunities for select using (true);
+drop policy if exists "immunities_write_admin" on public.immunities;
+create policy "immunities_write_admin" on public.immunities for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- nominations: lectura pública, escritura solo admin
+drop policy if exists "nominations_select_all" on public.nominations;
+create policy "nominations_select_all" on public.nominations for select using (true);
+drop policy if exists "nominations_write_admin" on public.nominations;
+create policy "nominations_write_admin" on public.nominations for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- eliminations: lectura pública, escritura solo admin
+drop policy if exists "eliminations_select_all" on public.eliminations;
+create policy "eliminations_select_all" on public.eliminations for select using (true);
+drop policy if exists "eliminations_write_admin" on public.eliminations;
+create policy "eliminations_write_admin" on public.eliminations for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- predictions:
+--   - cada quien ve su propio pick siempre
+--   - todos ven los picks de una semana ya CERRADA (para transparencia del ranking)
+--   - el admin ve todo
+drop policy if exists "predictions_select" on public.predictions;
+create policy "predictions_select" on public.predictions for select using (
+  player_id = auth.uid()
+  or public.is_admin()
+  or exists (select 1 from public.weeks w where w.id = week_id and w.status = 'closed')
+);
+
+-- insertar/editar tu propio pick, solo mientras la semana está en votación
+drop policy if exists "predictions_insert_own" on public.predictions;
+create policy "predictions_insert_own" on public.predictions for insert with check (
+  player_id = auth.uid()
+  and exists (select 1 from public.weeks w where w.id = week_id and w.status = 'voting_open')
+);
+
+drop policy if exists "predictions_update_own" on public.predictions;
+create policy "predictions_update_own" on public.predictions for update using (
+  player_id = auth.uid()
+  and exists (select 1 from public.weeks w where w.id = week_id and w.status = 'voting_open')
+) with check (
+  player_id = auth.uid()
+  and exists (select 1 from public.weeks w where w.id = week_id and w.status = 'voting_open')
+);
+
+-- =========================================================
+-- VISTAS de apoyo
+-- =========================================================
+
+-- Puntaje total por jugador (aciertos de eliminación)
+create or replace view public.leaderboard as
+select
+  p.id as player_id,
+  p.username,
+  p.display_name,
+  count(*) filter (
+    where e.participant_id is not null
+  ) as points
+from public.profiles p
+left join public.predictions pr on pr.player_id = p.id
+left join public.eliminations e
+  on e.week_id = pr.week_id and e.participant_id = pr.participant_id
+group by p.id, p.username, p.display_name
+order by points desc, display_name asc;
+
+-- Veces que cada participante ha sido nominado
+create or replace view public.nomination_counts as
+select participant_id, count(*) as times_nominated
+from public.nominations
+group by participant_id;
+
+-- =========================================================
+-- STORAGE: bucket público para fotos de participantes
+-- =========================================================
+insert into storage.buckets (id, name, public)
+values ('photos', 'photos', true)
+on conflict (id) do nothing;
+
+drop policy if exists "photos_public_read" on storage.objects;
+create policy "photos_public_read" on storage.objects for select
+  using (bucket_id = 'photos');
+
+drop policy if exists "photos_admin_write" on storage.objects;
+create policy "photos_admin_write" on storage.objects for insert
+  with check (bucket_id = 'photos' and public.is_admin());
+
+drop policy if exists "photos_admin_update" on storage.objects;
+create policy "photos_admin_update" on storage.objects for update
+  using (bucket_id = 'photos' and public.is_admin());
+
+drop policy if exists "photos_admin_delete" on storage.objects;
+create policy "photos_admin_delete" on storage.objects for delete
+  using (bucket_id = 'photos' and public.is_admin());
+
+-- =========================================================
+-- Después de correr este script:
+-- 1. Ve a Authentication > Users > Add user, crea tu propio
+--    usuario admin con email  tuusuario@lcdlfmx.app  y una contraseña.
+-- 2. En SQL Editor corre (cambia 'tuusuario'):
+--    update public.profiles set role = 'admin' where username = 'tuusuario';
+-- 3. Repite "Add user" para cada participante de la quiniela.
+-- =========================================================

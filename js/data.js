@@ -1,0 +1,211 @@
+import { supabase } from "./supabaseClient.js";
+
+function unwrap({ data, error }) {
+  if (error) throw error;
+  return data;
+}
+
+// ---------- Participants ----------
+export async function getParticipants({ activeOnly = false } = {}) {
+  let q = supabase.from("participants").select("*").order("name");
+  if (activeOnly) q = q.eq("active", true);
+  return unwrap(await q);
+}
+
+export async function createParticipant({ name, room, photo_url }) {
+  return unwrap(
+    await supabase.from("participants").insert({ name, room, photo_url }).select().single()
+  );
+}
+
+export async function updateParticipant(id, fields) {
+  return unwrap(await supabase.from("participants").update(fields).eq("id", id).select().single());
+}
+
+export async function deleteParticipant(id) {
+  return unwrap(await supabase.from("participants").delete().eq("id", id));
+}
+
+export async function uploadParticipantPhoto(file) {
+  const ext = file.name.split(".").pop();
+  const path = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("photos").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("photos").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function getNominationCounts() {
+  const rows = unwrap(await supabase.from("nomination_counts").select("*"));
+  const map = {};
+  rows.forEach((r) => (map[r.participant_id] = r.times_nominated));
+  return map;
+}
+
+// ---------- Weeks ----------
+export async function getWeeks() {
+  return unwrap(await supabase.from("weeks").select("*").order("week_number", { ascending: false }));
+}
+
+export async function getVotingWeek() {
+  const rows = unwrap(
+    await supabase
+      .from("weeks")
+      .select("*")
+      .eq("status", "voting_open")
+      .order("week_number", { ascending: false })
+      .limit(1)
+  );
+  return rows[0] || null;
+}
+
+export async function getLatestClosedWeek() {
+  const rows = unwrap(
+    await supabase
+      .from("weeks")
+      .select("*")
+      .eq("status", "closed")
+      .order("week_number", { ascending: false })
+      .limit(1)
+  );
+  return rows[0] || null;
+}
+
+export async function createWeek({ week_number, label, nomination_date, elimination_date }) {
+  return unwrap(
+    await supabase
+      .from("weeks")
+      .insert({ week_number, label, nomination_date, elimination_date })
+      .select()
+      .single()
+  );
+}
+
+export async function updateWeek(id, fields) {
+  return unwrap(await supabase.from("weeks").update(fields).eq("id", id).select().single());
+}
+
+export async function deleteWeek(id) {
+  return unwrap(await supabase.from("weeks").delete().eq("id", id));
+}
+
+// ---------- Nominations ----------
+export async function getNominationsForWeek(weekId) {
+  return unwrap(
+    await supabase
+      .from("nominations")
+      .select("week_id, participant_id, points, participants(*)")
+      .eq("week_id", weekId)
+      .order("points", { ascending: false })
+  );
+}
+
+export async function setNomination(weekId, participantId, points) {
+  return unwrap(
+    await supabase
+      .from("nominations")
+      .upsert({ week_id: weekId, participant_id: participantId, points })
+      .select()
+      .single()
+  );
+}
+
+export async function removeNomination(weekId, participantId) {
+  return unwrap(
+    await supabase.from("nominations").delete().eq("week_id", weekId).eq("participant_id", participantId)
+  );
+}
+
+// ---------- Immunities ----------
+export async function getImmunitiesForWeek(weekId) {
+  return unwrap(
+    await supabase.from("immunities").select("week_id, participant_id, participants(*)").eq("week_id", weekId)
+  );
+}
+
+export async function addImmunity(weekId, participantId) {
+  return unwrap(
+    await supabase.from("immunities").insert({ week_id: weekId, participant_id: participantId })
+  );
+}
+
+export async function removeImmunity(weekId, participantId) {
+  return unwrap(
+    await supabase.from("immunities").delete().eq("week_id", weekId).eq("participant_id", participantId)
+  );
+}
+
+// ---------- Eliminations ----------
+export async function getEliminationsForWeek(weekId) {
+  return unwrap(
+    await supabase.from("eliminations").select("week_id, participant_id, participants(*)").eq("week_id", weekId)
+  );
+}
+
+export async function getAllEliminationsWithWeeks() {
+  return unwrap(
+    await supabase
+      .from("eliminations")
+      .select("week_id, participant_id, participants(*), weeks(*)")
+      .order("week_id", { ascending: false })
+  );
+}
+
+export async function confirmEliminations(weekId, participantIds) {
+  await supabase.from("eliminations").delete().eq("week_id", weekId);
+  if (participantIds.length > 0) {
+    unwrap(
+      await supabase
+        .from("eliminations")
+        .insert(participantIds.map((pid) => ({ week_id: weekId, participant_id: pid })))
+    );
+  }
+  await supabase.from("participants").update({ active: false }).in("id", participantIds);
+  return unwrap(await supabase.from("weeks").update({ status: "closed" }).eq("id", weekId).select().single());
+}
+
+// ---------- Predictions ----------
+export async function getMyPrediction(weekId, playerId) {
+  const { data, error } = await supabase
+    .from("predictions")
+    .select("*")
+    .eq("week_id", weekId)
+    .eq("player_id", playerId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function submitPrediction(weekId, playerId, participantId) {
+  return unwrap(
+    await supabase
+      .from("predictions")
+      .upsert({ week_id: weekId, player_id: playerId, participant_id: participantId, updated_at: new Date().toISOString() })
+      .select()
+      .single()
+  );
+}
+
+export async function getPredictionsForWeek(weekId) {
+  return unwrap(
+    await supabase.from("predictions").select("*, profiles(display_name, username)").eq("week_id", weekId)
+  );
+}
+
+// ---------- Leaderboard ----------
+export async function getLeaderboard() {
+  return unwrap(await supabase.from("leaderboard").select("*"));
+}
+
+// ---------- Profiles (admin) ----------
+export async function getAllProfiles() {
+  return unwrap(await supabase.from("profiles").select("*").order("display_name"));
+}
+
+export async function setProfileRole(id, role) {
+  return unwrap(await supabase.from("profiles").update({ role }).eq("id", id).select().single());
+}
+
+export async function updateProfileDisplayName(id, display_name) {
+  return unwrap(await supabase.from("profiles").update({ display_name }).eq("id", id).select().single());
+}
