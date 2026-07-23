@@ -79,11 +79,11 @@ async function renderParticipantsAdmin(sub) {
           addErr.textContent = "No se pudo guardar. " + (e.message || "");
         } finally {
           addBtn.disabled = false;
-          addBtn.textContent = "Agregar participante";
+          addBtn.textContent = "Agregar habitante";
         }
       },
     },
-    "Agregar participante"
+    "Agregar habitante"
   );
 
   const addForm = h("div", { class: "card" }, [
@@ -126,7 +126,7 @@ async function renderParticipantsAdmin(sub) {
       {
         class: "btn small danger",
         onclick: async () => {
-          if (!confirm(`¿Eliminar a ${p.name} de la lista de participantes?`)) return;
+          if (!confirm(`¿Eliminar a ${p.name} de la lista de habitantes?`)) return;
           await deleteParticipant(p.id);
           await renderParticipantsAdmin(sub);
         },
@@ -152,7 +152,7 @@ async function renderParticipantsAdmin(sub) {
     sub,
     h("div", {}, [
       addForm,
-      h("div", { class: "card" }, items.length ? items : [h("p", { class: "muted" }, "Sin participantes todavía.")]),
+      h("div", { class: "card" }, items.length ? items : [h("p", { class: "muted" }, "Sin habitantes todavía.")]),
     ])
   );
 }
@@ -604,7 +604,7 @@ export async function renderAdmin(container) {
 
   const tabs = [
     { key: "weeks", label: "Semanas", render: renderWeeksAdmin },
-    { key: "participants", label: "Participantes", render: renderParticipantsAdmin },
+    { key: "participants", label: "Habitantes", render: renderParticipantsAdmin },
     { key: "legacy", label: "Favoritos históricos", render: renderLegacyAdmin },
     { key: "users", label: "Usuarios", render: renderUsersAdmin },
   ];
