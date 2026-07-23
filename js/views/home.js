@@ -218,7 +218,7 @@ export async function renderHome(container, profile) {
   clearAndAppend(
     container,
     h("div", { class: "empty-state" }, [
-      h("img", { src: "assets/logo.png", class: "brand-logo", style: "max-width:220px;margin:0 auto 16px" }),
+      h("img", { src: "assets/logo.png", class: "brand-logo", style: "max-width:220px;margin:0 auto 36px" }),
       h("p", {}, "Todavía no hay semanas abiertas. El líder de la semana se anuncia los lunes y los nominados se publican los miércoles."),
     ])
   );
