@@ -349,7 +349,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 }
 .nominee-card.selected .check { display: flex; }
 .nominee-card.immune { opacity: 0.55; cursor: not-allowed; }
-.nominee-card.eliminated-result { border-color: var(--red); }
+.nominee-card.eliminated-result { border-color: var(--red); box-shadow: 0 0 16px rgba(227,6,19,0.55); }
 .nominee-card.saved { cursor: not-allowed; border-color: var(--green); opacity: 0.75; }
 .nominee-card.saved:hover { transform: none; box-shadow: none; }
 .pick-type-icon {
