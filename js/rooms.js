@@ -1,1 +1,1 @@
-export const ROOM_OPTIONS = ["Ibiza", "Tulum", "Malibú"];
+export const ROOM_OPTIONS = ["Sin, Cuarto, Ibiza", "Tulum", "Malibú"];
