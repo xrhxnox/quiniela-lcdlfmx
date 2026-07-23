@@ -28,7 +28,7 @@ function formatCountdown(ms) {
 
 function countdownNode(closesAt, onClosed) {
   const closesAtMs = new Date(closesAt).getTime();
-  const el = h("p", { style: "margin:0" });
+  const el = h("p", { style: "margin:0;color:var(--accent)" });
   let fired = false;
   const render = () => {
     el.innerHTML = "";
