@@ -73,7 +73,7 @@ header.topbar .brand {
 }
 
 header.topbar .brand img {
-  height: 40px;
+  height: 125px;
   width: auto;
   filter: invert(1);
 }
