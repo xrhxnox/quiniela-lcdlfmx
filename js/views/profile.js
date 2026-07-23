@@ -7,12 +7,15 @@ import {
   getProfileByUsername,
   getLeaderboard,
   getLegacyFavorites,
+  getNominationCounts,
+  getVotingWeek,
+  getNominationsForWeek,
 } from "../data.js";
 import { ACCENTS, getAccentKey, applyAccent } from "../theme.js";
 import { ROOM_OPTIONS, LEGACY_ROOM_OPTIONS } from "../rooms.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
-function participantPickCard(label, participant, iconClass) {
+function participantPickCard(label, participant, iconClass, nominationCounts, currentNomination) {
   if (!participant) {
     return h("div", { class: "nominee-card", style: "cursor:default" }, [
       h("div", { class: "photo" }, h("i", { class: `fa-solid ${iconClass}` })),
@@ -25,17 +28,28 @@ function participantPickCard(label, participant, iconClass) {
   const photo = participant.photo_url
     ? h("div", { class: "photo", style: `background-image:url('${esc(participant.photo_url)}')` })
     : h("div", { class: "photo" }, initials(participant.name));
+  const timesNominated = nominationCounts?.[participant.id] || 0;
+
+  let weekBadge = null;
+  if (participant.active && currentNomination) {
+    weekBadge = currentNomination.saved
+      ? h("span", { class: "badge green" }, "Salvado esta semana")
+      : h("span", { class: "badge gold" }, "Nominado esta semana");
+  }
+
   return h("div", { class: "nominee-card", style: "cursor:default" }, [
     photo,
     h("div", { class: "info" }, [
       h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
       h("div", { class: "name" }, participant.name),
       participant.room ? h("div", { class: "room" }, participant.room) : null,
-      h("div", { style: "margin-top:6px" }, [
+      h("div", { style: "margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
         participant.active
           ? h("span", { class: "badge green" }, "En la casa")
           : h("span", { class: "badge red" }, "Eliminado/a"),
+        weekBadge,
       ]),
+      h("div", { class: "points" }, `Nominado ${timesNominated} veces`),
     ]),
   ]);
 }
@@ -173,13 +187,18 @@ async function renderProfileInternal(container, username, targetHint, editable, 
     return;
   }
 
-  const [participants, history, eliminations, leaderboard, legacyFavorites] = await Promise.all([
+  const [participants, history, eliminations, leaderboard, legacyFavorites, nominationCounts, votingWeek] = await Promise.all([
     getParticipants(),
     getMyPredictionHistory(target.id),
     getAllEliminationsWithWeeks(),
     getLeaderboard(),
     getLegacyFavorites(),
+    getNominationCounts(),
+    getVotingWeek(),
   ]);
+  const currentNominations = votingWeek ? await getNominationsForWeek(votingWeek.id) : [];
+  const currentNominationMap = {};
+  currentNominations.forEach((n) => (currentNominationMap[n.participant_id] = n));
 
   const refresh = async (updatedProfile) => {
     const nextTarget = updatedProfile || target;
@@ -229,8 +248,8 @@ async function renderProfileInternal(container, username, targetHint, editable, 
   // ---------- Favorito / odiado ----------
   const favHatedCard = h("div", { class: "card" }, [
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));max-width:380px" }, [
-      participantPickCard("Favorito", favorite, "fa-heart"),
-      participantPickCard("Odiado", hated, "fa-face-angry"),
+      participantPickCard("Favorito", favorite, "fa-heart", nominationCounts, favorite ? currentNominationMap[favorite.id] : null),
+      participantPickCard("Odiado", hated, "fa-face-angry", nominationCounts, hated ? currentNominationMap[hated.id] : null),
     ]),
   ]);
 
