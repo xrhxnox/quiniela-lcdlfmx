@@ -139,11 +139,11 @@ function teamBadgeNode(room) {
 const LEGACY_ROOM_BADGE_STYLES = {
   Cielo: { color: "#7dd3fc", icon: "fa-cloud" },
   Infierno: { color: "#dc2626", icon: "fa-fire-flame-curved" },
-  Mar: { color: "#0369a1", icon: "fa-water" },
+  Mar: { color: "#0279f0", icon: "fa-water" },
   Tierra: { color: "#a16207", icon: "fa-mountain" },
   Día: { color: "#eab308", icon: "fa-sun" },
   Noche: { color: "#4338ca", icon: "fa-moon" },
-  Eclipse: { color: "#6d28d9", icon: "fa-circle-half-stroke" },
+  Eclipse: { color: "#ff8000", icon: "fa-circle-half-stroke" },
 };
 
 function legacyRoomBadgeNode(value) {
