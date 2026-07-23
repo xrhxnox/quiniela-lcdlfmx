@@ -137,12 +137,11 @@ const ROOM_BADGE_STYLES = {
   Malibú: { color: "#e0574c", icon: "fa-heart" },
 };
 
-function legacyPickCard(label, fav, type) {
+function legacyPickCard(label, fav) {
   if (!fav) {
     return h("div", { class: "nominee-card", style: "cursor:default" }, [
       h("div", { class: "photo" }, h("i", { class: "fa-solid fa-clock-rotate-left" })),
       h("div", { class: "info" }, [
-        pickTypeIcon(type),
         h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
         h("div", { class: "name" }, "Sin definir"),
       ]),
@@ -154,7 +153,6 @@ function legacyPickCard(label, fav, type) {
   return h("div", { class: "nominee-card", style: "cursor:default" }, [
     photo,
     h("div", { class: "info" }, [
-      pickTypeIcon(type),
       h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
       h("div", { class: "name" }, fav.name),
     ]),
@@ -301,18 +299,18 @@ async function renderProfileInternal(container, username) {
   const legacyCard = h("div", { class: "card" }, [
     h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-star" }), " ", h("strong", {}, "Favoritos de temporadas anteriores")]),
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
-      legacyPickCard("Temporada 1", favT1, "favorite"),
-      legacyPickCard("Temporada 2", favT2, "favorite"),
-      legacyPickCard("Temporada 3", favT3, "favorite"),
+      legacyPickCard("Temporada 1", favT1),
+      legacyPickCard("Temporada 2", favT2),
+      legacyPickCard("Temporada 3", favT3),
     ]),
   ]);
 
   const legacyHatedCard = h("div", { class: "card" }, [
     h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-skull-crossbones" }), " ", h("strong", {}, "Odiados de temporadas anteriores")]),
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
-      legacyPickCard("Temporada 1", hatedT1, "hated"),
-      legacyPickCard("Temporada 2", hatedT2, "hated"),
-      legacyPickCard("Temporada 3", hatedT3, "hated"),
+      legacyPickCard("Temporada 1", hatedT1),
+      legacyPickCard("Temporada 2", hatedT2),
+      legacyPickCard("Temporada 3", hatedT3),
     ]),
   ]);
 
