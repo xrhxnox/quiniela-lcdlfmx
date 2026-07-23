@@ -1,14 +1,17 @@
 :root {
-  --bg: #0b0b0d;
-  --bg-elev: #171718;
-  --bg-card: #1e1e20;
-  --line: #2c2c2f;
-  --text: #f4f4f2;
-  --text-dim: #a5a5a8;
+  --bg: #333333;
+  --bg-elev: #3a3a3a;
+  --bg-card: #404040;
+  --line: #4d4d4d;
+  --text: #f5f5f4;
+  --text-dim: #c4c4c6;
   --red: #e30613;
   --red-dim: #7d0a10;
   --gold: #e8c05a;
   --green: #2fae5a;
+  --accent: #e30613;
+  --accent-dim: #7d0a10;
+  --accent-text: #ffffff;
   --radius: 14px;
   font-size: 16px;
 }
@@ -44,7 +47,7 @@ header.topbar {
   top: 0;
   z-index: 20;
   background: var(--bg);
-  border-bottom: 3px solid var(--red);
+  border-bottom: 3px solid var(--accent);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -84,7 +87,18 @@ header.topbar .user-chip strong {
   padding: 6px 10px;
   cursor: pointer;
 }
-.btn-logout:hover { border-color: var(--red); color: var(--text); }
+.btn-logout:hover { border-color: var(--accent); color: var(--text); }
+
+.swatches { display: flex; align-items: center; gap: 6px; }
+.swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.swatch.active { border-color: var(--text); box-shadow: 0 0 0 2px rgba(255,255,255,0.25); }
 
 nav.tabs {
   display: flex;
@@ -109,7 +123,7 @@ nav.tabs a {
 
 nav.tabs a.active {
   color: var(--text);
-  border-bottom-color: var(--red);
+  border-bottom-color: var(--accent);
 }
 
 /* ---------- Main layout ---------- */
@@ -127,7 +141,7 @@ main#app {
   text-transform: uppercase;
   letter-spacing: 0.02em;
   margin: 6px 0 16px;
-  border-left: 5px solid var(--red);
+  border-left: 5px solid var(--accent);
   padding-left: 10px;
 }
 
@@ -190,11 +204,11 @@ input[type=text], input[type=password], input[type=number], input[type=date], se
   padding: 10px 12px;
   outline: none;
 }
-input:focus, select:focus, textarea:focus { border-color: var(--red); }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 
 .btn {
-  background: var(--red);
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-text);
   border: none;
   border-radius: 8px;
   padding: 11px 16px;
@@ -204,12 +218,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--red); }
   letter-spacing: 0.03em;
   cursor: pointer;
 }
-.btn:hover { background: #ff1b26; }
+.btn:hover { filter: brightness(1.12); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn.secondary { background: transparent; border: 1px solid var(--line); color: var(--text); }
 .btn.secondary:hover { border-color: var(--text-dim); }
 .btn.small { padding: 6px 10px; font-size: 0.72rem; }
-.btn.danger { background: var(--red-dim); }
+.btn.danger { background: var(--red-dim); color: #fff; }
 
 .error-msg { color: #ff5b63; font-size: 0.85rem; min-height: 1em; }
 .success-msg { color: var(--green); font-size: 0.85rem; min-height: 1em; }
@@ -232,7 +246,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--red); }
   text-align: center;
 }
 .nominee-card:hover { transform: translateY(-2px); }
-.nominee-card.selected { border-color: var(--red); box-shadow: 0 0 0 2px var(--red-dim); }
+.nominee-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
 .nominee-card .photo {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -255,7 +269,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--red); }
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--red);
+  background: var(--accent);
   color: #fff;
   display: none;
   align-items: center;
