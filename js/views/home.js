@@ -161,7 +161,7 @@ export async function renderHome(container, profile) {
   clearAndAppend(
     container,
     h("div", { class: "empty-state" }, [
-      h("img", { src: "assets/logo.png", style: "max-width:220px;margin:0 auto 16px" }),
+      h("img", { src: "assets/logo.png", class: "brand-logo", style: "max-width:220px;margin:0 auto 16px" }),
       h("p", {}, "Todavía no hay semanas abiertas. Vuelve el viernes cerca de las 10pm cuando se publiquen los nominados."),
     ])
   );

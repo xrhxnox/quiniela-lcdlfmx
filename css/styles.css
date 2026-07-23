@@ -61,6 +61,7 @@ header.topbar .brand {
 header.topbar .brand img {
   height: 40px;
   width: auto;
+  filter: invert(1);
 }
 
 header.topbar .user-chip {
@@ -164,7 +165,9 @@ main#app {
   gap: 20px;
   text-align: center;
 }
-.login-wrap img.logo { max-width: 320px; margin-bottom: 8px; }
+.login-wrap img.logo { max-width: 320px; margin-bottom: 8px; filter: invert(1); }
+
+.brand-logo { filter: invert(1); }
 .login-card {
   background: var(--bg-card);
   border: 1px solid var(--line);
