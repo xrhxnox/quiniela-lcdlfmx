@@ -318,7 +318,7 @@ async function renderProfileInternal(container, username) {
   function legacySeasonCard(season, fav, hated, surprise, disappointment) {
     return h("div", { class: "card" }, [
       h("p", { style: "margin-top:0;text-align:center" }, [h("i", { class: `fa-solid ${SEASON_DICE_ICONS[season]}` }), " ", h("strong", {}, `Temporada ${season}`)]),
-      h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit, minmax(120px, 120px));justify-content:center" }, [
+      h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit, minmax(140px, 140px));justify-content:center" }, [
         legacyPickCard("Favorito", fav, "favorite"),
         legacyPickCard("Odiado", hated, "hated"),
         legacyPickCard("Sorpresa", surprise, "surprise"),
