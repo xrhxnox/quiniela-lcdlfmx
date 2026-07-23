@@ -311,9 +311,11 @@ async function renderProfileInternal(container, username) {
     ]),
   ]);
 
-  function legacySeasonCard(seasonLabel, fav, hated, surprise, disappointment) {
+  const SEASON_DICE_ICONS = { 1: "fa-dice-one", 2: "fa-dice-two", 3: "fa-dice-three" };
+
+  function legacySeasonCard(season, fav, hated, surprise, disappointment) {
     return h("div", { class: "card" }, [
-      h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-clock-rotate-left" }), " ", h("strong", {}, seasonLabel)]),
+      h("p", { style: "margin-top:0" }, [h("i", { class: `fa-solid ${SEASON_DICE_ICONS[season]}` }), " ", h("strong", {}, `Temporada ${season}`)]),
       h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
         legacyPickCard("Favorito", fav, "favorite"),
         legacyPickCard("Odiado", hated, "hated"),
@@ -323,9 +325,9 @@ async function renderProfileInternal(container, username) {
     ]);
   }
 
-  const legacySeason1Card = legacySeasonCard("Temporada 1", favT1, hatedT1, surpriseT1, disappointmentT1);
-  const legacySeason2Card = legacySeasonCard("Temporada 2", favT2, hatedT2, surpriseT2, disappointmentT2);
-  const legacySeason3Card = legacySeasonCard("Temporada 3", favT3, hatedT3, surpriseT3, disappointmentT3);
+  const legacySeason1Card = legacySeasonCard(1, favT1, hatedT1, surpriseT1, disappointmentT1);
+  const legacySeason2Card = legacySeasonCard(2, favT2, hatedT2, surpriseT2, disappointmentT2);
+  const legacySeason3Card = legacySeasonCard(3, favT3, hatedT3, surpriseT3, disappointmentT3);
 
   const cards = [
     headerCard,
