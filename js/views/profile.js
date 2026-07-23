@@ -98,7 +98,7 @@ async function renderProfileInternal(container, username, targetHint, editable, 
   const favHatedCard = h("div", { class: "card" }, [
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));max-width:380px" }, [
       participantPickCard("Favorito", favorite, "fa-heart"),
-      participantPickCard("Le cae mal", hated, "fa-face-angry"),
+      participantPickCard("Odiado", hated, "fa-face-angry"),
     ]),
   ]);
 

@@ -1,9 +1,14 @@
-import { getParticipants, getNominationCounts } from "../data.js";
+import { getParticipants, getNominationCounts, getImmunityCounts, getSavedCounts } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
 export async function renderParticipantes(container) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
-  const [participants, counts] = await Promise.all([getParticipants(), getNominationCounts()]);
+  const [participants, counts, leaderCounts, savedCounts] = await Promise.all([
+    getParticipants(),
+    getNominationCounts(),
+    getImmunityCounts(),
+    getSavedCounts(),
+  ]);
 
   if (participants.length === 0) {
     clearAndAppend(container, h("div", { class: "empty-state" }, "El admin todavía no ha agregado participantes."));
@@ -27,6 +32,8 @@ export async function renderParticipantes(container) {
             : h("span", { class: "badge red" }, "Eliminado/a"),
         ]),
         h("div", { class: "points" }, `Nominado ${counts[p.id] || 0} veces`),
+        h("div", { class: "points" }, `Líder ${leaderCounts[p.id] || 0} veces`),
+        h("div", { class: "points" }, `Salvación ${savedCounts[p.id] || 0} veces`),
       ]),
     ]);
   });

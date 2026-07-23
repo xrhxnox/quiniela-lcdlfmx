@@ -258,6 +258,19 @@ select participant_id, count(*) as times_nominated
 from public.nominations
 group by participant_id;
 
+-- Veces que cada participante ha sido líder de la semana (inmune)
+create or replace view public.immunity_counts as
+select participant_id, count(*) as times_leader
+from public.immunities
+group by participant_id;
+
+-- Veces que cada participante ha ganado la salvación
+create or replace view public.saved_counts as
+select participant_id, count(*) as times_saved
+from public.nominations
+where saved = true
+group by participant_id;
+
 -- =========================================================
 -- STORAGE: bucket público para fotos de participantes
 -- =========================================================

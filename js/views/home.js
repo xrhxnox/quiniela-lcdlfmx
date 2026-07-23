@@ -149,7 +149,7 @@ async function renderClosedWeek(container, week, profile) {
             ])
           : h("p", { class: "muted", style: "margin-top:12px" }, "No registraste un pick esta semana."),
       ]),
-      h("p", { class: "muted" }, "Las nominaciones de la próxima semana se publican normalmente el viernes cerca de las 10pm. ¡Vuelve pronto!"),
+      h("p", { class: "muted" }, "El líder de la semana se publica el lunes, los nominados el miércoles y la salvación el viernes. ¡Vuelve pronto!"),
     ])
   );
 }
@@ -170,7 +170,7 @@ export async function renderHome(container, profile) {
     container,
     h("div", { class: "empty-state" }, [
       h("img", { src: "assets/logo.png", class: "brand-logo", style: "max-width:220px;margin:0 auto 16px" }),
-      h("p", {}, "Todavía no hay semanas abiertas. Vuelve el viernes cerca de las 10pm cuando se publiquen los nominados."),
+      h("p", {}, "Todavía no hay semanas abiertas. El líder de la semana se anuncia los lunes y los nominados se publican los miércoles."),
     ])
   );
 }

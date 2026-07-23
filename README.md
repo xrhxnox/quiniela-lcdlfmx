@@ -45,14 +45,17 @@ datos y sistema de cuentas, y se aloja gratis en **GitHub Pages**.
 
 Entra con tu cuenta y ve a la pestaña **Admin**:
 
-- **Semanas**: crea la semana (número + fecha de eliminación), agrega a los
-  **nominados** con los puntos con los que fueron nominados, marca a quién
-  está **salvado/inmune**, y dale **Abrir votación** cuando quieras que los
-  jugadores puedan elegir (normalmente viernes ~10pm).
-- El domingo, entra otra vez, selecciona quién fue eliminado y dale
-  **Confirmar eliminación y cerrar semana**. Esto guarda el resultado, cierra
-  la votación, actualiza el ranking automáticamente y marca al eliminado como
-  inactivo.
+- **Semanas**: crea la semana (número + fecha de eliminación) y marca quién es
+  el **líder de la semana** (inmunidad) — normalmente se anuncia el lunes.
+  El miércoles agrega a los **nominados** con los puntos con los que fueron
+  nominados y dale **Abrir votación** para que los jugadores puedan elegir.
+  El viernes, si alguno de los nominados gana la salvación, márcalo con el
+  botón de escudo junto a su nombre: sigue apareciendo en la lista pero con
+  la etiqueta "Salvado" y ya nadie puede votar por él.
+- El día de la eliminación, entra otra vez, selecciona quién fue eliminado y
+  dale **Confirmar eliminación y cerrar semana**. Esto guarda el resultado,
+  cierra la votación, actualiza el ranking automáticamente y marca al
+  eliminado como inactivo.
 - **Participantes**: agrega a los habitantes de la casa con foto, nombre y
   cuarto. Aquí también puedes marcarlos como eliminados manualmente si hace
   falta.

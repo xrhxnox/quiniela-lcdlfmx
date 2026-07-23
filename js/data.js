@@ -42,6 +42,20 @@ export async function getNominationCounts() {
   return map;
 }
 
+export async function getImmunityCounts() {
+  const rows = unwrap(await supabase.from("immunity_counts").select("*"));
+  const map = {};
+  rows.forEach((r) => (map[r.participant_id] = r.times_leader));
+  return map;
+}
+
+export async function getSavedCounts() {
+  const rows = unwrap(await supabase.from("saved_counts").select("*"));
+  const map = {};
+  rows.forEach((r) => (map[r.participant_id] = r.times_saved));
+  return map;
+}
+
 // ---------- Weeks ----------
 export async function getWeeks() {
   return unwrap(await supabase.from("weeks").select("*").order("week_number", { ascending: false }));
