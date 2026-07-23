@@ -31,9 +31,9 @@ function pickTypeIcon(type) {
 function participantPickCard(label, participant, type, counts, currentNomination) {
   if (!participant) {
     return h("div", { class: "nominee-card", style: "cursor:default" }, [
-      pickTypeIcon(type),
       h("div", { class: "photo" }, h("i", { class: `fa-solid ${PICK_TYPE_ICONS[type]?.icon || "fa-user"}` })),
       h("div", { class: "info" }, [
+        pickTypeIcon(type),
         h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
         h("div", { class: "name" }, "Sin definir"),
       ]),
@@ -54,9 +54,9 @@ function participantPickCard(label, participant, type, counts, currentNomination
   }
 
   return h("div", { class: "nominee-card", style: "cursor:default" }, [
-    pickTypeIcon(type),
     photo,
     h("div", { class: "info" }, [
+      pickTypeIcon(type),
       h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
       h("div", { class: "name" }, participant.name),
       participant.room ? h("div", { class: "room" }, participant.room) : null,
@@ -140,9 +140,9 @@ const ROOM_BADGE_STYLES = {
 function legacyPickCard(label, fav, type) {
   if (!fav) {
     return h("div", { class: "nominee-card", style: "cursor:default" }, [
-      pickTypeIcon(type),
       h("div", { class: "photo" }, h("i", { class: "fa-solid fa-clock-rotate-left" })),
       h("div", { class: "info" }, [
+        pickTypeIcon(type),
         h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
         h("div", { class: "name" }, "Sin definir"),
       ]),
@@ -152,9 +152,9 @@ function legacyPickCard(label, fav, type) {
     ? h("div", { class: "photo", style: `background-image:url('${esc(fav.photo_url)}')` })
     : h("div", { class: "photo" }, initials(fav.name));
   return h("div", { class: "nominee-card", style: "cursor:default" }, [
-    pickTypeIcon(type),
     photo,
     h("div", { class: "info" }, [
+      pickTypeIcon(type),
       h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
       h("div", { class: "name" }, fav.name),
     ]),
@@ -299,7 +299,7 @@ async function renderProfileInternal(container, username) {
   ]);
 
   const legacyCard = h("div", { class: "card" }, [
-    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-clock-rotate-left" }), " ", h("strong", {}, "Favoritos de temporadas anteriores")]),
+    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-star" }), " ", h("strong", {}, "Favoritos de temporadas anteriores")]),
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
       legacyPickCard("Temporada 1", favT1, "favorite"),
       legacyPickCard("Temporada 2", favT2, "favorite"),
