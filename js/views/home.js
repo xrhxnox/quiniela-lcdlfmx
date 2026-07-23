@@ -157,6 +157,12 @@ async function renderVotingWeek(container, week, profile) {
           h("i", { class: "fa-solid fa-calendar-days" }),
           " Eliminación: ",
           h("strong", {}, week.elimination_date ? fmtDate(week.elimination_date) : "por confirmar"),
+          ...(week.voting_closes_at
+            ? [
+                " · Cierra a las ",
+                h("strong", {}, new Date(week.voting_closes_at).toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit" })),
+              ]
+            : []),
         ]),
         countdown,
         immuneBlock,
