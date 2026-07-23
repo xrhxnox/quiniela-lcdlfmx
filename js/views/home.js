@@ -16,6 +16,42 @@ function photoOrInitials(p) {
   return h("div", { class: "photo" }, initials(p.name));
 }
 
+function formatCountdown(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return days > 0 ? `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s` : `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+}
+
+function countdownNode(closesAt, onClosed) {
+  const closesAtMs = new Date(closesAt).getTime();
+  const el = h("p", { style: "margin:0" });
+  let fired = false;
+  const render = () => {
+    const remaining = closesAtMs - Date.now();
+    if (remaining <= 0) {
+      clearAndAppend(el, [h("i", { class: "fa-solid fa-lock" }), " Votación cerrada"]);
+      if (!fired) {
+        fired = true;
+        onClosed?.();
+      }
+      return false;
+    }
+    clearAndAppend(el, [h("i", { class: "fa-solid fa-hourglass-half" }), ` Cierra en: `, h("strong", {}, formatCountdown(remaining))]);
+    return true;
+  };
+  const tick = () => {
+    if (!el.isConnected) return;
+    if (render()) setTimeout(tick, 1000);
+  };
+  render();
+  setTimeout(tick, 1000);
+  return el;
+}
+
 async function renderVotingWeek(container, week, profile) {
   const [nominations, immunities, myPred] = await Promise.all([
     getNominationsForWeek(week.id),

@@ -221,6 +221,12 @@ create table if not exists public.weeks (
   created_at timestamptz not null default now()
 );
 
+-- Corte automático de votación: si se define, nadie puede insertar/editar
+-- su predicción después de esta hora, sin importar cuándo el admin cierre
+-- la semana manualmente (evita que alguien vea el resultado en vivo y
+-- cambie su pick antes de que se confirme la eliminación).
+alter table public.weeks add column if not exists voting_closes_at timestamptz;
+
 -- ---------- INMUNES de la semana ----------
 create table if not exists public.immunities (
   week_id bigint not null references public.weeks(id) on delete cascade,
@@ -336,19 +342,36 @@ create policy "predictions_select" on public.predictions for select using (
 );
 
 -- insertar/editar tu propio pick, solo mientras la semana está en votación
+-- Y (si el admin definió voting_closes_at) solo antes de esa hora exacta,
+-- así el corte es automático y no depende de que el admin cierre a tiempo.
 drop policy if exists "predictions_insert_own" on public.predictions;
 create policy "predictions_insert_own" on public.predictions for insert with check (
   player_id = auth.uid()
-  and exists (select 1 from public.weeks w where w.id = week_id and w.status = 'voting_open')
+  and exists (
+    select 1 from public.weeks w
+    where w.id = week_id
+      and w.status = 'voting_open'
+      and (w.voting_closes_at is null or now() < w.voting_closes_at)
+  )
 );
 
 drop policy if exists "predictions_update_own" on public.predictions;
 create policy "predictions_update_own" on public.predictions for update using (
   player_id = auth.uid()
-  and exists (select 1 from public.weeks w where w.id = week_id and w.status = 'voting_open')
+  and exists (
+    select 1 from public.weeks w
+    where w.id = week_id
+      and w.status = 'voting_open'
+      and (w.voting_closes_at is null or now() < w.voting_closes_at)
+  )
 ) with check (
   player_id = auth.uid()
-  and exists (select 1 from public.weeks w where w.id = week_id and w.status = 'voting_open')
+  and exists (
+    select 1 from public.weeks w
+    where w.id = week_id
+      and w.status = 'voting_open'
+      and (w.voting_closes_at is null or now() < w.voting_closes_at)
+  )
 );
 
 -- =========================================================

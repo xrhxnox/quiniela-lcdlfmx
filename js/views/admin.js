@@ -30,6 +30,12 @@ import { ROOM_OPTIONS } from "../rooms.js";
 const STATUS_LABEL = { draft: "Borrador", voting_open: "Votación abierta", closed: "Cerrada" };
 const STATUS_BADGE = { draft: "gray", voting_open: "green", closed: "red" };
 
+function toLocalDatetimeInputValue(isoString) {
+  const d = new Date(isoString);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function roomSelect(currentValue) {
   const options = [...ROOM_OPTIONS];
   if (currentValue && !options.includes(currentValue)) options.push(currentValue);
@@ -350,6 +356,18 @@ async function renderWeekDetail(container, week, allParticipants) {
             value: week.elimination_date || "",
             onchange: async (e) => {
               await updateWeek(week.id, { elimination_date: e.target.value });
+            },
+          }),
+        ]),
+        h("div", {}, [
+          h("label", {}, "Cierre automático de votación"),
+          h("input", {
+            type: "datetime-local",
+            value: week.voting_closes_at ? toLocalDatetimeInputValue(week.voting_closes_at) : "",
+            onchange: async (e) => {
+              await updateWeek(week.id, {
+                voting_closes_at: e.target.value ? new Date(e.target.value).toISOString() : null,
+              });
             },
           }),
         ]),
