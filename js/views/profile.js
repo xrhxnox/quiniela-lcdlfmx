@@ -20,6 +20,8 @@ import { h, esc, initials, clearAndAppend } from "../utils.js";
 const PICK_TYPE_ICONS = {
   favorite: { icon: "fa-star", color: "var(--gold)" },
   hated: { icon: "fa-skull-crossbones", color: "var(--red)" },
+  surprise: { icon: "fa-face-surprise", color: "var(--violet)" },
+  disappointment: { icon: "fa-face-frown", color: "var(--slate)" },
 };
 
 function pickTypeIcon(type) {
@@ -254,6 +256,14 @@ async function renderProfileInternal(container, username) {
   const hatedT1 = legacyFavorites.find((f) => f.id === target.hated_season1_id) || null;
   const hatedT2 = legacyFavorites.find((f) => f.id === target.hated_season2_id) || null;
   const hatedT3 = legacyFavorites.find((f) => f.id === target.hated_season3_id) || null;
+  const surprise = participants.find((p) => p.id === target.surprise_participant_id) || null;
+  const disappointment = participants.find((p) => p.id === target.disappointment_participant_id) || null;
+  const surpriseT1 = legacyFavorites.find((f) => f.id === target.surprise_season1_id) || null;
+  const surpriseT2 = legacyFavorites.find((f) => f.id === target.surprise_season2_id) || null;
+  const surpriseT3 = legacyFavorites.find((f) => f.id === target.surprise_season3_id) || null;
+  const disappointmentT1 = legacyFavorites.find((f) => f.id === target.disappointment_season1_id) || null;
+  const disappointmentT2 = legacyFavorites.find((f) => f.id === target.disappointment_season2_id) || null;
+  const disappointmentT3 = legacyFavorites.find((f) => f.id === target.disappointment_season3_id) || null;
   const stats = computeStats(history, eliminatedSet);
   const badges = buildBadges(stats, favorite);
   const legacyRoomBadges = [target.legacy_room_t1, target.legacy_room_t2, target.legacy_room_t3]
@@ -291,9 +301,11 @@ async function renderProfileInternal(container, username) {
   // ---------- Favorito / odiado ----------
   const favHatedCard = h("div", { class: "card" }, [
     h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-calendar-days" }), " ", h("strong", {}, "Esta temporada")]),
-    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));max-width:380px" }, [
+    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(140px, 1fr))" }, [
       participantPickCard("Favorito", favorite, "favorite", counts, favorite ? currentNominationMap[favorite.id] : null),
       participantPickCard("Odiado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null),
+      participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null),
+      participantPickCard("Decepción", disappointment, "disappointment", counts, disappointment ? currentNominationMap[disappointment.id] : null),
     ]),
   ]);
 
@@ -315,7 +327,33 @@ async function renderProfileInternal(container, username) {
     ]),
   ]);
 
-  const cards = [headerCard, favHatedCard, legacyCard, legacyHatedCard, buildCompareCard(target, leaderboard)];
+  const legacySurpriseCard = h("div", { class: "card" }, [
+    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-face-surprise" }), " ", h("strong", {}, "Sorpresas de temporadas anteriores")]),
+    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
+      legacyPickCard("Temporada 1", surpriseT1),
+      legacyPickCard("Temporada 2", surpriseT2),
+      legacyPickCard("Temporada 3", surpriseT3),
+    ]),
+  ]);
+
+  const legacyDisappointmentCard = h("div", { class: "card" }, [
+    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-face-frown" }), " ", h("strong", {}, "Decepciones de temporadas anteriores")]),
+    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
+      legacyPickCard("Temporada 1", disappointmentT1),
+      legacyPickCard("Temporada 2", disappointmentT2),
+      legacyPickCard("Temporada 3", disappointmentT3),
+    ]),
+  ]);
+
+  const cards = [
+    headerCard,
+    favHatedCard,
+    legacyCard,
+    legacyHatedCard,
+    legacySurpriseCard,
+    legacyDisappointmentCard,
+    buildCompareCard(target, leaderboard),
+  ];
 
   // ---------- Historial ----------
   const historyRows = sortHistory(history).map((row) => {
@@ -472,6 +510,8 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
 
   const favSelect = pickSelect(profile.favorite_participant_id, participants);
   const hatedSelect = pickSelect(profile.hated_participant_id, participants);
+  const surpriseSelect = pickSelect(profile.surprise_participant_id, participants);
+  const disappointmentSelect = pickSelect(profile.disappointment_participant_id, participants);
 
   const roomSelect = h(
     "select",
@@ -499,6 +539,14 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
   const t1HatedSelect = legacySelect(1, profile.hated_season1_id);
   const t2HatedSelect = legacySelect(2, profile.hated_season2_id);
   const t3HatedSelect = legacySelect(3, profile.hated_season3_id);
+
+  const t1SurpriseSelect = legacySelect(1, profile.surprise_season1_id);
+  const t2SurpriseSelect = legacySelect(2, profile.surprise_season2_id);
+  const t3SurpriseSelect = legacySelect(3, profile.surprise_season3_id);
+
+  const t1DisappointmentSelect = legacySelect(1, profile.disappointment_season1_id);
+  const t2DisappointmentSelect = legacySelect(2, profile.disappointment_season2_id);
+  const t3DisappointmentSelect = legacySelect(3, profile.disappointment_season3_id);
 
   function legacyRoomSelect(season, currentValue) {
     const options = LEGACY_ROOM_OPTIONS[season];
@@ -559,6 +607,10 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
             clearFavorite: !favSelect.value,
             hated_participant_id: hatedSelect.value ? Number(hatedSelect.value) : undefined,
             clearHated: !hatedSelect.value,
+            surprise_participant_id: surpriseSelect.value ? Number(surpriseSelect.value) : undefined,
+            clearSurprise: !surpriseSelect.value,
+            disappointment_participant_id: disappointmentSelect.value ? Number(disappointmentSelect.value) : undefined,
+            clearDisappointment: !disappointmentSelect.value,
             favorite_room: roomSelect.value || null,
             fav_season1_id: t1Select.value ? Number(t1Select.value) : undefined,
             clearFavSeason1: !t1Select.value,
@@ -575,6 +627,18 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
             clearHatedSeason2: !t2HatedSelect.value,
             hated_season3_id: t3HatedSelect.value ? Number(t3HatedSelect.value) : undefined,
             clearHatedSeason3: !t3HatedSelect.value,
+            surprise_season1_id: t1SurpriseSelect.value ? Number(t1SurpriseSelect.value) : undefined,
+            clearSurpriseSeason1: !t1SurpriseSelect.value,
+            surprise_season2_id: t2SurpriseSelect.value ? Number(t2SurpriseSelect.value) : undefined,
+            clearSurpriseSeason2: !t2SurpriseSelect.value,
+            surprise_season3_id: t3SurpriseSelect.value ? Number(t3SurpriseSelect.value) : undefined,
+            clearSurpriseSeason3: !t3SurpriseSelect.value,
+            disappointment_season1_id: t1DisappointmentSelect.value ? Number(t1DisappointmentSelect.value) : undefined,
+            clearDisappointmentSeason1: !t1DisappointmentSelect.value,
+            disappointment_season2_id: t2DisappointmentSelect.value ? Number(t2DisappointmentSelect.value) : undefined,
+            clearDisappointmentSeason2: !t2DisappointmentSelect.value,
+            disappointment_season3_id: t3DisappointmentSelect.value ? Number(t3DisappointmentSelect.value) : undefined,
+            clearDisappointmentSeason3: !t3DisappointmentSelect.value,
             accent_color: selectedAccent,
           });
           successMsg.textContent = "¡Cambios guardados!";
@@ -600,24 +664,40 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [favSelect]),
     h("label", {}, "Odiado"),
     h("div", { style: "margin-bottom:14px" }, [hatedSelect]),
+    h("label", {}, "Sorpresa"),
+    h("div", { style: "margin-bottom:14px" }, [surpriseSelect]),
+    h("label", {}, "Decepción"),
+    h("div", { style: "margin-bottom:14px" }, [disappointmentSelect]),
     h("label", {}, "Cuarto favorito"),
     h("div", { style: "margin-bottom:14px" }, [roomSelect]),
     h("label", {}, "Favorito de Temporada 1"),
     h("div", { style: "margin-bottom:14px" }, [t1Select]),
     h("label", {}, "Odiado de Temporada 1"),
     h("div", { style: "margin-bottom:14px" }, [t1HatedSelect]),
+    h("label", {}, "Sorpresa de Temporada 1"),
+    h("div", { style: "margin-bottom:14px" }, [t1SurpriseSelect]),
+    h("label", {}, "Decepción de Temporada 1"),
+    h("div", { style: "margin-bottom:14px" }, [t1DisappointmentSelect]),
     h("label", {}, "Cuarto de Temporada 1 (Cielo o Infierno)"),
     h("div", { style: "margin-bottom:14px" }, [t1RoomSelect]),
     h("label", {}, "Favorito de Temporada 2"),
     h("div", { style: "margin-bottom:14px" }, [t2Select]),
     h("label", {}, "Odiado de Temporada 2"),
     h("div", { style: "margin-bottom:14px" }, [t2HatedSelect]),
+    h("label", {}, "Sorpresa de Temporada 2"),
+    h("div", { style: "margin-bottom:14px" }, [t2SurpriseSelect]),
+    h("label", {}, "Decepción de Temporada 2"),
+    h("div", { style: "margin-bottom:14px" }, [t2DisappointmentSelect]),
     h("label", {}, "Cuarto de Temporada 2 (Mar o Tierra)"),
     h("div", { style: "margin-bottom:14px" }, [t2RoomSelect]),
     h("label", {}, "Favorito de Temporada 3"),
     h("div", { style: "margin-bottom:14px" }, [t3Select]),
     h("label", {}, "Odiado de Temporada 3"),
     h("div", { style: "margin-bottom:14px" }, [t3HatedSelect]),
+    h("label", {}, "Sorpresa de Temporada 3"),
+    h("div", { style: "margin-bottom:14px" }, [t3SurpriseSelect]),
+    h("label", {}, "Decepción de Temporada 3"),
+    h("div", { style: "margin-bottom:14px" }, [t3DisappointmentSelect]),
     h("label", {}, "Cuarto de Temporada 3 (Día, Noche o Eclipse)"),
     h("div", { style: "margin-bottom:14px" }, [t3RoomSelect]),
     h("label", {}, "Color de tema"),

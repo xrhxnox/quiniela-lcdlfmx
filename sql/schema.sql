@@ -57,6 +57,8 @@ alter table public.profiles add column if not exists hated_participant_id bigint
 alter table public.profiles add column if not exists favorite_room text;
 alter table public.profiles add column if not exists avatar_url text;
 alter table public.profiles add column if not exists bio text;
+alter table public.profiles add column if not exists surprise_participant_id bigint references public.participants(id) on delete set null;
+alter table public.profiles add column if not exists disappointment_participant_id bigint references public.participants(id) on delete set null;
 
 -- ---------- FAVORITOS DE TEMPORADAS ANTERIORES (no son habitantes actuales) ----------
 create table if not exists public.legacy_favorites (
@@ -73,6 +75,12 @@ alter table public.profiles add column if not exists fav_season3_id bigint refer
 alter table public.profiles add column if not exists hated_season1_id bigint references public.legacy_favorites(id) on delete set null;
 alter table public.profiles add column if not exists hated_season2_id bigint references public.legacy_favorites(id) on delete set null;
 alter table public.profiles add column if not exists hated_season3_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists surprise_season1_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists surprise_season2_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists surprise_season3_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists disappointment_season1_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists disappointment_season2_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists disappointment_season3_id bigint references public.legacy_favorites(id) on delete set null;
 
 alter table public.legacy_favorites enable row level security;
 
@@ -103,6 +111,7 @@ drop function if exists public.update_my_profile(text, bigint, boolean, text, bi
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text);
+drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean);
 create or replace function public.update_my_profile(
   new_display_name text default null,
   new_favorite_participant_id bigint default null,
@@ -127,7 +136,23 @@ create or replace function public.update_my_profile(
   new_hated_season2_id bigint default null,
   clear_hated_season2 boolean default false,
   new_hated_season3_id bigint default null,
-  clear_hated_season3 boolean default false
+  clear_hated_season3 boolean default false,
+  new_surprise_participant_id bigint default null,
+  clear_surprise boolean default false,
+  new_disappointment_participant_id bigint default null,
+  clear_disappointment boolean default false,
+  new_surprise_season1_id bigint default null,
+  clear_surprise_season1 boolean default false,
+  new_surprise_season2_id bigint default null,
+  clear_surprise_season2 boolean default false,
+  new_surprise_season3_id bigint default null,
+  clear_surprise_season3 boolean default false,
+  new_disappointment_season1_id bigint default null,
+  clear_disappointment_season1 boolean default false,
+  new_disappointment_season2_id bigint default null,
+  clear_disappointment_season2 boolean default false,
+  new_disappointment_season3_id bigint default null,
+  clear_disappointment_season3 boolean default false
 )
 returns public.profiles
 language plpgsql
@@ -153,14 +178,22 @@ begin
     legacy_room_t3 = coalesce(new_legacy_room_t3, legacy_room_t3),
     hated_season1_id = case when clear_hated_season1 then null else coalesce(new_hated_season1_id, hated_season1_id) end,
     hated_season2_id = case when clear_hated_season2 then null else coalesce(new_hated_season2_id, hated_season2_id) end,
-    hated_season3_id = case when clear_hated_season3 then null else coalesce(new_hated_season3_id, hated_season3_id) end
+    hated_season3_id = case when clear_hated_season3 then null else coalesce(new_hated_season3_id, hated_season3_id) end,
+    surprise_participant_id = case when clear_surprise then null else coalesce(new_surprise_participant_id, surprise_participant_id) end,
+    disappointment_participant_id = case when clear_disappointment then null else coalesce(new_disappointment_participant_id, disappointment_participant_id) end,
+    surprise_season1_id = case when clear_surprise_season1 then null else coalesce(new_surprise_season1_id, surprise_season1_id) end,
+    surprise_season2_id = case when clear_surprise_season2 then null else coalesce(new_surprise_season2_id, surprise_season2_id) end,
+    surprise_season3_id = case when clear_surprise_season3 then null else coalesce(new_surprise_season3_id, surprise_season3_id) end,
+    disappointment_season1_id = case when clear_disappointment_season1 then null else coalesce(new_disappointment_season1_id, disappointment_season1_id) end,
+    disappointment_season2_id = case when clear_disappointment_season2 then null else coalesce(new_disappointment_season2_id, disappointment_season2_id) end,
+    disappointment_season3_id = case when clear_disappointment_season3 then null else coalesce(new_disappointment_season3_id, disappointment_season3_id) end
   where id = auth.uid()
   returning * into result;
   return result;
 end;
 $$;
 
-grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean) to authenticated;
+grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean) to authenticated;
 
 -- ---------- SEMANAS ----------
 create table if not exists public.weeks (
