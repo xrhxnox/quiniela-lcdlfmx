@@ -33,7 +33,7 @@ export async function renderParticipantes(container) {
         ]),
         h("div", { class: "points" }, `Nominado ${counts[p.id] || 0} veces`),
         h("div", { class: "points" }, `Líder ${leaderCounts[p.id] || 0} veces`),
-        h("div", { class: "points" }, `Salvación ${savedCounts[p.id] || 0} veces`),
+        h("div", { class: "points" }, `Salvado ${savedCounts[p.id] || 0} veces`),
       ]),
     ]);
   });
