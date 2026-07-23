@@ -58,11 +58,33 @@ alter table public.profiles add column if not exists favorite_room text;
 alter table public.profiles add column if not exists avatar_url text;
 alter table public.profiles add column if not exists bio text;
 
+-- ---------- FAVORITOS DE TEMPORADAS ANTERIORES (no son habitantes actuales) ----------
+create table if not exists public.legacy_favorites (
+  id bigint generated always as identity primary key,
+  season int not null check (season in (1, 2, 3)),
+  name text not null,
+  photo_url text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.profiles add column if not exists fav_season1_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists fav_season2_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists fav_season3_id bigint references public.legacy_favorites(id) on delete set null;
+
+alter table public.legacy_favorites enable row level security;
+
+drop policy if exists "legacy_favorites_select_all" on public.legacy_favorites;
+create policy "legacy_favorites_select_all" on public.legacy_favorites for select using (true);
+drop policy if exists "legacy_favorites_write_admin" on public.legacy_favorites;
+create policy "legacy_favorites_write_admin" on public.legacy_favorites for all
+  using (public.is_admin()) with check (public.is_admin());
+
 -- Permite que cada quien actualice SOLO su propio nombre, favorito, odiado,
--- cuarto favorito, foto, bio y color (nunca su rol), sin necesitar una
--- política de UPDATE abierta en profiles.
+-- cuarto favorito, foto, bio, color y favoritos de temporadas anteriores
+-- (nunca su rol), sin necesitar una política de UPDATE abierta en profiles.
 drop function if exists public.update_my_profile(text, bigint, boolean, text);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text);
+drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text);
 create or replace function public.update_my_profile(
   new_display_name text default null,
   new_favorite_participant_id bigint default null,
@@ -72,7 +94,13 @@ create or replace function public.update_my_profile(
   clear_hated boolean default false,
   new_favorite_room text default null,
   new_avatar_url text default null,
-  new_bio text default null
+  new_bio text default null,
+  new_fav_season1_id bigint default null,
+  clear_fav_season1 boolean default false,
+  new_fav_season2_id bigint default null,
+  clear_fav_season2 boolean default false,
+  new_fav_season3_id bigint default null,
+  clear_fav_season3 boolean default false
 )
 returns public.profiles
 language plpgsql
@@ -89,14 +117,17 @@ begin
     hated_participant_id = case when clear_hated then null else coalesce(new_hated_participant_id, hated_participant_id) end,
     favorite_room = coalesce(new_favorite_room, favorite_room),
     avatar_url = coalesce(new_avatar_url, avatar_url),
-    bio = coalesce(new_bio, bio)
+    bio = coalesce(new_bio, bio),
+    fav_season1_id = case when clear_fav_season1 then null else coalesce(new_fav_season1_id, fav_season1_id) end,
+    fav_season2_id = case when clear_fav_season2 then null else coalesce(new_fav_season2_id, fav_season2_id) end,
+    fav_season3_id = case when clear_fav_season3 then null else coalesce(new_fav_season3_id, fav_season3_id) end
   where id = auth.uid()
   returning * into result;
   return result;
 end;
 $$;
 
-grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text) to authenticated;
+grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean) to authenticated;
 
 -- ---------- SEMANAS ----------
 create table if not exists public.weeks (

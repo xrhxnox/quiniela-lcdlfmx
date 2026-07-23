@@ -35,6 +35,25 @@ export async function uploadParticipantPhoto(file) {
   return data.publicUrl;
 }
 
+// ---------- Favoritos de temporadas anteriores (no son habitantes actuales) ----------
+export async function getLegacyFavorites({ season } = {}) {
+  let q = supabase.from("legacy_favorites").select("*").order("name");
+  if (season) q = q.eq("season", season);
+  return unwrap(await q);
+}
+
+export async function createLegacyFavorite({ season, name, photo_url }) {
+  return unwrap(await supabase.from("legacy_favorites").insert({ season, name, photo_url }).select().single());
+}
+
+export async function updateLegacyFavorite(id, fields) {
+  return unwrap(await supabase.from("legacy_favorites").update(fields).eq("id", id).select().single());
+}
+
+export async function deleteLegacyFavorite(id) {
+  return unwrap(await supabase.from("legacy_favorites").delete().eq("id", id));
+}
+
 export async function getNominationCounts() {
   const rows = unwrap(await supabase.from("nomination_counts").select("*"));
   const map = {};
@@ -262,6 +281,12 @@ export async function updateMyProfile({
   favorite_room,
   avatar_url,
   bio,
+  fav_season1_id,
+  clearFavSeason1,
+  fav_season2_id,
+  clearFavSeason2,
+  fav_season3_id,
+  clearFavSeason3,
 } = {}) {
   return unwrap(
     await supabase.rpc("update_my_profile", {
@@ -274,6 +299,12 @@ export async function updateMyProfile({
       new_favorite_room: favorite_room ?? null,
       new_avatar_url: avatar_url ?? null,
       new_bio: bio ?? null,
+      new_fav_season1_id: fav_season1_id ?? null,
+      clear_fav_season1: clearFavSeason1 ?? false,
+      new_fav_season2_id: fav_season2_id ?? null,
+      clear_fav_season2: clearFavSeason2 ?? false,
+      new_fav_season3_id: fav_season3_id ?? null,
+      clear_fav_season3: clearFavSeason3 ?? false,
     })
   );
 }

@@ -6,6 +6,7 @@ import {
   uploadMyAvatar,
   getProfileByUsername,
   getLeaderboard,
+  getLegacyFavorites,
 } from "../data.js";
 import { ACCENTS, getAccentKey, applyAccent } from "../theme.js";
 import { ROOM_OPTIONS } from "../rooms.js";
@@ -103,6 +104,28 @@ const ROOM_BADGE_STYLES = {
   Malibú: { color: "#e0574c", icon: "fa-heart" },
 };
 
+function legacyPickCard(label, fav) {
+  if (!fav) {
+    return h("div", { class: "nominee-card", style: "cursor:default" }, [
+      h("div", { class: "photo" }, h("i", { class: "fa-solid fa-clock-rotate-left" })),
+      h("div", { class: "info" }, [
+        h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
+        h("div", { class: "name" }, "Sin definir"),
+      ]),
+    ]);
+  }
+  const photo = fav.photo_url
+    ? h("div", { class: "photo", style: `background-image:url('${esc(fav.photo_url)}')` })
+    : h("div", { class: "photo" }, initials(fav.name));
+  return h("div", { class: "nominee-card", style: "cursor:default" }, [
+    photo,
+    h("div", { class: "info" }, [
+      h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
+      h("div", { class: "name" }, fav.name),
+    ]),
+  ]);
+}
+
 function teamBadgeNode(room) {
   if (!room) return null;
   const style = ROOM_BADGE_STYLES[room] || { color: "#e8c05a", icon: "fa-umbrella-beach" };
@@ -130,11 +153,12 @@ async function renderProfileInternal(container, username, targetHint, editable, 
     return;
   }
 
-  const [participants, history, eliminations, leaderboard] = await Promise.all([
+  const [participants, history, eliminations, leaderboard, legacyFavorites] = await Promise.all([
     getParticipants(),
     getMyPredictionHistory(target.id),
     getAllEliminationsWithWeeks(),
     getLeaderboard(),
+    getLegacyFavorites(),
   ]);
 
   const refresh = async (updatedProfile) => {
@@ -148,6 +172,9 @@ async function renderProfileInternal(container, username, targetHint, editable, 
   const points = rankIndex >= 0 ? leaderboard[rankIndex].points : 0;
   const favorite = participants.find((p) => p.id === target.favorite_participant_id) || null;
   const hated = participants.find((p) => p.id === target.hated_participant_id) || null;
+  const favT1 = legacyFavorites.find((f) => f.id === target.fav_season1_id) || null;
+  const favT2 = legacyFavorites.find((f) => f.id === target.fav_season2_id) || null;
+  const favT3 = legacyFavorites.find((f) => f.id === target.fav_season3_id) || null;
   const stats = computeStats(history, eliminatedSet);
   const badges = buildBadges(stats, favorite);
 
@@ -184,8 +211,17 @@ async function renderProfileInternal(container, username, targetHint, editable, 
     ]),
   ]);
 
-  const cards = [headerCard, favHatedCard];
-  if (editable) cards.push(buildEditCard(target, participants, refresh));
+  const legacyCard = h("div", { class: "card" }, [
+    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-clock-rotate-left" }), " ", h("strong", {}, "Favoritos de temporadas anteriores")]),
+    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
+      legacyPickCard("Temporada 1", favT1),
+      legacyPickCard("Temporada 2", favT2),
+      legacyPickCard("Temporada 3", favT3),
+    ]),
+  ]);
+
+  const cards = [headerCard, favHatedCard, legacyCard];
+  if (editable) cards.push(buildEditCard(target, participants, legacyFavorites, refresh));
   cards.push(buildCompareCard(target, leaderboard));
 
   // ---------- Historial ----------
@@ -323,7 +359,7 @@ function renderCompareResult(box, target, other, myHistory, theirHistory, elimin
   );
 }
 
-function buildEditCard(profile, participants, refresh) {
+function buildEditCard(profile, participants, legacyFavorites, refresh) {
   const nameInput = h("input", { type: "text", value: profile.display_name });
   const errMsg = h("span", { class: "error-msg" });
   const nameBtn = h(
@@ -467,6 +503,44 @@ function buildEditCard(profile, participants, refresh) {
     "Guardar"
   );
 
+  function legacySelect(season, currentId) {
+    const options = legacyFavorites.filter((f) => f.season === season);
+    return h(
+      "select",
+      {},
+      [h("option", { value: "" }, "Sin elegir")].concat(
+        options.map((f) => h("option", { value: f.id, selected: currentId === f.id ? "selected" : undefined }, f.name))
+      )
+    );
+  }
+
+  function legacySaveField({ season, currentId, valueKey, clearKey }) {
+    const select = legacySelect(season, currentId);
+    const btn = h(
+      "button",
+      {
+        class: "btn small",
+        onclick: async () => {
+          btn.disabled = true;
+          try {
+            const value = select.value;
+            const updated = await updateMyProfile(value ? { [valueKey]: Number(value) } : { [clearKey]: true });
+            await refresh(updated);
+          } catch (e) {
+            errMsg.textContent = "Error al guardar";
+            btn.disabled = false;
+          }
+        },
+      },
+      "Guardar"
+    );
+    return h("div", { class: "row-flex", style: "margin-bottom:14px" }, [select, btn]);
+  }
+
+  const t1Field = legacySaveField({ season: 1, currentId: profile.fav_season1_id, valueKey: "fav_season1_id", clearKey: "clearFavSeason1" });
+  const t2Field = legacySaveField({ season: 2, currentId: profile.fav_season2_id, valueKey: "fav_season2_id", clearKey: "clearFavSeason2" });
+  const t3Field = legacySaveField({ season: 3, currentId: profile.fav_season3_id, valueKey: "fav_season3_id", clearKey: "clearFavSeason3" });
+
   const swatchWrap = h("div", { class: "swatches", style: "gap:12px" });
   Object.entries(ACCENTS).forEach(([key, theme]) => {
     swatchWrap.appendChild(
@@ -502,6 +576,12 @@ function buildEditCard(profile, participants, refresh) {
     h("div", { class: "row-flex", style: "margin-bottom:14px" }, [hatedSelect, hatedBtn]),
     h("label", {}, "Cuarto favorito"),
     h("div", { class: "row-flex", style: "margin-bottom:14px" }, [roomSelect, roomBtn]),
+    h("label", {}, "Favorito de Temporada 1"),
+    t1Field,
+    h("label", {}, "Favorito de Temporada 2"),
+    t2Field,
+    h("label", {}, "Favorito de Temporada 3"),
+    t3Field,
     h("label", {}, "Color de tema"),
     swatchWrap,
     errMsg,

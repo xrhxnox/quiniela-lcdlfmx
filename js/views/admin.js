@@ -19,6 +19,10 @@ import {
   getAllProfiles,
   setProfileRole,
   updateProfileDisplayName,
+  getLegacyFavorites,
+  createLegacyFavorite,
+  updateLegacyFavorite,
+  deleteLegacyFavorite,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 import { ROOM_OPTIONS } from "../rooms.js";
@@ -456,6 +460,104 @@ async function renderUsersAdmin(sub) {
 }
 
 // ============================================================
+// FAVORITOS DE TEMPORADAS ANTERIORES
+// ============================================================
+async function renderLegacyAdmin(sub) {
+  clearAndAppend(sub, h("div", { class: "loading" }, "Cargando…"));
+  const favorites = await getLegacyFavorites();
+
+  const seasonSelect = h(
+    "select",
+    { style: "max-width:120px" },
+    [1, 2, 3].map((s) => h("option", { value: s }, `Temporada ${s}`))
+  );
+  const nameInput = h("input", { type: "text", placeholder: "Nombre" });
+  const fileInput = h("input", { type: "file", accept: "image/*" });
+  const addErr = h("div", { class: "error-msg" });
+  const addBtn = h(
+    "button",
+    {
+      class: "btn small",
+      onclick: async () => {
+        if (!nameInput.value.trim()) {
+          addErr.textContent = "El nombre es obligatorio.";
+          return;
+        }
+        addBtn.disabled = true;
+        addBtn.textContent = "Guardando…";
+        try {
+          let photo_url = null;
+          if (fileInput.files[0]) photo_url = await uploadParticipantPhoto(fileInput.files[0]);
+          await createLegacyFavorite({ season: Number(seasonSelect.value), name: nameInput.value.trim(), photo_url });
+          await renderLegacyAdmin(sub);
+        } catch (e) {
+          addErr.textContent = "No se pudo guardar. " + (e.message || "");
+        } finally {
+          addBtn.disabled = false;
+          addBtn.textContent = "Agregar";
+        }
+      },
+    },
+    "Agregar"
+  );
+
+  const addForm = h("div", { class: "card" }, [
+    h("p", { style: "margin-top:0", class: "muted" }, "Estos íconos son solo para elegir como favorito en el perfil — no cuentan como habitantes de la temporada actual."),
+    h("div", { class: "field-row" }, [
+      h("div", {}, [h("label", {}, "Temporada"), seasonSelect]),
+      h("div", {}, [h("label", {}, "Nombre"), nameInput]),
+      h("div", {}, [h("label", {}, "Foto"), fileInput]),
+    ]),
+    addBtn,
+    addErr,
+  ]);
+
+  const groups = [1, 2, 3].map((season) => {
+    const items = favorites
+      .filter((f) => f.season === season)
+      .map((f) => {
+        const nameField = h("input", { type: "text", value: f.name, style: "max-width:160px" });
+        const saveBtn = h(
+          "button",
+          {
+            class: "btn small secondary",
+            onclick: async () => {
+              await updateLegacyFavorite(f.id, { name: nameField.value.trim() });
+              await renderLegacyAdmin(sub);
+            },
+          },
+          "Guardar"
+        );
+        const delBtn = h(
+          "button",
+          {
+            class: "btn small danger",
+            onclick: async () => {
+              if (!confirm(`¿Borrar a ${f.name} (Temporada ${f.season})?`)) return;
+              await deleteLegacyFavorite(f.id);
+              await renderLegacyAdmin(sub);
+            },
+          },
+          "Borrar"
+        );
+        const avatar = f.photo_url
+          ? h("div", { class: "avatar-sm", style: `background-image:url('${esc(f.photo_url)}')` })
+          : h("div", { class: "avatar-sm" }, initials(f.name));
+        return h("div", { class: "list-item" }, [
+          h("div", { class: "row-flex" }, [avatar, nameField]),
+          h("div", { class: "row-flex" }, [saveBtn, delBtn]),
+        ]);
+      });
+    return h("div", {}, [
+      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, `Temporada ${season}`)),
+      h("div", { class: "card" }, items.length ? items : [h("p", { class: "muted" }, "Sin favoritos todavía.")]),
+    ]);
+  });
+
+  clearAndAppend(sub, h("div", {}, [addForm, ...groups]));
+}
+
+// ============================================================
 // MAIN
 // ============================================================
 export async function renderAdmin(container) {
@@ -466,6 +568,7 @@ export async function renderAdmin(container) {
   const tabs = [
     { key: "weeks", label: "Semanas", render: renderWeeksAdmin },
     { key: "participants", label: "Participantes", render: renderParticipantsAdmin },
+    { key: "legacy", label: "Favoritos históricos", render: renderLegacyAdmin },
     { key: "users", label: "Usuarios", render: renderUsersAdmin },
   ];
 
