@@ -405,7 +405,8 @@ table.data td.num { font-weight: 700; }
 .player-link:hover { background: var(--accent); color: var(--accent-text); }
 .table-wrap { overflow-x: auto; }
 
-.row-flex { display: flex; align-items: center; gap: 10px; }
+.row-flex { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+input[type=file] { max-width: 100%; }
 .avatar-sm {
   width: 34px; height: 34px; border-radius: 50%;
   background: #000 center/cover no-repeat;
