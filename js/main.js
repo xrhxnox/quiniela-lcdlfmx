@@ -75,7 +75,7 @@ function renderNav() {
           location.reload();
         },
       },
-      [h("i", { class: "fa-solid fa-right-from-bracket" }), " Cerrar Sesión"]
+      [h("i", { class: "fa-solid fa-right-from-bracket" }), " Salir"]
     )
   );
 }
