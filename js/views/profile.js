@@ -17,10 +17,22 @@ import { ACCENTS, getAccentKey, applyAccent } from "../theme.js";
 import { ROOM_OPTIONS, LEGACY_ROOM_OPTIONS } from "../rooms.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
-function participantPickCard(label, participant, iconClass, counts, currentNomination) {
+const PICK_TYPE_ICONS = {
+  favorite: { icon: "fa-star", color: "var(--gold)" },
+  hated: { icon: "fa-skull-crossbones", color: "var(--red)" },
+};
+
+function pickTypeIcon(type) {
+  const style = PICK_TYPE_ICONS[type];
+  if (!style) return null;
+  return h("div", { class: "pick-type-icon", style: `color:${style.color}` }, h("i", { class: `fa-solid ${style.icon}` }));
+}
+
+function participantPickCard(label, participant, type, counts, currentNomination) {
   if (!participant) {
     return h("div", { class: "nominee-card", style: "cursor:default" }, [
-      h("div", { class: "photo" }, h("i", { class: `fa-solid ${iconClass}` })),
+      pickTypeIcon(type),
+      h("div", { class: "photo" }, h("i", { class: `fa-solid ${PICK_TYPE_ICONS[type]?.icon || "fa-user"}` })),
       h("div", { class: "info" }, [
         h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
         h("div", { class: "name" }, "Sin definir"),
@@ -42,6 +54,7 @@ function participantPickCard(label, participant, iconClass, counts, currentNomin
   }
 
   return h("div", { class: "nominee-card", style: "cursor:default" }, [
+    pickTypeIcon(type),
     photo,
     h("div", { class: "info" }, [
       h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
@@ -124,9 +137,10 @@ const ROOM_BADGE_STYLES = {
   Malibú: { color: "#e0574c", icon: "fa-heart" },
 };
 
-function legacyPickCard(label, fav) {
+function legacyPickCard(label, fav, type) {
   if (!fav) {
     return h("div", { class: "nominee-card", style: "cursor:default" }, [
+      pickTypeIcon(type),
       h("div", { class: "photo" }, h("i", { class: "fa-solid fa-clock-rotate-left" })),
       h("div", { class: "info" }, [
         h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
@@ -138,6 +152,7 @@ function legacyPickCard(label, fav) {
     ? h("div", { class: "photo", style: `background-image:url('${esc(fav.photo_url)}')` })
     : h("div", { class: "photo" }, initials(fav.name));
   return h("div", { class: "nominee-card", style: "cursor:default" }, [
+    pickTypeIcon(type),
     photo,
     h("div", { class: "info" }, [
       h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
@@ -238,6 +253,9 @@ async function renderProfileInternal(container, username) {
   const favT1 = legacyFavorites.find((f) => f.id === target.fav_season1_id) || null;
   const favT2 = legacyFavorites.find((f) => f.id === target.fav_season2_id) || null;
   const favT3 = legacyFavorites.find((f) => f.id === target.fav_season3_id) || null;
+  const hatedT1 = legacyFavorites.find((f) => f.id === target.hated_season1_id) || null;
+  const hatedT2 = legacyFavorites.find((f) => f.id === target.hated_season2_id) || null;
+  const hatedT3 = legacyFavorites.find((f) => f.id === target.hated_season3_id) || null;
   const stats = computeStats(history, eliminatedSet);
   const badges = buildBadges(stats, favorite);
   const legacyRoomBadges = [target.legacy_room_t1, target.legacy_room_t2, target.legacy_room_t3]
@@ -275,21 +293,30 @@ async function renderProfileInternal(container, username) {
   // ---------- Favorito / odiado ----------
   const favHatedCard = h("div", { class: "card" }, [
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));max-width:380px" }, [
-      participantPickCard("Favorito", favorite, "fa-heart", counts, favorite ? currentNominationMap[favorite.id] : null),
-      participantPickCard("Odiado", hated, "fa-face-angry", counts, hated ? currentNominationMap[hated.id] : null),
+      participantPickCard("Favorito", favorite, "favorite", counts, favorite ? currentNominationMap[favorite.id] : null),
+      participantPickCard("Odiado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null),
     ]),
   ]);
 
   const legacyCard = h("div", { class: "card" }, [
     h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-clock-rotate-left" }), " ", h("strong", {}, "Favoritos de temporadas anteriores")]),
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
-      legacyPickCard("Temporada 1", favT1),
-      legacyPickCard("Temporada 2", favT2),
-      legacyPickCard("Temporada 3", favT3),
+      legacyPickCard("Temporada 1", favT1, "favorite"),
+      legacyPickCard("Temporada 2", favT2, "favorite"),
+      legacyPickCard("Temporada 3", favT3, "favorite"),
     ]),
   ]);
 
-  const cards = [headerCard, favHatedCard, legacyCard, buildCompareCard(target, leaderboard)];
+  const legacyHatedCard = h("div", { class: "card" }, [
+    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-skull-crossbones" }), " ", h("strong", {}, "Odiados de temporadas anteriores")]),
+    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
+      legacyPickCard("Temporada 1", hatedT1, "hated"),
+      legacyPickCard("Temporada 2", hatedT2, "hated"),
+      legacyPickCard("Temporada 3", hatedT3, "hated"),
+    ]),
+  ]);
+
+  const cards = [headerCard, favHatedCard, legacyCard, legacyHatedCard, buildCompareCard(target, leaderboard)];
 
   // ---------- Historial ----------
   const historyRows = sortHistory(history).map((row) => {
@@ -470,6 +497,10 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
   const t2Select = legacySelect(2, profile.fav_season2_id);
   const t3Select = legacySelect(3, profile.fav_season3_id);
 
+  const t1HatedSelect = legacySelect(1, profile.hated_season1_id);
+  const t2HatedSelect = legacySelect(2, profile.hated_season2_id);
+  const t3HatedSelect = legacySelect(3, profile.hated_season3_id);
+
   function legacyRoomSelect(season, currentValue) {
     const options = LEGACY_ROOM_OPTIONS[season];
     return h(
@@ -539,6 +570,12 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
             legacy_room_t1: t1RoomSelect.value || undefined,
             legacy_room_t2: t2RoomSelect.value || undefined,
             legacy_room_t3: t3RoomSelect.value || undefined,
+            hated_season1_id: t1HatedSelect.value ? Number(t1HatedSelect.value) : undefined,
+            clearHatedSeason1: !t1HatedSelect.value,
+            hated_season2_id: t2HatedSelect.value ? Number(t2HatedSelect.value) : undefined,
+            clearHatedSeason2: !t2HatedSelect.value,
+            hated_season3_id: t3HatedSelect.value ? Number(t3HatedSelect.value) : undefined,
+            clearHatedSeason3: !t3HatedSelect.value,
             accent_color: selectedAccent,
           });
           successMsg.textContent = "¡Cambios guardados!";
@@ -568,14 +605,20 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [roomSelect]),
     h("label", {}, "Favorito de Temporada 1"),
     h("div", { style: "margin-bottom:14px" }, [t1Select]),
+    h("label", {}, "Odiado de Temporada 1"),
+    h("div", { style: "margin-bottom:14px" }, [t1HatedSelect]),
     h("label", {}, "Cuarto de Temporada 1 (Cielo o Infierno)"),
     h("div", { style: "margin-bottom:14px" }, [t1RoomSelect]),
     h("label", {}, "Favorito de Temporada 2"),
     h("div", { style: "margin-bottom:14px" }, [t2Select]),
+    h("label", {}, "Odiado de Temporada 2"),
+    h("div", { style: "margin-bottom:14px" }, [t2HatedSelect]),
     h("label", {}, "Cuarto de Temporada 2 (Mar o Tierra)"),
     h("div", { style: "margin-bottom:14px" }, [t2RoomSelect]),
     h("label", {}, "Favorito de Temporada 3"),
     h("div", { style: "margin-bottom:14px" }, [t3Select]),
+    h("label", {}, "Odiado de Temporada 3"),
+    h("div", { style: "margin-bottom:14px" }, [t3HatedSelect]),
     h("label", {}, "Cuarto de Temporada 3 (Día, Noche o Eclipse)"),
     h("div", { style: "margin-bottom:14px" }, [t3RoomSelect]),
     h("label", {}, "Color de tema"),

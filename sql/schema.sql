@@ -70,6 +70,9 @@ create table if not exists public.legacy_favorites (
 alter table public.profiles add column if not exists fav_season1_id bigint references public.legacy_favorites(id) on delete set null;
 alter table public.profiles add column if not exists fav_season2_id bigint references public.legacy_favorites(id) on delete set null;
 alter table public.profiles add column if not exists fav_season3_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists hated_season1_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists hated_season2_id bigint references public.legacy_favorites(id) on delete set null;
+alter table public.profiles add column if not exists hated_season3_id bigint references public.legacy_favorites(id) on delete set null;
 
 alter table public.legacy_favorites enable row level security;
 
@@ -99,6 +102,7 @@ drop function if exists public.update_my_profile(text, bigint, boolean, text);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean);
+drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text);
 create or replace function public.update_my_profile(
   new_display_name text default null,
   new_favorite_participant_id bigint default null,
@@ -117,7 +121,13 @@ create or replace function public.update_my_profile(
   clear_fav_season3 boolean default false,
   new_legacy_room_t1 text default null,
   new_legacy_room_t2 text default null,
-  new_legacy_room_t3 text default null
+  new_legacy_room_t3 text default null,
+  new_hated_season1_id bigint default null,
+  clear_hated_season1 boolean default false,
+  new_hated_season2_id bigint default null,
+  clear_hated_season2 boolean default false,
+  new_hated_season3_id bigint default null,
+  clear_hated_season3 boolean default false
 )
 returns public.profiles
 language plpgsql
@@ -140,14 +150,17 @@ begin
     fav_season3_id = case when clear_fav_season3 then null else coalesce(new_fav_season3_id, fav_season3_id) end,
     legacy_room_t1 = coalesce(new_legacy_room_t1, legacy_room_t1),
     legacy_room_t2 = coalesce(new_legacy_room_t2, legacy_room_t2),
-    legacy_room_t3 = coalesce(new_legacy_room_t3, legacy_room_t3)
+    legacy_room_t3 = coalesce(new_legacy_room_t3, legacy_room_t3),
+    hated_season1_id = case when clear_hated_season1 then null else coalesce(new_hated_season1_id, hated_season1_id) end,
+    hated_season2_id = case when clear_hated_season2 then null else coalesce(new_hated_season2_id, hated_season2_id) end,
+    hated_season3_id = case when clear_hated_season3 then null else coalesce(new_hated_season3_id, hated_season3_id) end
   where id = auth.uid()
   returning * into result;
   return result;
 end;
 $$;
 
-grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text) to authenticated;
+grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean) to authenticated;
 
 -- ---------- SEMANAS ----------
 create table if not exists public.weeks (

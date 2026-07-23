@@ -290,6 +290,12 @@ export async function updateMyProfile({
   legacy_room_t1,
   legacy_room_t2,
   legacy_room_t3,
+  hated_season1_id,
+  clearHatedSeason1,
+  hated_season2_id,
+  clearHatedSeason2,
+  hated_season3_id,
+  clearHatedSeason3,
 } = {}) {
   return unwrap(
     await supabase.rpc("update_my_profile", {
@@ -311,6 +317,12 @@ export async function updateMyProfile({
       new_legacy_room_t1: legacy_room_t1 ?? null,
       new_legacy_room_t2: legacy_room_t2 ?? null,
       new_legacy_room_t3: legacy_room_t3 ?? null,
+      new_hated_season1_id: hated_season1_id ?? null,
+      clear_hated_season1: clearHatedSeason1 ?? false,
+      new_hated_season2_id: hated_season2_id ?? null,
+      clear_hated_season2: clearHatedSeason2 ?? false,
+      new_hated_season3_id: hated_season3_id ?? null,
+      clear_hated_season3: clearHatedSeason3 ?? false,
     })
   );
 }
