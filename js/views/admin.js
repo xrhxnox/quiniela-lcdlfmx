@@ -99,13 +99,26 @@ async function renderParticipantsAdmin(sub) {
   const items = participants.map((p) => {
     const nameField = h("input", { type: "text", value: p.name, style: "max-width:160px" });
     const roomField = roomSelect(p.room);
+    const photoField = h("input", { type: "file", accept: "image/*", style: "max-width:160px" });
+    const itemErr = h("div", { class: "error-msg" });
     const saveBtn = h(
       "button",
       {
         class: "btn small secondary",
         onclick: async () => {
-          await updateParticipant(p.id, { name: nameField.value.trim(), room: roomField.value || null });
-          await renderParticipantsAdmin(sub);
+          itemErr.textContent = "";
+          saveBtn.disabled = true;
+          saveBtn.textContent = "Guardando…";
+          try {
+            const fields = { name: nameField.value.trim(), room: roomField.value || null };
+            if (photoField.files[0]) fields.photo_url = await uploadParticipantPhoto(photoField.files[0]);
+            await updateParticipant(p.id, fields);
+            await renderParticipantsAdmin(sub);
+          } catch (e) {
+            itemErr.textContent = "No se pudo guardar. " + (e.message || "");
+            saveBtn.disabled = false;
+            saveBtn.textContent = "Guardar";
+          }
         },
       },
       "Guardar"
@@ -142,9 +155,11 @@ async function renderParticipantsAdmin(sub) {
         avatar,
         nameField,
         roomField,
+        photoField,
         p.active ? h("span", { class: "badge green" }, "activo") : h("span", { class: "badge red" }, "eliminado"),
       ]),
       h("div", { class: "row-flex" }, [saveBtn, toggleBtn, delBtn]),
+      itemErr,
     ]);
   });
 
