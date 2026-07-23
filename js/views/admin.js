@@ -569,13 +569,26 @@ async function renderLegacyAdmin(sub) {
       .filter((f) => f.season === season)
       .map((f) => {
         const nameField = h("input", { type: "text", value: f.name, style: "max-width:160px" });
+        const photoField = h("input", { type: "file", accept: "image/*", style: "max-width:160px" });
+        const itemErr = h("div", { class: "error-msg" });
         const saveBtn = h(
           "button",
           {
             class: "btn small secondary",
             onclick: async () => {
-              await updateLegacyFavorite(f.id, { name: nameField.value.trim() });
-              await renderLegacyAdmin(sub);
+              itemErr.textContent = "";
+              saveBtn.disabled = true;
+              saveBtn.textContent = "Guardando…";
+              try {
+                const fields = { name: nameField.value.trim() };
+                if (photoField.files[0]) fields.photo_url = await uploadParticipantPhoto(photoField.files[0]);
+                await updateLegacyFavorite(f.id, fields);
+                await renderLegacyAdmin(sub);
+              } catch (e) {
+                itemErr.textContent = "No se pudo guardar. " + (e.message || "");
+                saveBtn.disabled = false;
+                saveBtn.textContent = "Guardar";
+              }
             },
           },
           "Guardar"
@@ -596,8 +609,9 @@ async function renderLegacyAdmin(sub) {
           ? h("div", { class: "avatar-sm", style: `background-image:url('${esc(f.photo_url)}')` })
           : h("div", { class: "avatar-sm" }, initials(f.name));
         return h("div", { class: "list-item" }, [
-          h("div", { class: "row-flex" }, [avatar, nameField]),
+          h("div", { class: "row-flex" }, [avatar, nameField, photoField]),
           h("div", { class: "row-flex" }, [saveBtn, delBtn]),
+          itemErr,
         ]);
       });
     return h("div", {}, [
