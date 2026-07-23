@@ -182,7 +182,7 @@ const LEGACY_ROOM_BADGE_STYLES = {
   Noche: { color: "#4338ca", icon: "fa-moon" },
   Eclipse: { color: "#ff8000", icon: "fa-circle-half-stroke" },
   "Solo Wendy Guevara": { color: "#f472b6", icon: "fa-transgender" },
-  "Gomita Super Buena Onda": { color: "#22c55e", icon: "fa-thumbs-up" },
+  "Gomita Super Buena Onda": { color: "#fc03d3", icon: "fa-poo" },
 };
 
 function legacyRoomBadgeNode(value) {
