@@ -114,11 +114,11 @@ header.topbar .user-chip strong {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid transparent;
+  border: 2px solid rgba(255,255,255,0.15);
   padding: 0;
   cursor: pointer;
 }
-.swatch.active { border-color: var(--text); box-shadow: 0 0 0 2px rgba(255,255,255,0.25); }
+.swatch.active { box-shadow: 0 0 0 2px #000, 0 0 0 4px rgba(255,255,255,0.6); }
 
 nav.tabs {
   display: flex;
