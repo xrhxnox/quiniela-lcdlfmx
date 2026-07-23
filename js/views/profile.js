@@ -142,7 +142,7 @@ const ROOM_BADGE_STYLES = {
 function legacyPickCard(label, fav, type) {
   if (!fav) {
     return h("div", { class: "nominee-card", style: "cursor:default" }, [
-      h("div", { class: "photo" }, h("i", { class: "fa-solid fa-clock-rotate-left" })),
+      h("div", { class: "photo" }, h("i", { class: `fa-solid ${PICK_TYPE_ICONS[type]?.icon || "fa-clock-rotate-left"}` })),
       h("div", { class: "info" }, [
         pickTypeIcon(type),
         h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
