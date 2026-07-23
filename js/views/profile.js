@@ -181,7 +181,7 @@ async function renderProfileInternal(container, username, targetHint, editable, 
     if (status !== "closed") {
       resultBadge = h("span", { class: "badge gray" }, "Pendiente");
     } else if (eliminatedSet.has(key)) {
-      resultBadge = h("span", { class: "badge green" }, "Correcto");
+      resultBadge = h("span", { class: "badge green" }, "Acierto");
     } else {
       resultBadge = h("span", { class: "badge red" }, "Fallido");
     }
