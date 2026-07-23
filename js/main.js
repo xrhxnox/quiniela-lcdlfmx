@@ -61,7 +61,7 @@ function renderNav() {
   });
   appHeaderWrap.style.display = "block";
   userChip.innerHTML = "";
-  userChip.appendChild(h("strong", {}, currentProfile.display_name));
+  userChip.appendChild(h("span", { class: "username-badge" }, `Usuario: ${currentProfile.display_name}`));
   userChip.appendChild(
     h(
       "button",
