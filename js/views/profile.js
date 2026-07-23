@@ -150,8 +150,8 @@ function legacyRoomBadgeNode(value) {
   const style = LEGACY_ROOM_BADGE_STYLES[value] || { color: "#e8c05a", icon: "fa-clock-rotate-left" };
   return h(
     "span",
-    { class: "badge", style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color}` },
-    [h("i", { class: `fa-solid ${style.icon}` }), ` ${value}`]
+    { class: "badge", style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color};margin-top:6px` },
+    [h("i", { class: `fa-solid ${style.icon}` }), ` Team ${value}`]
   );
 }
 
@@ -196,6 +196,9 @@ async function renderProfileInternal(container, username, targetHint, editable, 
   const favT3 = legacyFavorites.find((f) => f.id === target.fav_season3_id) || null;
   const stats = computeStats(history, eliminatedSet);
   const badges = buildBadges(stats, favorite);
+  const legacyRoomBadges = [target.legacy_room_t1, target.legacy_room_t2, target.legacy_room_t3]
+    .map(legacyRoomBadgeNode)
+    .filter(Boolean);
 
   // ---------- Encabezado ----------
   const headerCard = h("div", { class: "card" }, [
@@ -205,7 +208,7 @@ async function renderProfileInternal(container, username, targetHint, editable, 
         h("div", { style: "font-size:1.3rem;font-weight:700" }, target.display_name),
         h("div", { class: "muted" }, `@${target.username}`),
         target.bio ? h("div", { style: "margin-top:4px;font-style:italic" }, target.bio) : null,
-        teamBadgeNode(target.favorite_room),
+        h("div", { style: "display:flex;flex-wrap:wrap;gap:6px" }, [teamBadgeNode(target.favorite_room), ...legacyRoomBadges]),
       ]),
     ]),
     h("div", { class: "row-flex", style: "gap:18px;flex-wrap:wrap;margin-top:16px" }, [
@@ -230,10 +233,6 @@ async function renderProfileInternal(container, username, targetHint, editable, 
     ]),
   ]);
 
-  const legacyRoomBadges = [target.legacy_room_t1, target.legacy_room_t2, target.legacy_room_t3]
-    .map(legacyRoomBadgeNode)
-    .filter(Boolean);
-
   const legacyCard = h("div", { class: "card" }, [
     h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-clock-rotate-left" }), " ", h("strong", {}, "Favoritos de temporadas anteriores")]),
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
@@ -241,9 +240,6 @@ async function renderProfileInternal(container, username, targetHint, editable, 
       legacyPickCard("Temporada 2", favT2),
       legacyPickCard("Temporada 3", favT3),
     ]),
-    legacyRoomBadges.length
-      ? h("div", { style: "margin-top:12px;display:flex;flex-wrap:wrap;gap:6px" }, legacyRoomBadges)
-      : null,
   ]);
 
   const cards = [headerCard, favHatedCard, legacyCard];
