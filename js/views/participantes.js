@@ -40,6 +40,6 @@ export async function renderParticipantes(container) {
 
   clearAndAppend(
     container,
-    h("div", {}, [h("div", { class: "section-title" }, "Participantes"), h("div", { class: "grid" }, cards)])
+    h("div", {}, [h("div", { class: "section-title" }, "Habitantes"), h("div", { class: "grid" }, cards)])
   );
 }
