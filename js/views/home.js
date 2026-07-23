@@ -182,9 +182,11 @@ async function renderClosedWeek(container, week, profile) {
     container,
     h("div", {}, [
       h("div", { class: "section-title" }, week.label || `Semana ${week.week_number}`),
-      h("div", { class: "card" }, [
+      h("div", { class: "card", style: "text-align:center" }, [
         h("p", {}, eliminations.length ? "Resultado de esta semana:" : "Aún no se ha confirmado quién salió."),
-        eliminations.length ? h("div", { class: "grid" }, resultCards) : null,
+        eliminations.length
+          ? h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit, minmax(150px, 150px));justify-content:center" }, resultCards)
+          : null,
         myPred
           ? h("p", { style: "margin-top:12px" }, [
               "Tu pick fue ",
