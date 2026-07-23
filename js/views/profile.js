@@ -95,20 +95,20 @@ function buildBadges(stats) {
   return badges;
 }
 
-const ROOM_BADGE_COLORS = {
-  "Sin Cuarto": "#8a8a8d",
-  Ibiza: "#2596be",
-  Tulum: "#2fae5a",
-  Malibú: "#e0574c",
+const ROOM_BADGE_STYLES = {
+  "Sin Cuarto": { color: "#8a8a8d", icon: "fa-skull" },
+  Ibiza: { color: "#2596be", icon: "fa-droplet" },
+  Tulum: { color: "#2fae5a", icon: "fa-seedling" },
+  Malibú: { color: "#e0574c", icon: "fa-heart" },
 };
 
 function teamBadgeNode(room) {
   if (!room) return null;
-  const color = ROOM_BADGE_COLORS[room] || "#e8c05a";
+  const style = ROOM_BADGE_STYLES[room] || { color: "#e8c05a", icon: "fa-umbrella-beach" };
   return h(
     "span",
-    { class: "badge", style: `background:${color}26;color:${color};border:1px solid ${color};margin-top:6px` },
-    [h("i", { class: "fa-solid fa-umbrella-beach" }), ` Team ${room}`]
+    { class: "badge", style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color};margin-top:6px` },
+    [h("i", { class: `fa-solid ${style.icon}` }), ` Team ${room}`]
   );
 }
 
