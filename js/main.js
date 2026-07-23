@@ -21,18 +21,18 @@ appFooter.textContent = `LCDLFMX4 · ${new Date().getFullYear()} · Designed by 
 let currentProfile = null;
 
 const ROUTES = [
-  { path: "#/", label: "Votar", render: (c) => renderHome(c, currentProfile) },
-  { path: "#/ranking", label: "Ranking", render: renderRanking },
-  { path: "#/eliminados", label: "Eliminados", render: renderEliminados },
-  { path: "#/participantes", label: "Participantes", render: renderParticipantes },
-  { path: "#/admin", label: "Admin", render: renderAdmin, adminOnly: true },
+  { path: "#/", label: "Votar", icon: "🗳️", render: (c) => renderHome(c, currentProfile) },
+  { path: "#/ranking", label: "Ranking", icon: "🏆", render: renderRanking },
+  { path: "#/eliminados", label: "Eliminados", icon: "🚪", render: renderEliminados },
+  { path: "#/participantes", label: "Participantes", icon: "🏠", render: renderParticipantes },
+  { path: "#/admin", label: "Admin", icon: "⚙️", render: renderAdmin, adminOnly: true },
 ];
 
 function renderNav() {
   tabsEl.innerHTML = "";
   const hash = location.hash || "#/";
   ROUTES.filter((r) => !r.adminOnly || currentProfile?.role === "admin").forEach((r) => {
-    const a = h("a", { href: r.path, class: hash === r.path ? "active" : "" }, r.label);
+    const a = h("a", { href: r.path, class: hash === r.path ? "active" : "" }, `${r.icon} ${r.label}`);
     tabsEl.appendChild(a);
   });
   tabsEl.style.display = "flex";
@@ -85,6 +85,9 @@ async function renderRoute() {
     console.error(e);
     clearAndAppend(app, h("div", { class: "empty-state" }, "Ocurrió un error cargando esta sección. Intenta recargar la página."));
   }
+  app.classList.remove("fade-in");
+  void app.offsetWidth;
+  app.classList.add("fade-in");
 }
 
 async function boot() {
