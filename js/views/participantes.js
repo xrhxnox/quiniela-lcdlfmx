@@ -31,9 +31,9 @@ export async function renderParticipantes(container) {
             ? h("span", { class: "badge green" }, "En la casa")
             : h("span", { class: "badge red" }, "Eliminado/a"),
         ]),
-        h("div", { class: "points", style: "color:var(--cyan)" }, `Líder ${leaderCounts[p.id] || 0} veces`),
+        h("div", { class: "points" }, `Líder ${leaderCounts[p.id] || 0} veces`),
         h("div", { class: "points" }, `Salvado ${savedCounts[p.id] || 0} veces`),
-        h("div", { class: "points", style: "color:var(--red)" }, `Nominado ${counts[p.id] || 0} veces`),
+        h("div", { class: "points" }, `Nominado ${counts[p.id] || 0} veces`),
       ]),
     ]);
   });

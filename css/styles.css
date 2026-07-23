@@ -331,7 +331,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 .nominee-card .info { padding: 8px 8px 12px; }
 .nominee-card .name { font-weight: 700; font-size: 0.9rem; }
 .nominee-card .room { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
-.nominee-card .points { font-size: 0.72rem; color: var(--gold); margin-top: 4px; }
+.nominee-card .points { font-size: 0.72rem; color: var(--text-dim); margin-top: 4px; }
 .nominee-card .check {
   position: absolute;
   top: 8px;
