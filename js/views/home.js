@@ -23,7 +23,7 @@ function formatCountdown(ms) {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
   const pad = (n) => String(n).padStart(2, "0");
-  return days > 0 ? `${days}D ${pad(hours)}H ${pad(minutes)}M ${pad(seconds)}S` : `${pad(hours)}H ${pad(minutes)}M ${pad(seconds)}S`;
+  return days > 0 ? `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s` : `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
 }
 
 function countdownNode(closesAt, onClosed) {
