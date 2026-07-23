@@ -9,7 +9,7 @@ import {
   getLegacyFavorites,
 } from "../data.js";
 import { ACCENTS, getAccentKey, applyAccent } from "../theme.js";
-import { ROOM_OPTIONS, LEGACY_ROOM_OPTIONS } from "../rooms.js";
+import { ROOM_OPTIONS } from "../rooms.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
 function participantPickCard(label, participant, iconClass) {
@@ -136,26 +136,6 @@ function teamBadgeNode(room) {
   );
 }
 
-const LEGACY_ROOM_BADGE_STYLES = {
-  Cielo: { color: "#7dd3fc", icon: "fa-cloud" },
-  Infierno: { color: "#dc2626", icon: "fa-fire-flame-curved" },
-  Mar: { color: "#0369a1", icon: "fa-water" },
-  Tierra: { color: "#a16207", icon: "fa-mountain" },
-  Día: { color: "#eab308", icon: "fa-sun" },
-  Noche: { color: "#4338ca", icon: "fa-moon" },
-  Eclipse: { color: "#6d28d9", icon: "fa-circle-half-stroke" },
-};
-
-function legacyRoomBadgeNode(value) {
-  if (!value) return null;
-  const style = LEGACY_ROOM_BADGE_STYLES[value] || { color: "#e8c05a", icon: "fa-clock-rotate-left" };
-  return h(
-    "span",
-    { class: "badge", style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color};margin-top:6px` },
-    [h("i", { class: `fa-solid ${style.icon}` }), ` Team ${value}`]
-  );
-}
-
 export async function renderProfile(container, viewerProfile, onUpdate) {
   await renderProfileInternal(container, viewerProfile.username, viewerProfile, true, onUpdate);
 }
@@ -197,9 +177,6 @@ async function renderProfileInternal(container, username, targetHint, editable, 
   const favT3 = legacyFavorites.find((f) => f.id === target.fav_season3_id) || null;
   const stats = computeStats(history, eliminatedSet);
   const badges = buildBadges(stats, favorite);
-  const legacyRoomBadges = [target.legacy_room_t1, target.legacy_room_t2, target.legacy_room_t3]
-    .map(legacyRoomBadgeNode)
-    .filter(Boolean);
 
   // ---------- Encabezado ----------
   const headerCard = h("div", { class: "card" }, [
@@ -209,7 +186,7 @@ async function renderProfileInternal(container, username, targetHint, editable, 
         h("div", { style: "font-size:1.3rem;font-weight:700" }, target.display_name),
         h("div", { class: "muted" }, `@${target.username}`),
         target.bio ? h("div", { style: "margin-top:4px;font-style:italic" }, target.bio) : null,
-        h("div", { style: "display:flex;flex-wrap:wrap;gap:6px" }, [teamBadgeNode(target.favorite_room), ...legacyRoomBadges]),
+        teamBadgeNode(target.favorite_room),
       ]),
     ]),
     h("div", { class: "row-flex", style: "gap:18px;flex-wrap:wrap;margin-top:16px" }, [
@@ -564,40 +541,6 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
   const t2Field = legacySaveField({ season: 2, currentId: profile.fav_season2_id, valueKey: "fav_season2_id", clearKey: "clearFavSeason2" });
   const t3Field = legacySaveField({ season: 3, currentId: profile.fav_season3_id, valueKey: "fav_season3_id", clearKey: "clearFavSeason3" });
 
-  function legacyRoomField({ season, currentValue, valueKey }) {
-    const options = LEGACY_ROOM_OPTIONS[season];
-    const select = h(
-      "select",
-      {},
-      [h("option", { value: "" }, "Sin elegir")].concat(
-        options.map((o) => h("option", { value: o, selected: currentValue === o ? "selected" : undefined }, o))
-      )
-    );
-    const btn = h(
-      "button",
-      {
-        class: "btn small",
-        onclick: async () => {
-          if (!select.value) return;
-          btn.disabled = true;
-          try {
-            const updated = await updateMyProfile({ [valueKey]: select.value });
-            await refresh(updated);
-          } catch (e) {
-            errMsg.textContent = "Error al guardar";
-            btn.disabled = false;
-          }
-        },
-      },
-      "Guardar"
-    );
-    return h("div", { class: "row-flex", style: "margin-bottom:14px" }, [select, btn]);
-  }
-
-  const t1RoomField = legacyRoomField({ season: 1, currentValue: profile.legacy_room_t1, valueKey: "legacy_room_t1" });
-  const t2RoomField = legacyRoomField({ season: 2, currentValue: profile.legacy_room_t2, valueKey: "legacy_room_t2" });
-  const t3RoomField = legacyRoomField({ season: 3, currentValue: profile.legacy_room_t3, valueKey: "legacy_room_t3" });
-
   const swatchWrap = h("div", { class: "swatches", style: "gap:12px" });
   Object.entries(ACCENTS).forEach(([key, theme]) => {
     swatchWrap.appendChild(
@@ -629,22 +572,16 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { class: "row-flex", style: "margin-bottom:14px" }, [bioInput, bioBtn]),
     h("label", {}, "Mi favorito"),
     h("div", { class: "row-flex", style: "margin-bottom:14px" }, [favSelect, favBtn]),
-    h("label", {}, "El que me cae mal"),
+    h("label", {}, "Odiado"),
     h("div", { class: "row-flex", style: "margin-bottom:14px" }, [hatedSelect, hatedBtn]),
     h("label", {}, "Cuarto favorito"),
     h("div", { class: "row-flex", style: "margin-bottom:14px" }, [roomSelect, roomBtn]),
     h("label", {}, "Favorito de Temporada 1"),
     t1Field,
-    h("label", {}, "Cuarto de Temporada 1 (Cielo o Infierno)"),
-    t1RoomField,
     h("label", {}, "Favorito de Temporada 2"),
     t2Field,
-    h("label", {}, "Cuarto de Temporada 2 (Mar o Tierra)"),
-    t2RoomField,
     h("label", {}, "Favorito de Temporada 3"),
     t3Field,
-    h("label", {}, "Cuarto de Temporada 3 (Día o Noche)"),
-    t3RoomField,
     h("label", {}, "Color de tema"),
     swatchWrap,
     errMsg,
