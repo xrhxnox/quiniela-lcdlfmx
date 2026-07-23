@@ -153,21 +153,19 @@ async function renderProfileInternal(container, username, targetHint, editable, 
 
   // ---------- Encabezado ----------
   const headerCard = h("div", { class: "card" }, [
-    h("div", { class: "row-flex", style: "justify-content:space-between;flex-wrap:wrap;gap:16px" }, [
-      h("div", { class: "row-flex", style: "gap:14px;align-items:center" }, [
-        avatarNode(target, 125),
-        h("div", {}, [
-          h("div", { style: "font-size:1.3rem;font-weight:700" }, target.display_name),
-          h("div", { class: "muted" }, `@${target.username}`),
-          target.bio ? h("div", { style: "margin-top:4px;font-style:italic" }, target.bio) : null,
-          teamBadgeNode(target.favorite_room),
-        ]),
+    h("div", { class: "row-flex", style: "gap:14px;align-items:center;flex-wrap:wrap" }, [
+      avatarNode(target, 125),
+      h("div", {}, [
+        h("div", { style: "font-size:1.3rem;font-weight:700" }, target.display_name),
+        h("div", { class: "muted" }, `@${target.username}`),
+        target.bio ? h("div", { style: "margin-top:4px;font-style:italic" }, target.bio) : null,
+        teamBadgeNode(target.favorite_room),
       ]),
-      h("div", { class: "row-flex", style: "gap:18px;flex-wrap:wrap" }, [
-        statBlock(String(points), "puntos"),
-        rankIndex >= 0 ? statBlock(`#${rankIndex + 1}`, `de ${leaderboard.length}`) : null,
-        stats.accuracyPct !== null ? statBlock(`${stats.accuracyPct}%`, "acierto") : null,
-      ]),
+    ]),
+    h("div", { class: "row-flex", style: "gap:18px;flex-wrap:wrap;margin-top:16px" }, [
+      statBlock(String(points), "puntos"),
+      rankIndex >= 0 ? statBlock(`#${rankIndex + 1}`, `de ${leaderboard.length}`) : null,
+      stats.accuracyPct !== null ? statBlock(`${stats.accuracyPct}%`, "acierto") : null,
     ]),
     badges.length
       ? h(
