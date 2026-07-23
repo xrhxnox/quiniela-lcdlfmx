@@ -65,7 +65,12 @@ async function renderVotingWeek(container, week, profile) {
     selected = null;
   }
 
-  const statusMsg = h("div", { class: "success-msg" }, myPred ? "Ya tienes un pick guardado. Puedes cambiarlo mientras la votación siga abierta." : "");
+  const pickedName = myPred ? nominations.find((n) => n.participant_id === myPred.participant_id)?.participants?.name : null;
+  const statusMsg = h(
+    "div",
+    { class: "success-msg" },
+    myPred ? `Ya tienes un pick guardado: ${pickedName || "—"}. Puedes cambiarlo mientras la votación siga abierta.` : ""
+  );
   const errMsg = h("div", { class: "error-msg" });
 
   const cards = nominations.map((n) => {
@@ -121,7 +126,8 @@ async function renderVotingWeek(container, week, profile) {
         submitBtn.textContent = "Guardando…";
         try {
           await submitPrediction(week.id, profile.id, selected);
-          statusMsg.textContent = "¡Pick guardado! Puedes cambiarlo hasta que cierre la votación.";
+          const name = nominations.find((n) => n.participant_id === selected)?.participants?.name;
+          statusMsg.textContent = `¡Pick guardado: ${name || "—"}! Puedes cambiarlo hasta que cierre la votación.`;
         } catch (e) {
           errMsg.textContent = "No se pudo guardar tu pick. Intenta de nuevo.";
         } finally {
