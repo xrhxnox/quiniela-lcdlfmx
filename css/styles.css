@@ -69,7 +69,7 @@ header.topbar {
 header.topbar .brand {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 10px;
 }
 
 header.topbar .brand img {
