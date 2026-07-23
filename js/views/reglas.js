@@ -13,7 +13,7 @@ export async function renderReglas(container) {
     h("div", {}, [
       h("div", { class: "section-title" }, "Reglas"),
 
-      ruleCard("fa-square-poll-vertical", "Cómo se juega", [
+      ruleCard("fa-square-poll-vertical", "Cómo se funciona", [
         h("p", { style: "margin-bottom:0" }, [
           "Cada semana eliges, entre los nominados, a quién crees que van a eliminar. ",
           h("strong", {}, "Si le atinas, sumas 1 punto"), ". Puedes cambiar tu pick las veces que quieras mientras la votación siga abierta.",
