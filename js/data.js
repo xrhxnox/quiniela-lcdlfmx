@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient.js";
+import { compressImage } from "./utils.js";
 
 function unwrap({ data, error }) {
   if (error) throw error;
@@ -27,9 +28,9 @@ export async function deleteParticipant(id) {
 }
 
 export async function uploadParticipantPhoto(file) {
-  const ext = file.name.split(".").pop();
-  const path = `${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("photos").upload(path, file, { upsert: true });
+  const compressed = await compressImage(file);
+  const path = `${crypto.randomUUID()}.jpg`;
+  const { error } = await supabase.storage.from("photos").upload(path, compressed, { upsert: true });
   if (error) throw error;
   const { data } = supabase.storage.from("photos").getPublicUrl(path);
   return data.publicUrl;
@@ -262,9 +263,9 @@ export async function getProfileByUsername(username) {
 }
 
 export async function uploadMyAvatar(userId, file) {
-  const ext = file.name.split(".").pop();
-  const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+  const compressed = await compressImage(file);
+  const path = `${userId}/${crypto.randomUUID()}.jpg`;
+  const { error } = await supabase.storage.from("avatars").upload(path, compressed, { upsert: true });
   if (error) throw error;
   const { data } = supabase.storage.from("avatars").getPublicUrl(path);
   return data.publicUrl;
