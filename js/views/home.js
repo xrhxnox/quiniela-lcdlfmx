@@ -31,16 +31,17 @@ function countdownNode(closesAt, onClosed) {
   const el = h("p", { style: "margin:0" });
   let fired = false;
   const render = () => {
+    el.innerHTML = "";
     const remaining = closesAtMs - Date.now();
     if (remaining <= 0) {
-      clearAndAppend(el, [h("i", { class: "fa-solid fa-lock" }), " Votación cerrada"]);
+      el.append(h("i", { class: "fa-solid fa-lock" }), " Votación cerrada");
       if (!fired) {
         fired = true;
         onClosed?.();
       }
       return false;
     }
-    clearAndAppend(el, [h("i", { class: "fa-solid fa-hourglass-half" }), ` Cierra en: `, h("strong", {}, formatCountdown(remaining))]);
+    el.append(h("i", { class: "fa-solid fa-hourglass-half" }), " Cierra en: ", h("strong", {}, formatCountdown(remaining)));
     return true;
   };
   const tick = () => {
@@ -132,6 +133,15 @@ async function renderVotingWeek(container, week, profile) {
     "Guardar mi pick"
   );
 
+  const countdown = week.voting_closes_at
+    ? countdownNode(week.voting_closes_at, () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Votación cerrada";
+        cardsWrap.style.pointerEvents = "none";
+        cardsWrap.style.opacity = "0.6";
+      })
+    : null;
+
   clearAndAppend(
     container,
     h("div", {}, [
@@ -142,6 +152,7 @@ async function renderVotingWeek(container, week, profile) {
           " Eliminación: ",
           h("strong", {}, week.elimination_date ? fmtDate(week.elimination_date) : "por confirmar"),
         ]),
+        countdown,
         immuneBlock,
         h("p", { class: "muted", style: "font-size:0.82rem" }, "Elige entre los nominados quién crees que será eliminado. Si le atinas, sumas 1 punto."),
       ]),
