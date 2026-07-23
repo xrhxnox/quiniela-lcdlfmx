@@ -1,5 +1,5 @@
 -- =========================================================
--- La Casa de los Famosos México T3 - Quiniela
+-- La Casa de los Famosos México T4 - Quiniela
 -- Esquema de base de datos para Supabase (Postgres)
 -- =========================================================
 -- Cómo usar: en tu proyecto de Supabase, abre "SQL Editor",

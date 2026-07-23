@@ -1,4 +1,4 @@
-# Quiniela — La Casa de los Famosos México T3
+# Quiniela — La Casa de los Famosos México T4
 
 Web para llevar la quiniela de eliminación entre amigos: cada semana los jugadores
 eligen a quién creen que van a eliminar entre los nominados, suman puntos si le

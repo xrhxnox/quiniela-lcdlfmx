@@ -14,6 +14,9 @@ const app = document.getElementById("app");
 const topbar = document.getElementById("topbar");
 const tabsEl = document.getElementById("tabs");
 const userChip = document.getElementById("userChip");
+const appFooter = document.getElementById("appFooter");
+
+appFooter.textContent = `LCDLFMX4 · ${new Date().getFullYear()} · Designed by Rick`;
 
 let currentProfile = null;
 
