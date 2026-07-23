@@ -162,7 +162,7 @@ async function renderWeekDetail(container, week, allParticipants) {
             await refresh();
           },
         },
-        "✕"
+        h("i", { class: "fa-solid fa-xmark" })
       ),
     ])
   );
@@ -202,7 +202,7 @@ async function renderWeekDetail(container, week, allParticipants) {
             await refresh();
           },
         },
-        "✕"
+        h("i", { class: "fa-solid fa-xmark" })
       ),
     ])
   );

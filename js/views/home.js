@@ -41,7 +41,7 @@ async function renderVotingWeek(container, week, profile) {
         },
       },
       [
-        h("div", { class: "check" }, "✓"),
+        h("div", { class: "check" }, h("i", { class: "fa-solid fa-check" })),
         photoOrInitials(p),
         h("div", { class: "info" }, [
           h("div", { class: "name" }, p.name),
@@ -58,7 +58,8 @@ async function renderVotingWeek(container, week, profile) {
   const immuneBlock =
     immunities.length > 0
       ? h("p", { class: "muted", style: "font-size:0.82rem" }, [
-          "🛡️ Salvados esta semana: ",
+          h("i", { class: "fa-solid fa-shield-halved" }),
+          " Salvados esta semana: ",
           h("strong", {}, immunities.map((i) => i.participants.name).join(", ")),
         ])
       : null;
@@ -95,7 +96,8 @@ async function renderVotingWeek(container, week, profile) {
       h("div", { class: "section-title" }, week.label || `Semana ${week.week_number}`),
       h("div", { class: "card" }, [
         h("p", {}, [
-          "🗓️ Eliminación: ",
+          h("i", { class: "fa-solid fa-calendar-days" }),
+          " Eliminación: ",
           h("strong", {}, week.elimination_date ? fmtDate(week.elimination_date) : "por confirmar"),
         ]),
         immuneBlock,

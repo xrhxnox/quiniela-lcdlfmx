@@ -124,6 +124,9 @@ nav.tabs {
 }
 
 nav.tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   white-space: nowrap;
   text-decoration: none;
   color: var(--text-dim);
@@ -137,6 +140,8 @@ nav.tabs a {
   border: 1px solid transparent;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
+
+nav.tabs a i { font-size: 0.9rem; }
 
 nav.tabs a:hover {
   color: var(--text);

@@ -12,7 +12,7 @@ export async function renderRanking(container) {
 
   const body = rows.map((r, i) =>
     h("tr", { class: `rank-row${i === 0 ? " top1" : ""}` }, [
-      h("td", {}, `${i + 1}${i === 0 ? " 👑" : ""}`),
+      h("td", {}, [`${i + 1} `, i === 0 ? h("i", { class: "fa-solid fa-crown" }) : null]),
       h("td", {}, r.display_name),
       h("td", { class: "num" }, String(r.points)),
     ])

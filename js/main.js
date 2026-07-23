@@ -21,18 +21,21 @@ appFooter.textContent = `LCDLFMX4 · ${new Date().getFullYear()} · Designed by 
 let currentProfile = null;
 
 const ROUTES = [
-  { path: "#/", label: "Votar", icon: "🗳️", render: (c) => renderHome(c, currentProfile) },
-  { path: "#/ranking", label: "Ranking", icon: "🏆", render: renderRanking },
-  { path: "#/eliminados", label: "Eliminados", icon: "🚪", render: renderEliminados },
-  { path: "#/participantes", label: "Participantes", icon: "🏠", render: renderParticipantes },
-  { path: "#/admin", label: "Admin", icon: "⚙️", render: renderAdmin, adminOnly: true },
+  { path: "#/", label: "Votar", icon: "fa-square-poll-vertical", render: (c) => renderHome(c, currentProfile) },
+  { path: "#/ranking", label: "Ranking", icon: "fa-trophy", render: renderRanking },
+  { path: "#/eliminados", label: "Eliminados", icon: "fa-door-open", render: renderEliminados },
+  { path: "#/participantes", label: "Participantes", icon: "fa-house", render: renderParticipantes },
+  { path: "#/admin", label: "Admin", icon: "fa-gear", render: renderAdmin, adminOnly: true },
 ];
 
 function renderNav() {
   tabsEl.innerHTML = "";
   const hash = location.hash || "#/";
   ROUTES.filter((r) => !r.adminOnly || currentProfile?.role === "admin").forEach((r) => {
-    const a = h("a", { href: r.path, class: hash === r.path ? "active" : "" }, `${r.icon} ${r.label}`);
+    const a = h("a", { href: r.path, class: hash === r.path ? "active" : "" }, [
+      h("i", { class: `fa-solid ${r.icon}` }),
+      h("span", {}, r.label),
+    ]);
     tabsEl.appendChild(a);
   });
   tabsEl.style.display = "flex";
