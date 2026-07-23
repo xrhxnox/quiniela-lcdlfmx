@@ -143,6 +143,7 @@ const LEGACY_ROOM_BADGE_STYLES = {
   Tierra: { color: "#a16207", icon: "fa-mountain" },
   Día: { color: "#eab308", icon: "fa-sun" },
   Noche: { color: "#4338ca", icon: "fa-moon" },
+  Eclipse: { color: "#6d28d9", icon: "fa-circle-half-stroke" },
 };
 
 function legacyRoomBadgeNode(value) {

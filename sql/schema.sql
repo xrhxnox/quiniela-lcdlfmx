@@ -82,7 +82,14 @@ create policy "legacy_favorites_write_admin" on public.legacy_favorites for all
 -- Cuartos de temporadas anteriores (opciones fijas por temporada)
 alter table public.profiles add column if not exists legacy_room_t1 text check (legacy_room_t1 in ('Cielo','Infierno'));
 alter table public.profiles add column if not exists legacy_room_t2 text check (legacy_room_t2 in ('Mar','Tierra'));
-alter table public.profiles add column if not exists legacy_room_t3 text check (legacy_room_t3 in ('Día','Noche'));
+alter table public.profiles add column if not exists legacy_room_t3 text check (legacy_room_t3 in ('Día','Noche','Eclipse'));
+
+-- Si ya habías creado la columna con el check viejo (sin Eclipse), esto lo actualiza.
+do $$
+begin
+  alter table public.profiles drop constraint if exists profiles_legacy_room_t3_check;
+  alter table public.profiles add constraint profiles_legacy_room_t3_check check (legacy_room_t3 in ('Día','Noche','Eclipse'));
+end $$;
 
 -- Permite que cada quien actualice SOLO su propio nombre, favorito, odiado,
 -- cuarto favorito, foto, bio, color, favoritos y cuartos de temporadas
