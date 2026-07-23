@@ -6,6 +6,7 @@ import { renderEliminados } from "./views/eliminados.js";
 import { renderParticipantes } from "./views/participantes.js";
 import { renderAdmin } from "./views/admin.js";
 import { renderProfile, renderPublicProfile } from "./views/profile.js";
+import { renderReglas } from "./views/reglas.js";
 import { h, clearAndAppend } from "./utils.js";
 import { initAccent, syncAccentFromProfile } from "./theme.js";
 
@@ -23,6 +24,7 @@ let currentProfile = null;
 
 const ROUTES = [
   { path: "#/", label: "Votar", icon: "fa-square-poll-vertical", render: (c) => renderHome(c, currentProfile) },
+  { path: "#/reglas", label: "Reglas", icon: "fa-scroll", render: renderReglas },
   { path: "#/ranking", label: "Ranking", icon: "fa-trophy", render: renderRanking },
   { path: "#/eliminados", label: "Eliminados", icon: "fa-door-open", render: renderEliminados },
   { path: "#/participantes", label: "Participantes", icon: "fa-house", render: renderParticipantes },
