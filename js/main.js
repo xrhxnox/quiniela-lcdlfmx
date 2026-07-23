@@ -62,7 +62,7 @@ function renderNav() {
   appHeaderWrap.style.display = "block";
   userChip.innerHTML = "";
   userChip.appendChild(
-    h("span", { class: "username-badge" }, [h("i", { class: "fa-solid fa-user" }), `Usuario: ${currentProfile.display_name}`])
+    h("span", { class: "username-badge" }, [h("i", { class: "fa-solid fa-user" }), currentProfile.display_name])
   );
   userChip.appendChild(
     h(
