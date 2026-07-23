@@ -37,16 +37,14 @@ export async function renderRanking(container) {
   const body = rows.map((r, i) =>
     h("tr", { class: `rank-row${i === 0 ? " top1" : ""}` }, [
       h("td", {}, [`${i + 1} `, i === 0 ? h("i", { class: "fa-solid fa-crown" }) : null]),
+      h("td", { style: "font-weight:700" }, r.display_name),
+      h("td", { class: "num" }, String(r.points)),
       h("td", {}, [
-        h("div", { class: "player-cell" }, [
-          h("span", { style: "font-weight:700" }, r.display_name),
-          h("a", { href: `#/perfil/${encodeURIComponent(r.username)}`, class: "player-link" }, [
-            h("i", { class: "fa-solid fa-user" }),
-            " Ver perfil",
-          ]),
+        h("a", { href: `#/perfil/${encodeURIComponent(r.username)}`, class: "player-link" }, [
+          h("i", { class: "fa-solid fa-user" }),
+          " Ver perfil",
         ]),
       ]),
-      h("td", { class: "num" }, String(r.points)),
     ])
   );
 
@@ -57,7 +55,7 @@ export async function renderRanking(container) {
       activityFeed,
       h("div", { class: "card table-wrap" }, [
         h("table", { class: "data" }, [
-          h("thead", {}, h("tr", {}, [h("th", {}, "#"), h("th", {}, "Jugador"), h("th", {}, "Puntos")])),
+          h("thead", {}, h("tr", {}, [h("th", {}, "#"), h("th", {}, "Jugador"), h("th", {}, "Puntos"), h("th", {}, "Perfil")])),
           h("tbody", {}, body),
         ]),
       ]),

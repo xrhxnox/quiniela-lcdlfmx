@@ -3,6 +3,10 @@ export const ACCENTS = {
   celeste: { label: "Celeste", accent: "#2596be", dim: "#123f52", text: "#ffffff" },
   amarillo: { label: "Amarillo", accent: "#f2c94c", dim: "#8a6d10", text: "#1a1a1a" },
   rosa: { label: "Rosa", accent: "#ffbfde", dim: "#f0a8ce", text: "#1a1a1a" },
+  verde: { label: "Verde", accent: "#22c55e", dim: "#15803d", text: "#ffffff" },
+  morado: { label: "Morado", accent: "#8b5cf6", dim: "#5b21b6", text: "#ffffff" },
+  naranja: { label: "Naranja", accent: "#f97316", dim: "#9a3412", text: "#ffffff" },
+  turquesa: { label: "Turquesa", accent: "#14b8a6", dim: "#0f766e", text: "#ffffff" },
 };
 
 const STORAGE_KEY = "lcdlfmx_accent";

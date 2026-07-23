@@ -148,17 +148,18 @@ async function renderProfileInternal(container, username, targetHint, editable, 
   const favorite = participants.find((p) => p.id === target.favorite_participant_id) || null;
   const hated = participants.find((p) => p.id === target.hated_participant_id) || null;
   const stats = computeStats(history, eliminatedSet);
-  const badges = buildBadges(target, stats);
+  const badges = buildBadges(stats);
 
   // ---------- Encabezado ----------
   const headerCard = h("div", { class: "card" }, [
     h("div", { class: "row-flex", style: "justify-content:space-between;flex-wrap:wrap;gap:16px" }, [
       h("div", { class: "row-flex", style: "gap:14px;align-items:center" }, [
-        avatarNode(target, 96),
+        avatarNode(target, 125),
         h("div", {}, [
           h("div", { style: "font-size:1.3rem;font-weight:700" }, target.display_name),
           h("div", { class: "muted" }, `@${target.username}`),
           target.bio ? h("div", { style: "margin-top:4px;font-style:italic" }, target.bio) : null,
+          teamBadgeNode(target.favorite_room),
         ]),
       ]),
       h("div", { class: "row-flex", style: "gap:18px;flex-wrap:wrap" }, [
