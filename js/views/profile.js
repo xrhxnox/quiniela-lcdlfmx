@@ -18,10 +18,10 @@ import { ROOM_OPTIONS, LEGACY_ROOM_OPTIONS } from "../rooms.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
 const PICK_TYPE_ICONS = {
-  favorite: { icon: "fa-star", color: "var(--gold)" },
-  hated: { icon: "fa-skull-crossbones", color: "var(--red)" },
-  surprise: { icon: "fa-face-surprise", color: "var(--violet)" },
-  disappointment: { icon: "fa-face-frown", color: "var(--slate)" },
+  favorite: { icon: "fa-star", color: "#ffffff" },
+  hated: { icon: "fa-skull-crossbones", color: "#ffffff" },
+  surprise: { icon: "fa-bomb", color: "#ffffff" },
+  disappointment: { icon: "fa-heart-crack", color: "#ffffff" },
 };
 
 function pickTypeIcon(type) {
