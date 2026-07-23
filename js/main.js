@@ -1,5 +1,4 @@
 import { getSession, getMyProfile, logout, onAuthStateChange } from "./auth.js";
-import { updateMyProfile } from "./data.js";
 import { renderLogin } from "./views/login.js";
 import { renderHome } from "./views/home.js";
 import { renderRanking } from "./views/ranking.js";
@@ -8,7 +7,7 @@ import { renderParticipantes } from "./views/participantes.js";
 import { renderAdmin } from "./views/admin.js";
 import { renderProfile, renderPublicProfile } from "./views/profile.js";
 import { h, clearAndAppend } from "./utils.js";
-import { ACCENTS, getAccentKey, applyAccent, initAccent, syncAccentFromProfile } from "./theme.js";
+import { initAccent, syncAccentFromProfile } from "./theme.js";
 
 initAccent();
 
@@ -53,28 +52,6 @@ function renderNav() {
   });
   appHeaderWrap.style.display = "block";
   userChip.innerHTML = "";
-  const swatchWrap = h("div", { class: "swatches" });
-  Object.entries(ACCENTS).forEach(([key, theme]) => {
-    swatchWrap.appendChild(
-      h("button", {
-        class: `swatch${getAccentKey() === key ? " active" : ""}`,
-        style: `background:${theme.accent}`,
-        title: theme.label,
-        type: "button",
-        onclick: async () => {
-          applyAccent(key);
-          renderNav();
-          try {
-            const updated = await updateMyProfile({ accent_color: key });
-            currentProfile = { ...currentProfile, ...updated };
-          } catch (e) {
-            /* el color ya se aplicó localmente aunque falle guardarlo */
-          }
-        },
-      })
-    );
-  });
-  userChip.appendChild(swatchWrap);
   userChip.appendChild(h("strong", {}, currentProfile.display_name));
   userChip.appendChild(
     h(

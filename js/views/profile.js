@@ -10,22 +10,30 @@ import { ACCENTS, getAccentKey, applyAccent } from "../theme.js";
 import { ROOM_OPTIONS } from "../rooms.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
-function bigPhotoOrInitials(p, iconClass) {
-  if (p?.photo_url) {
-    return h("div", { class: "photo", style: `background-image:url('${esc(p.photo_url)}');width:90px;height:90px;border-radius:12px` });
-  }
-  if (p) {
-    return h("div", { class: "photo", style: "width:90px;height:90px;border-radius:12px;font-size:1.2rem" }, initials(p.name));
-  }
-  return h("div", { class: "photo", style: "width:90px;height:90px;border-radius:12px;font-size:1.2rem" }, h("i", { class: `fa-solid ${iconClass}` }));
-}
-
 function participantPickCard(label, participant, iconClass) {
-  return h("div", { class: "row-flex", style: "gap:14px;align-items:center" }, [
-    bigPhotoOrInitials(participant, iconClass),
-    h("div", {}, [
-      h("div", { class: "muted", style: "font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
-      h("div", { style: "font-weight:700;font-size:1.05rem" }, participant ? participant.name : "Sin definir"),
+  if (!participant) {
+    return h("div", { class: "nominee-card", style: "cursor:default" }, [
+      h("div", { class: "photo" }, h("i", { class: `fa-solid ${iconClass}` })),
+      h("div", { class: "info" }, [
+        h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
+        h("div", { class: "name" }, "Sin definir"),
+      ]),
+    ]);
+  }
+  const photo = participant.photo_url
+    ? h("div", { class: "photo", style: `background-image:url('${esc(participant.photo_url)}')` })
+    : h("div", { class: "photo" }, initials(participant.name));
+  return h("div", { class: "nominee-card", style: "cursor:default" }, [
+    photo,
+    h("div", { class: "info" }, [
+      h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
+      h("div", { class: "name" }, participant.name),
+      participant.room ? h("div", { class: "room" }, participant.room) : null,
+      h("div", { style: "margin-top:6px" }, [
+        participant.active
+          ? h("span", { class: "badge green" }, "En la casa")
+          : h("span", { class: "badge red" }, "Eliminado/a"),
+      ]),
     ]),
   ]);
 }
@@ -88,9 +96,9 @@ async function renderProfileInternal(container, username, targetHint, editable, 
 
   // ---------- Favorito / odiado ----------
   const favHatedCard = h("div", { class: "card" }, [
-    h("div", { class: "field-row" }, [
-      h("div", {}, participantPickCard("Favorito", favorite, "fa-heart")),
-      h("div", {}, participantPickCard("Le cae mal", hated, "fa-face-angry")),
+    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));max-width:380px" }, [
+      participantPickCard("Favorito", favorite, "fa-heart"),
+      participantPickCard("Le cae mal", hated, "fa-face-angry"),
     ]),
   ]);
 

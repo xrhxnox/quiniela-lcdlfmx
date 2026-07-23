@@ -383,10 +383,13 @@ table.data th {
   text-transform: uppercase;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
+  text-align: center;
 }
 table.data tbody tr:hover { background: rgba(255,255,255,0.03); }
 table.data td.num { text-align: center; font-weight: 700; }
 .rank-row.top1 td:first-child { color: var(--gold); font-weight: 800; }
+.player-link { color: var(--accent); font-weight: 700; text-decoration: none; }
+.player-link:hover { text-decoration: underline; }
 .table-wrap { overflow-x: auto; }
 
 .row-flex { display: flex; align-items: center; gap: 10px; }
