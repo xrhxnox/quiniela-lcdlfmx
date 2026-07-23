@@ -42,7 +42,9 @@ function participantPickCard(label, participant, iconClass) {
 function avatarNode(profile, size) {
   const style = `width:${size}px;height:${size}px;border-radius:50%;flex-shrink:0;`;
   if (profile.avatar_url) {
-    return h("div", { class: "photo", style: `${style}background-image:url('${esc(profile.avatar_url)}')` });
+    return h("div", {
+      style: `${style}background:var(--bg-elev) url('${esc(profile.avatar_url)}') center/contain no-repeat;`,
+    });
   }
   const theme = ACCENTS[profile.accent_color] || ACCENTS.rojo;
   return h(
@@ -136,7 +138,7 @@ async function renderProfileInternal(container, username, targetHint, editable, 
   const headerCard = h("div", { class: "card" }, [
     h("div", { class: "row-flex", style: "justify-content:space-between;flex-wrap:wrap;gap:16px" }, [
       h("div", { class: "row-flex", style: "gap:14px;align-items:center" }, [
-        avatarNode(target, 64),
+        avatarNode(target, 96),
         h("div", {}, [
           h("div", { style: "font-size:1.3rem;font-weight:700" }, target.display_name),
           h("div", { class: "muted" }, `@${target.username}`),
@@ -149,9 +151,6 @@ async function renderProfileInternal(container, username, targetHint, editable, 
         stats.accuracyPct !== null ? statBlock(`${stats.accuracyPct}%`, "acierto") : null,
       ]),
     ]),
-    target.favorite_room
-      ? h("p", { style: "margin-bottom:0;margin-top:10px" }, [h("i", { class: "fa-solid fa-house" }), ` Cuarto favorito: `, h("strong", {}, target.favorite_room)])
-      : null,
     badges.length
       ? h(
           "div",
@@ -355,11 +354,16 @@ function buildEditCard(profile, participants, refresh) {
     {
       class: "btn small",
       onclick: async () => {
-        if (!avatarFile.files[0]) return;
+        const file = avatarFile.files[0];
+        if (!file) return;
+        if (file.size > 3 * 1024 * 1024) {
+          errMsg.textContent = "La foto pesa demasiado (máximo 3MB). Usa una más ligera.";
+          return;
+        }
         avatarBtn.disabled = true;
         avatarBtn.textContent = "Subiendo…";
         try {
-          const url = await uploadMyAvatar(profile.id, avatarFile.files[0]);
+          const url = await uploadMyAvatar(profile.id, file);
           const updated = await updateMyProfile({ avatar_url: url });
           await refresh(updated);
         } catch (e) {
@@ -482,7 +486,7 @@ function buildEditCard(profile, participants, refresh) {
     h("div", { class: "row-flex", style: "margin-bottom:14px" }, [hatedSelect, hatedBtn]),
     h("label", {}, "Cuarto favorito"),
     h("div", { class: "row-flex", style: "margin-bottom:14px" }, [roomSelect, roomBtn]),
-    h("label", {}, "Color de énfasis"),
+    h("label", {}, "Color de tema"),
     swatchWrap,
     errMsg,
   ]);
