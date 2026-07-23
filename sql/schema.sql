@@ -55,11 +55,14 @@ alter table public.profiles add column if not exists favorite_participant_id big
 alter table public.profiles add column if not exists accent_color text;
 alter table public.profiles add column if not exists hated_participant_id bigint references public.participants(id) on delete set null;
 alter table public.profiles add column if not exists favorite_room text;
+alter table public.profiles add column if not exists avatar_url text;
+alter table public.profiles add column if not exists bio text;
 
 -- Permite que cada quien actualice SOLO su propio nombre, favorito, odiado,
--- cuarto favorito y color (nunca su rol), sin necesitar una política de
--- UPDATE abierta en profiles.
+-- cuarto favorito, foto, bio y color (nunca su rol), sin necesitar una
+-- política de UPDATE abierta en profiles.
 drop function if exists public.update_my_profile(text, bigint, boolean, text);
+drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text);
 create or replace function public.update_my_profile(
   new_display_name text default null,
   new_favorite_participant_id bigint default null,
@@ -67,7 +70,9 @@ create or replace function public.update_my_profile(
   new_accent_color text default null,
   new_hated_participant_id bigint default null,
   clear_hated boolean default false,
-  new_favorite_room text default null
+  new_favorite_room text default null,
+  new_avatar_url text default null,
+  new_bio text default null
 )
 returns public.profiles
 language plpgsql
@@ -82,14 +87,16 @@ begin
     favorite_participant_id = case when clear_favorite then null else coalesce(new_favorite_participant_id, favorite_participant_id) end,
     accent_color = coalesce(new_accent_color, accent_color),
     hated_participant_id = case when clear_hated then null else coalesce(new_hated_participant_id, hated_participant_id) end,
-    favorite_room = coalesce(new_favorite_room, favorite_room)
+    favorite_room = coalesce(new_favorite_room, favorite_room),
+    avatar_url = coalesce(new_avatar_url, avatar_url),
+    bio = coalesce(new_bio, bio)
   where id = auth.uid()
   returning * into result;
   return result;
 end;
 $$;
 
-grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text) to authenticated;
+grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text) to authenticated;
 
 -- ---------- SEMANAS ----------
 create table if not exists public.weeks (
@@ -293,6 +300,30 @@ create policy "photos_admin_update" on storage.objects for update
 drop policy if exists "photos_admin_delete" on storage.objects;
 create policy "photos_admin_delete" on storage.objects for delete
   using (bucket_id = 'photos' and public.is_admin());
+
+-- =========================================================
+-- STORAGE: bucket público para fotos de perfil (cada quien sube la suya)
+-- =========================================================
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists "avatars_public_read" on storage.objects;
+create policy "avatars_public_read" on storage.objects for select
+  using (bucket_id = 'avatars');
+
+-- Solo puedes subir/editar/borrar dentro de tu propia carpeta: avatars/<tu-uid>/...
+drop policy if exists "avatars_own_write" on storage.objects;
+create policy "avatars_own_write" on storage.objects for insert
+  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "avatars_own_update" on storage.objects;
+create policy "avatars_own_update" on storage.objects for update
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "avatars_own_delete" on storage.objects;
+create policy "avatars_own_delete" on storage.objects for delete
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
 
 -- =========================================================
 -- Después de correr este script:

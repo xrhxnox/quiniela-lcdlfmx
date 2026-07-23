@@ -242,6 +242,15 @@ export async function getProfileByUsername(username) {
   return data;
 }
 
+export async function uploadMyAvatar(userId, file) {
+  const ext = file.name.split(".").pop();
+  const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 // ---------- Mi perfil (self-service) ----------
 export async function updateMyProfile({
   display_name,
@@ -251,6 +260,8 @@ export async function updateMyProfile({
   hated_participant_id,
   clearHated,
   favorite_room,
+  avatar_url,
+  bio,
 } = {}) {
   return unwrap(
     await supabase.rpc("update_my_profile", {
@@ -261,6 +272,8 @@ export async function updateMyProfile({
       new_hated_participant_id: hated_participant_id ?? null,
       clear_hated: clearHated ?? false,
       new_favorite_room: favorite_room ?? null,
+      new_avatar_url: avatar_url ?? null,
+      new_bio: bio ?? null,
     })
   );
 }
