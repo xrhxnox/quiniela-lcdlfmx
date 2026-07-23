@@ -87,13 +87,29 @@ function computeStats(history, eliminatedSet) {
   return { totalClosed, correctCount, accuracyPct, currentStreak, bestStreak };
 }
 
-function buildBadges(target, stats) {
+function buildBadges(stats) {
   const badges = [];
   if (stats.currentStreak >= 3) badges.push({ icon: "fa-fire", label: `Racha de ${stats.currentStreak}` });
   if (stats.bestStreak >= 5) badges.push({ icon: "fa-crow", label: "Ojo de águila" });
   if (stats.totalClosed >= 3 && stats.accuracyPct >= 70) badges.push({ icon: "fa-bullseye", label: "Francotirador" });
-  if (target.favorite_room) badges.push({ icon: "fa-umbrella-beach", label: `Team ${target.favorite_room}` });
   return badges;
+}
+
+const ROOM_BADGE_COLORS = {
+  "Sin Cuarto": "#8a8a8d",
+  Ibiza: "#2596be",
+  Tulum: "#2fae5a",
+  Malibú: "#e0574c",
+};
+
+function teamBadgeNode(room) {
+  if (!room) return null;
+  const color = ROOM_BADGE_COLORS[room] || "#e8c05a";
+  return h(
+    "span",
+    { class: "badge", style: `background:${color}26;color:${color};border:1px solid ${color};margin-top:6px` },
+    [h("i", { class: "fa-solid fa-umbrella-beach" }), ` Team ${room}`]
+  );
 }
 
 export async function renderProfile(container, viewerProfile, onUpdate) {
