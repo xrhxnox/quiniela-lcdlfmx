@@ -38,7 +38,6 @@ export function renderLogin(container, onSuccess) {
 
   const wrap = h("div", { class: "login-wrap" }, [
     h("img", { class: "logo", src: "assets/logo.png", alt: "La Casa de los Famosos México" }),
-    h("div", { class: "muted" }, "Quiniela de eliminación · Temporada 4"),
     form,
   ]);
 
