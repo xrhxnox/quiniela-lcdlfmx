@@ -302,8 +302,8 @@ async function renderProfileInternal(container, username) {
 
   // ---------- Favorito / odiado ----------
   const favHatedCard = h("div", { class: "card" }, [
-    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-calendar-days" }), " ", h("strong", {}, "Acerca de esta temporada")]),
-    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(140px, 1fr))" }, [
+    h("p", { style: "margin-top:0;text-align:center" }, [h("i", { class: "fa-solid fa-calendar-days" }), " ", h("strong", {}, "Acerca de esta temporada")]),
+    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));justify-content:center" }, [
       participantPickCard("Favorito", favorite, "favorite", counts, favorite ? currentNominationMap[favorite.id] : null),
       participantPickCard("Odiado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null),
       participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null),
@@ -315,8 +315,8 @@ async function renderProfileInternal(container, username) {
 
   function legacySeasonCard(season, fav, hated, surprise, disappointment) {
     return h("div", { class: "card" }, [
-      h("p", { style: "margin-top:0" }, [h("i", { class: `fa-solid ${SEASON_DICE_ICONS[season]}` }), " ", h("strong", {}, `Temporada ${season}`)]),
-      h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
+      h("p", { style: "margin-top:0;text-align:center" }, [h("i", { class: `fa-solid ${SEASON_DICE_ICONS[season]}` }), " ", h("strong", {}, `Temporada ${season}`)]),
+      h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));justify-content:center" }, [
         legacyPickCard("Favorito", fav, "favorite"),
         legacyPickCard("Odiado", hated, "hated"),
         legacyPickCard("Sorpresa", surprise, "surprise"),
