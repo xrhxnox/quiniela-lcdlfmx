@@ -13,7 +13,15 @@ export async function renderRanking(container) {
   const body = rows.map((r, i) =>
     h("tr", { class: `rank-row${i === 0 ? " top1" : ""}` }, [
       h("td", {}, [`${i + 1} `, i === 0 ? h("i", { class: "fa-solid fa-crown" }) : null]),
-      h("td", {}, h("a", { href: `#/perfil/${encodeURIComponent(r.username)}`, class: "player-link" }, r.display_name)),
+      h("td", {}, [
+        h("div", { class: "player-cell" }, [
+          h("span", { style: "font-weight:700" }, r.display_name),
+          h("a", { href: `#/perfil/${encodeURIComponent(r.username)}`, class: "player-link" }, [
+            h("i", { class: "fa-solid fa-user" }),
+            " Ver perfil",
+          ]),
+        ]),
+      ]),
       h("td", { class: "num" }, String(r.points)),
     ])
   );

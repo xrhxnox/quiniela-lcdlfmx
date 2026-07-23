@@ -113,9 +113,9 @@ async function renderProfileInternal(container, username, targetHint, editable, 
     if (status !== "closed") {
       resultBadge = h("span", { class: "badge gray" }, "Pendiente");
     } else if (eliminatedSet.has(key)) {
-      resultBadge = h("span", { class: "badge green" }, "Acertó");
+      resultBadge = h("span", { class: "badge green" }, "Correcto");
     } else {
-      resultBadge = h("span", { class: "badge red" }, "Falló");
+      resultBadge = h("span", { class: "badge red" }, "Fallido");
     }
     return h("tr", {}, [
       h("td", {}, row.weeks.label || `Semana ${row.weeks.week_number}`),
