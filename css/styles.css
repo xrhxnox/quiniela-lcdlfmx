@@ -15,10 +15,35 @@
   --accent: #e30613;
   --accent-dim: #7d0a10;
   --accent-text: #ffffff;
+  --photo-bg: #000000;
   --radius: 14px;
   --font-display: "Oswald", "Segoe UI", system-ui, -apple-system, sans-serif;
   font-size: 16px;
 }
+
+:root[data-theme="light"] {
+  --bg: #f4f4f5;
+  --bg-elev: #ffffff;
+  --bg-card: #ffffff;
+  --line: #dcdcdc;
+  --text: #1a1a1a;
+  --text-dim: #5c5c5e;
+  --photo-bg: #e5e5e5;
+}
+
+[data-theme="light"] .brand-logo,
+[data-theme="light"] .login-wrap img.logo,
+[data-theme="light"] header.topbar .brand img {
+  filter: none;
+}
+[data-theme="light"] nav.tabs a:hover { background: rgba(0,0,0,0.05); }
+[data-theme="light"] table.data tbody tr:hover { background: rgba(0,0,0,0.03); }
+[data-theme="light"] .badge.gray { background: rgba(0,0,0,0.05); }
+[data-theme="light"] .swatch { border-color: rgba(0,0,0,0.15); }
+[data-theme="light"] .swatch.active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0,0,0,0.5); }
+[data-theme="light"] .card,
+[data-theme="light"] .nominee-card,
+[data-theme="light"] .login-card { box-shadow: 0 6px 18px rgba(0,0,0,0.1); }
 
 * { box-sizing: border-box; }
 
@@ -320,7 +345,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 .nominee-card .photo {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: #000 center/cover no-repeat;
+  background: var(--photo-bg) center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -422,7 +447,7 @@ table.data td.num { font-weight: 700; }
 input[type=file] { max-width: 100%; }
 .avatar-sm {
   width: 34px; height: 34px; border-radius: 50%;
-  background: #000 center/cover no-repeat;
+  background: var(--photo-bg) center/cover no-repeat;
   flex-shrink: 0;
   font-size: 0.8rem; font-weight: 800; color: var(--text-dim);
   display: flex; align-items: center; justify-content: center;

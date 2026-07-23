@@ -59,6 +59,7 @@ alter table public.profiles add column if not exists avatar_url text;
 alter table public.profiles add column if not exists bio text;
 alter table public.profiles add column if not exists surprise_participant_id bigint references public.participants(id) on delete set null;
 alter table public.profiles add column if not exists disappointment_participant_id bigint references public.participants(id) on delete set null;
+alter table public.profiles add column if not exists theme_mode text check (theme_mode in ('dark','light'));
 
 -- ---------- FAVORITOS DE TEMPORADAS ANTERIORES (no son habitantes actuales) ----------
 create table if not exists public.legacy_favorites (
@@ -122,6 +123,7 @@ drop function if exists public.update_my_profile(text, bigint, boolean, text, bi
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean);
 drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean);
+drop function if exists public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, boolean, boolean, boolean, boolean, boolean);
 create or replace function public.update_my_profile(
   new_display_name text default null,
   new_favorite_participant_id bigint default null,
@@ -167,7 +169,8 @@ create or replace function public.update_my_profile(
   clear_legacy_room_t1 boolean default false,
   clear_legacy_room_t2 boolean default false,
   clear_legacy_room_t3 boolean default false,
-  clear_avatar boolean default false
+  clear_avatar boolean default false,
+  new_theme_mode text default null
 )
 returns public.profiles
 language plpgsql
@@ -201,14 +204,15 @@ begin
     surprise_season3_id = case when clear_surprise_season3 then null else coalesce(new_surprise_season3_id, surprise_season3_id) end,
     disappointment_season1_id = case when clear_disappointment_season1 then null else coalesce(new_disappointment_season1_id, disappointment_season1_id) end,
     disappointment_season2_id = case when clear_disappointment_season2 then null else coalesce(new_disappointment_season2_id, disappointment_season2_id) end,
-    disappointment_season3_id = case when clear_disappointment_season3 then null else coalesce(new_disappointment_season3_id, disappointment_season3_id) end
+    disappointment_season3_id = case when clear_disappointment_season3 then null else coalesce(new_disappointment_season3_id, disappointment_season3_id) end,
+    theme_mode = coalesce(new_theme_mode, theme_mode)
   where id = auth.uid()
   returning * into result;
   return result;
 end;
 $$;
 
-grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, boolean, boolean, boolean, boolean, boolean) to authenticated;
+grant execute on function public.update_my_profile(text, bigint, boolean, text, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, text, text, text, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean, boolean, boolean, boolean, boolean, boolean, text) to authenticated;
 
 -- ---------- SEMANAS ----------
 create table if not exists public.weeks (

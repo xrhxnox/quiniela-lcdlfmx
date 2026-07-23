@@ -37,3 +37,27 @@ export function syncAccentFromProfile(profile) {
     applyAccent(profile.accent_color);
   }
 }
+
+const THEME_MODE_KEY = "lcdlfmx_theme_mode";
+
+export function getThemeMode() {
+  return localStorage.getItem(THEME_MODE_KEY) === "light" ? "light" : "dark";
+}
+
+export function applyThemeMode(mode) {
+  const value = mode === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", value);
+  localStorage.setItem(THEME_MODE_KEY, value);
+}
+
+export function initThemeMode() {
+  applyThemeMode(getThemeMode());
+}
+
+// Igual que el color: si el perfil ya tiene un tema guardado en el servidor,
+// ese manda sobre lo que haya localmente.
+export function syncThemeModeFromProfile(profile) {
+  if (profile?.theme_mode === "light" || profile?.theme_mode === "dark") {
+    applyThemeMode(profile.theme_mode);
+  }
+}

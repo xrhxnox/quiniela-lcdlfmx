@@ -8,9 +8,10 @@ import { renderAdmin } from "./views/admin.js";
 import { renderProfile, renderPublicProfile, renderEditProfile } from "./views/profile.js";
 import { renderReglas } from "./views/reglas.js";
 import { h, clearAndAppend } from "./utils.js";
-import { initAccent, syncAccentFromProfile } from "./theme.js";
+import { initAccent, syncAccentFromProfile, initThemeMode, syncThemeModeFromProfile } from "./theme.js";
 
 initAccent();
+initThemeMode();
 
 const app = document.getElementById("app");
 const appHeaderWrap = document.getElementById("appHeaderWrap");
@@ -118,12 +119,14 @@ async function boot() {
     renderLogin(app, async () => {
       currentProfile = await getMyProfile();
       syncAccentFromProfile(currentProfile);
+      syncThemeModeFromProfile(currentProfile);
       await renderRoute();
     });
     return;
   }
   currentProfile = await getMyProfile();
   syncAccentFromProfile(currentProfile);
+  syncThemeModeFromProfile(currentProfile);
   await renderRoute();
 }
 

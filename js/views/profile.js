@@ -13,7 +13,7 @@ import {
   getVotingWeek,
   getNominationsForWeek,
 } from "../data.js";
-import { ACCENTS, getAccentKey, applyAccent } from "../theme.js";
+import { ACCENTS, getAccentKey, applyAccent, getThemeMode, applyThemeMode } from "../theme.js";
 import { ROOM_OPTIONS, LEGACY_ROOM_OPTIONS } from "../rooms.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
@@ -567,6 +567,29 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     swatchWrap.appendChild(swatchBtn);
   });
 
+  let selectedThemeMode = getThemeMode();
+  const themeModeWrap = h("div", { class: "row-flex", style: "gap:10px" });
+  [
+    { key: "dark", label: "Oscuro", icon: "fa-moon" },
+    { key: "light", label: "Claro", icon: "fa-sun" },
+  ].forEach(({ key, label, icon }) => {
+    const modeBtn = h(
+      "button",
+      {
+        class: `btn small${selectedThemeMode === key ? "" : " secondary"}`,
+        type: "button",
+        onclick: () => {
+          applyThemeMode(key);
+          selectedThemeMode = key;
+          [...themeModeWrap.children].forEach((c) => c.classList.add("secondary"));
+          modeBtn.classList.remove("secondary");
+        },
+      },
+      [h("i", { class: `fa-solid ${icon}` }), " ", label]
+    );
+    themeModeWrap.appendChild(modeBtn);
+  });
+
   const saveBtn = h(
     "button",
     {
@@ -631,6 +654,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
             disappointment_season3_id: t3DisappointmentSelect.value ? Number(t3DisappointmentSelect.value) : undefined,
             clearDisappointmentSeason3: !t3DisappointmentSelect.value,
             accent_color: selectedAccent,
+            theme_mode: selectedThemeMode,
           });
           successMsg.textContent = "¡Cambios guardados!";
           await refresh(updated);
@@ -699,6 +723,8 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [t3RoomSelect]),
     h("label", {}, "Color de tema"),
     h("div", { style: "margin-bottom:18px" }, [swatchWrap]),
+    h("label", {}, "Tema oscuro o claro"),
+    h("div", { style: "margin-bottom:18px" }, [themeModeWrap]),
     saveBtn,
     successMsg,
     errMsg,
