@@ -235,29 +235,32 @@ async function renderProfileInternal(container, username) {
     .filter(Boolean);
 
   // ---------- Encabezado ----------
-  const headerCard = h("div", { class: "card" }, [
-    h("div", { class: "row-flex", style: "gap:14px;align-items:center;flex-wrap:wrap" }, [
+  const headerCard = h(
+    "div",
+    { class: "card", style: "display:flex;flex-direction:column;align-items:center;text-align:center" },
+    [
       avatarNode(target, 125),
-      h("div", {}, [
-        h("div", { style: "font-size:1.3rem;font-weight:700" }, target.display_name),
-        h("div", { class: "muted" }, `@${target.username}`),
-        target.bio ? h("div", { style: "margin-top:4px;font-style:italic" }, target.bio) : null,
-        h("div", { style: "display:flex;flex-wrap:wrap;gap:6px" }, [teamBadgeNode(target.favorite_room), ...legacyRoomBadges]),
+      h("div", { style: "font-size:1.3rem;font-weight:700;margin-top:12px" }, target.display_name),
+      h("div", { class: "muted" }, `@${target.username}`),
+      target.bio ? h("div", { style: "margin-top:4px;font-style:italic" }, target.bio) : null,
+      h("div", { style: "display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px" }, [
+        teamBadgeNode(target.favorite_room),
+        ...legacyRoomBadges,
       ]),
-    ]),
-    h("div", { class: "row-flex", style: "gap:18px;flex-wrap:wrap;margin-top:16px" }, [
-      statBlock(String(points), "puntos"),
-      rankIndex >= 0 ? statBlock(`#${rankIndex + 1}`, `de ${leaderboard.length}`) : null,
-      stats.accuracyPct !== null ? statBlock(`${stats.accuracyPct}%`, "acierto") : null,
-    ]),
-    badges.length
-      ? h(
-          "div",
-          { style: "margin-top:10px;display:flex;flex-wrap:wrap;gap:6px" },
-          badges.map((b) => h("span", { class: "badge gold" }, [h("i", { class: `fa-solid ${b.icon}` }), " ", b.label]))
-        )
-      : null,
-  ]);
+      h("div", { class: "row-flex", style: "gap:18px;flex-wrap:wrap;justify-content:center;margin-top:16px" }, [
+        statBlock(String(points), "puntos"),
+        rankIndex >= 0 ? statBlock(`#${rankIndex + 1}`, `de ${leaderboard.length}`) : null,
+        stats.accuracyPct !== null ? statBlock(`${stats.accuracyPct}%`, "acierto") : null,
+      ]),
+      badges.length
+        ? h(
+            "div",
+            { style: "margin-top:12px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px" },
+            badges.map((b) => h("span", { class: "badge gold" }, [h("i", { class: `fa-solid ${b.icon}` }), " ", b.label]))
+          )
+        : null,
+    ]
+  );
 
   // ---------- Favorito / odiado ----------
   const favHatedCard = h("div", { class: "card" }, [
