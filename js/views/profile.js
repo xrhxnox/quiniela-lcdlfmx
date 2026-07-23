@@ -181,15 +181,18 @@ const LEGACY_ROOM_BADGE_STYLES = {
   Día: { color: "#eab308", icon: "fa-sun" },
   Noche: { color: "#4338ca", icon: "fa-moon" },
   Eclipse: { color: "#ff8000", icon: "fa-circle-half-stroke" },
+  "Team Solo Wendy Guevara": { color: "#f472b6", icon: "fa-transgender" },
+  "Team Gomita Super Buena Onda": { color: "#22c55e", icon: "fa-thumbs-up" },
 };
 
 function legacyRoomBadgeNode(value) {
   if (!value) return null;
   const style = LEGACY_ROOM_BADGE_STYLES[value] || { color: "#e8c05a", icon: "fa-clock-rotate-left" };
+  const text = value.startsWith("Team ") ? value : `Team ${value}`;
   return h(
     "span",
     { class: "badge", style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color};margin-top:6px` },
-    [h("i", { class: `fa-solid ${style.icon}` }), ` Team ${value}`]
+    [h("i", { class: `fa-solid ${style.icon}` }), ` ${text}`]
   );
 }
 
@@ -303,7 +306,7 @@ async function renderProfileInternal(container, username) {
   // ---------- Favorito / odiado ----------
   const favHatedCard = h("div", { class: "card" }, [
     h("p", { style: "margin-top:0;text-align:center" }, [h("i", { class: "fa-solid fa-calendar-days" }), " ", h("strong", {}, "Acerca de esta temporada")]),
-    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));justify-content:center" }, [
+    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit, minmax(140px, 140px));justify-content:center" }, [
       participantPickCard("Favorito", favorite, "favorite", counts, favorite ? currentNominationMap[favorite.id] : null),
       participantPickCard("Odiado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null),
       participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null),
@@ -316,7 +319,7 @@ async function renderProfileInternal(container, username) {
   function legacySeasonCard(season, fav, hated, surprise, disappointment) {
     return h("div", { class: "card" }, [
       h("p", { style: "margin-top:0;text-align:center" }, [h("i", { class: `fa-solid ${SEASON_DICE_ICONS[season]}` }), " ", h("strong", {}, `Temporada ${season}`)]),
-      h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));justify-content:center" }, [
+      h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit, minmax(120px, 120px));justify-content:center" }, [
         legacyPickCard("Favorito", fav, "favorite"),
         legacyPickCard("Odiado", hated, "hated"),
         legacyPickCard("Sorpresa", surprise, "surprise"),
@@ -661,7 +664,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [t1SurpriseSelect]),
     h("label", {}, "Decepción de Temporada 1"),
     h("div", { style: "margin-bottom:14px" }, [t1DisappointmentSelect]),
-    h("label", {}, "Cuarto de Temporada 1 (Cielo o Infierno)"),
+    h("label", {}, "Team de Temporada 1 (Cielo, Infierno o Team Solo Wendy Guevara)"),
     h("div", { style: "margin-bottom:14px" }, [t1RoomSelect]),
     h("label", {}, "Favorito de Temporada 2"),
     h("div", { style: "margin-bottom:14px" }, [t2Select]),
@@ -671,7 +674,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [t2SurpriseSelect]),
     h("label", {}, "Decepción de Temporada 2"),
     h("div", { style: "margin-bottom:14px" }, [t2DisappointmentSelect]),
-    h("label", {}, "Cuarto de Temporada 2 (Mar o Tierra)"),
+    h("label", {}, "Team de Temporada 2 (Mar, Tierra o Team Gomita Super Buena Onda)"),
     h("div", { style: "margin-bottom:14px" }, [t2RoomSelect]),
     h("label", {}, "Favorito de Temporada 3"),
     h("div", { style: "margin-bottom:14px" }, [t3Select]),
@@ -681,7 +684,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [t3SurpriseSelect]),
     h("label", {}, "Decepción de Temporada 3"),
     h("div", { style: "margin-bottom:14px" }, [t3DisappointmentSelect]),
-    h("label", {}, "Cuarto de Temporada 3 (Día, Noche o Eclipse)"),
+    h("label", {}, "Team de Temporada 3 (Día, Noche o Eclipse)"),
     h("div", { style: "margin-bottom:14px" }, [t3RoomSelect]),
     h("label", {}, "Color de tema"),
     h("div", { style: "margin-bottom:18px" }, [swatchWrap]),
