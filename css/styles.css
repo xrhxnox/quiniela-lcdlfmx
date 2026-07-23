@@ -136,12 +136,13 @@ header.topbar .user-chip strong {
   gap: 8px;
   background: #ffffff;
   color: #1a1a1a;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   padding: 8px 14px;
   border-radius: 999px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 [data-theme="light"] .username-badge {
   background: #000000;
