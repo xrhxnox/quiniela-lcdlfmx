@@ -139,11 +139,12 @@ const ROOM_BADGE_STYLES = {
   Malibú: { color: "#e0574c", icon: "fa-heart" },
 };
 
-function legacyPickCard(label, fav) {
+function legacyPickCard(label, fav, type) {
   if (!fav) {
     return h("div", { class: "nominee-card", style: "cursor:default" }, [
       h("div", { class: "photo" }, h("i", { class: "fa-solid fa-clock-rotate-left" })),
       h("div", { class: "info" }, [
+        pickTypeIcon(type),
         h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
         h("div", { class: "name" }, "Sin definir"),
       ]),
@@ -155,6 +156,7 @@ function legacyPickCard(label, fav) {
   return h("div", { class: "nominee-card", style: "cursor:default" }, [
     photo,
     h("div", { class: "info" }, [
+      pickTypeIcon(type),
       h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
       h("div", { class: "name" }, fav.name),
     ]),
@@ -309,49 +311,28 @@ async function renderProfileInternal(container, username) {
     ]),
   ]);
 
-  const legacyCard = h("div", { class: "card" }, [
-    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-star" }), " ", h("strong", {}, "Favoritos de temporadas anteriores")]),
-    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
-      legacyPickCard("Temporada 1", favT1),
-      legacyPickCard("Temporada 2", favT2),
-      legacyPickCard("Temporada 3", favT3),
-    ]),
-  ]);
+  function legacySeasonCard(seasonLabel, fav, hated, surprise, disappointment) {
+    return h("div", { class: "card" }, [
+      h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-clock-rotate-left" }), " ", h("strong", {}, seasonLabel)]),
+      h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
+        legacyPickCard("Favorito", fav, "favorite"),
+        legacyPickCard("Odiado", hated, "hated"),
+        legacyPickCard("Sorpresa", surprise, "surprise"),
+        legacyPickCard("Decepción", disappointment, "disappointment"),
+      ]),
+    ]);
+  }
 
-  const legacyHatedCard = h("div", { class: "card" }, [
-    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-skull-crossbones" }), " ", h("strong", {}, "Odiados de temporadas anteriores")]),
-    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
-      legacyPickCard("Temporada 1", hatedT1),
-      legacyPickCard("Temporada 2", hatedT2),
-      legacyPickCard("Temporada 3", hatedT3),
-    ]),
-  ]);
-
-  const legacySurpriseCard = h("div", { class: "card" }, [
-    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-face-surprise" }), " ", h("strong", {}, "Sorpresas de temporadas anteriores")]),
-    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
-      legacyPickCard("Temporada 1", surpriseT1),
-      legacyPickCard("Temporada 2", surpriseT2),
-      legacyPickCard("Temporada 3", surpriseT3),
-    ]),
-  ]);
-
-  const legacyDisappointmentCard = h("div", { class: "card" }, [
-    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-face-frown" }), " ", h("strong", {}, "Decepciones de temporadas anteriores")]),
-    h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fill, minmax(120px, 1fr))" }, [
-      legacyPickCard("Temporada 1", disappointmentT1),
-      legacyPickCard("Temporada 2", disappointmentT2),
-      legacyPickCard("Temporada 3", disappointmentT3),
-    ]),
-  ]);
+  const legacySeason1Card = legacySeasonCard("Temporada 1", favT1, hatedT1, surpriseT1, disappointmentT1);
+  const legacySeason2Card = legacySeasonCard("Temporada 2", favT2, hatedT2, surpriseT2, disappointmentT2);
+  const legacySeason3Card = legacySeasonCard("Temporada 3", favT3, hatedT3, surpriseT3, disappointmentT3);
 
   const cards = [
     headerCard,
     favHatedCard,
-    legacyCard,
-    legacyHatedCard,
-    legacySurpriseCard,
-    legacyDisappointmentCard,
+    legacySeason1Card,
+    legacySeason2Card,
+    legacySeason3Card,
     buildCompareCard(target, leaderboard),
   ];
 
