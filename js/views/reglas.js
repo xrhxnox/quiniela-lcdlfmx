@@ -21,11 +21,17 @@ export async function renderReglas(container) {
       ]),
 
       ruleCard("fa-calendar-days", "Calendario de la semana", [
-        h("ul", { style: "margin:0;padding-left:20px" }, [
+        h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
           h("li", {}, [h("strong", {}, "Lunes:"), " se anuncia el líder de la semana (inmunidad)."]),
           h("li", {}, [h("strong", {}, "Miércoles:"), " se publican los nominados y se abre la votación."]),
           h("li", {}, [h("strong", {}, "Viernes:"), " se confirma quién de los nominados ganó la salvación."]),
-          h("li", { style: "margin-bottom:0" }, [h("strong", {}, "Día de eliminación:"), " se cierra la votación y se confirma quién salió."]),
+          h("li", {}, [h("strong", {}, "Día de eliminación:"), " se cierra la votación y se confirma quién salió."]),
+          h("li", { style: "margin-bottom:0" }, [
+            h("i", { class: "fa-solid fa-hourglass-half" }),
+            " ",
+            h("strong", {}, "Cuenta regresiva:"),
+            " el día de la eliminación, en Votar aparece un contador en vivo hasta la hora exacta en que se cierra la votación (entre 6 y 8 PM). Al llegar a cero, ya no puedes votar ni cambiar tu pick, aunque el admin todavía no haya confirmado quién salió — así nadie puede copiar el resultado en vivo.",
+          ]),
         ]),
       ]),
 
