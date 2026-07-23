@@ -55,7 +55,9 @@ html, body {
   margin: 0;
   padding: 0;
   background-color: var(--bg);
-  background-image: radial-gradient(ellipse 1200px 800px at 50% -10%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%);
+  background-image:
+    radial-gradient(ellipse 1200px 800px at 50% -10%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 1200px 800px at 50% 110%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%);
   background-repeat: no-repeat;
   background-attachment: fixed;
   color: var(--text);
