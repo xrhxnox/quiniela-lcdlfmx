@@ -23,7 +23,7 @@ appFooter.textContent = `LCDLFMX4 · ${new Date().getFullYear()} · Designed by 
 let currentProfile = null;
 
 const ROUTES = [
-  { path: "#/", label: "Votar", icon: "fa-square-poll-vertical", render: (c) => renderHome(c, currentProfile) },
+  { path: "#/", label: "Votar", icon: "fa-thumbs-up", render: (c) => renderHome(c, currentProfile) },
   { path: "#/participantes", label: "Habitantes", icon: "fa-house", render: renderParticipantes },
   { path: "#/eliminados", label: "Eliminados", icon: "fa-door-open", render: renderEliminados },
   { path: "#/ranking", label: "Ranking", icon: "fa-trophy", render: renderRanking },
