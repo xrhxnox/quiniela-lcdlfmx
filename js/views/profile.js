@@ -170,18 +170,38 @@ function legacyRoomBadgeNode(value) {
   );
 }
 
-export async function renderProfile(container, viewerProfile, onUpdate) {
-  await renderProfileInternal(container, viewerProfile.username, viewerProfile, true, onUpdate);
+export async function renderProfile(container, viewerProfile) {
+  await renderProfileInternal(container, viewerProfile.username);
 }
 
-export async function renderPublicProfile(container, username, viewerProfile) {
-  await renderProfileInternal(container, username, viewerProfile, false, null);
+export async function renderPublicProfile(container, username) {
+  await renderProfileInternal(container, username);
 }
 
-async function renderProfileInternal(container, username, targetHint, editable, onUpdate) {
+export async function renderEditProfile(container, viewerProfile, onUpdate) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
 
-  const target = editable ? targetHint : await getProfileByUsername(username);
+  const [participants, legacyFavorites] = await Promise.all([getParticipants(), getLegacyFavorites()]);
+
+  const refresh = async (updatedProfile) => {
+    const nextProfile = updatedProfile || viewerProfile;
+    onUpdate?.(nextProfile);
+    await renderEditProfile(container, nextProfile, onUpdate);
+  };
+
+  clearAndAppend(
+    container,
+    h("div", {}, [
+      h("div", { class: "section-title" }, "Editar Perfil"),
+      buildEditCard(viewerProfile, participants, legacyFavorites, refresh),
+    ])
+  );
+}
+
+async function renderProfileInternal(container, username) {
+  clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
+
+  const target = await getProfileByUsername(username);
   if (!target) {
     clearAndAppend(container, h("div", { class: "empty-state" }, "No encontramos a ese jugador."));
     return;
@@ -199,12 +219,6 @@ async function renderProfileInternal(container, username, targetHint, editable, 
   const currentNominations = votingWeek ? await getNominationsForWeek(votingWeek.id) : [];
   const currentNominationMap = {};
   currentNominations.forEach((n) => (currentNominationMap[n.participant_id] = n));
-
-  const refresh = async (updatedProfile) => {
-    const nextTarget = updatedProfile || target;
-    onUpdate?.(nextTarget);
-    await renderProfileInternal(container, nextTarget.username, nextTarget, editable, onUpdate);
-  };
 
   const eliminatedSet = new Set(eliminations.map((e) => `${e.week_id}:${e.participant_id}`));
   const rankIndex = leaderboard.findIndex((r) => r.player_id === target.id);
@@ -262,9 +276,7 @@ async function renderProfileInternal(container, username, targetHint, editable, 
     ]),
   ]);
 
-  const cards = [headerCard, favHatedCard, legacyCard];
-  if (editable) cards.push(buildEditCard(target, participants, legacyFavorites, refresh));
-  cards.push(buildCompareCard(target, leaderboard));
+  const cards = [headerCard, favHatedCard, legacyCard, buildCompareCard(target, leaderboard)];
 
   // ---------- Historial ----------
   const historyRows = sortHistory(history).map((row) => {
@@ -297,9 +309,9 @@ async function renderProfileInternal(container, username, targetHint, editable, 
   clearAndAppend(
     container,
     h("div", {}, [
-      h("div", { class: "section-title" }, editable ? "Mi Perfil" : `Perfil de ${target.display_name}`),
+      h("div", { class: "section-title" }, `Perfil de ${target.display_name}`),
       ...cards,
-      h("div", { class: "section-title", style: "font-size:1.1rem;margin-top:24px" }, editable ? "Mi historial de picks" : "Historial de picks"),
+      h("div", { class: "section-title", style: "font-size:1.1rem;margin-top:24px" }, "Historial de picks"),
       historyCard,
     ])
   );
@@ -639,8 +651,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
   });
 
   return h("div", { class: "card" }, [
-    h("p", { style: "margin-top:0" }, h("strong", {}, "Editar mi perfil")),
-    h("label", {}, "Foto de perfil"),
+    h("label", { style: "margin-top:0;display:block" }, "Foto de perfil"),
     h("div", { class: "row-flex", style: "margin-bottom:14px" }, [avatarFile, avatarBtn]),
     h("label", {}, "Nombre para mostrar"),
     h("div", { class: "row-flex", style: "margin-bottom:14px" }, [nameInput, nameBtn]),

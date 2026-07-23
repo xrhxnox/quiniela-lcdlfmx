@@ -5,7 +5,7 @@ import { renderRanking } from "./views/ranking.js";
 import { renderEliminados } from "./views/eliminados.js";
 import { renderParticipantes } from "./views/participantes.js";
 import { renderAdmin } from "./views/admin.js";
-import { renderProfile, renderPublicProfile } from "./views/profile.js";
+import { renderProfile, renderPublicProfile, renderEditProfile } from "./views/profile.js";
 import { renderReglas } from "./views/reglas.js";
 import { h, clearAndAppend } from "./utils.js";
 import { initAccent, syncAccentFromProfile } from "./theme.js";
@@ -32,8 +32,14 @@ const ROUTES = [
     path: "#/perfil",
     label: "Mi Perfil",
     icon: "fa-user",
+    render: (c) => renderProfile(c, currentProfile),
+  },
+  {
+    path: "#/editar-perfil",
+    label: "Editar Perfil",
+    icon: "fa-pen-to-square",
     render: (c) =>
-      renderProfile(c, currentProfile, (updated) => {
+      renderEditProfile(c, currentProfile, (updated) => {
         currentProfile = { ...currentProfile, ...updated };
         renderNav();
       }),
@@ -78,7 +84,7 @@ async function renderRoute() {
   if (hash.startsWith("#/perfil/")) {
     const username = decodeURIComponent(hash.slice("#/perfil/".length));
     try {
-      await renderPublicProfile(app, username, currentProfile);
+      await renderPublicProfile(app, username);
     } catch (e) {
       console.error(e);
       clearAndAppend(app, h("div", { class: "empty-state" }, "Ocurrió un error cargando este perfil."));
