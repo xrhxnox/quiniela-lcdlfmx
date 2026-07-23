@@ -32,7 +32,7 @@ async function renderParticipantsAdmin(sub) {
   const participants = await getParticipants();
 
   const nameInput = h("input", { type: "text", placeholder: "Nombre" });
-  const roomInput = h("input", { type: "text", placeholder: "Cuarto" });
+  const roomInput = h("input", { type: "text", placeholder: "Cuarto (opcional)" });
   const fileInput = h("input", { type: "file", accept: "image/*" });
   const addErr = h("div", { class: "error-msg" });
   const addBtn = h(
@@ -40,8 +40,8 @@ async function renderParticipantsAdmin(sub) {
     {
       class: "btn small",
       onclick: async () => {
-        if (!nameInput.value.trim() || !roomInput.value.trim()) {
-          addErr.textContent = "Nombre y cuarto son obligatorios.";
+        if (!nameInput.value.trim()) {
+          addErr.textContent = "El nombre es obligatorio.";
           return;
         }
         addBtn.disabled = true;
@@ -49,7 +49,7 @@ async function renderParticipantsAdmin(sub) {
         try {
           let photo_url = null;
           if (fileInput.files[0]) photo_url = await uploadParticipantPhoto(fileInput.files[0]);
-          await createParticipant({ name: nameInput.value.trim(), room: roomInput.value.trim(), photo_url });
+          await createParticipant({ name: nameInput.value.trim(), room: roomInput.value.trim() || null, photo_url });
           await renderParticipantsAdmin(sub);
         } catch (e) {
           addErr.textContent = "No se pudo guardar. " + (e.message || "");
@@ -80,7 +80,7 @@ async function renderParticipantsAdmin(sub) {
       {
         class: "btn small secondary",
         onclick: async () => {
-          await updateParticipant(p.id, { name: nameField.value.trim(), room: roomField.value.trim() });
+          await updateParticipant(p.id, { name: nameField.value.trim(), room: roomField.value.trim() || null });
           await renderParticipantsAdmin(sub);
         },
       },

@@ -20,7 +20,7 @@ export async function renderParticipantes(container) {
       photo,
       h("div", { class: "info" }, [
         h("div", { class: "name" }, p.name),
-        h("div", { class: "room" }, p.room),
+        p.room ? h("div", { class: "room" }, p.room) : null,
         h("div", { style: "margin-top:6px" }, [
           p.active
             ? h("span", { class: "badge green" }, "En la casa")

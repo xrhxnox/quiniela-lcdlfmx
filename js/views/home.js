@@ -45,7 +45,7 @@ async function renderVotingWeek(container, week, profile) {
         photoOrInitials(p),
         h("div", { class: "info" }, [
           h("div", { class: "name" }, p.name),
-          h("div", { class: "room" }, p.room),
+          p.room ? h("div", { class: "room" }, p.room) : null,
           h("div", { class: "points" }, `${n.points} pts de nominación`),
         ]),
       ]

@@ -44,7 +44,7 @@ create trigger on_auth_user_created
 create table if not exists public.participants (
   id bigint generated always as identity primary key,
   name text not null,
-  room text not null,
+  room text,
   photo_url text,
   active boolean not null default true,
   created_at timestamptz not null default now()
