@@ -66,7 +66,7 @@ function participantPickCard(label, participant, type, counts, currentNomination
           : h("span", { class: "badge red" }, "Eliminado/a"),
         weekBadge,
       ]),
-      h("div", { class: "points", style: "color:var(--green)" }, `Líder ${timesLeader} veces`),
+      h("div", { class: "points", style: "color:var(--cyan)" }, `Líder ${timesLeader} veces`),
       h("div", { class: "points" }, `Salvado ${timesSaved} veces`),
       h("div", { class: "points", style: "color:var(--red)" }, `Nominado ${timesNominated} veces`),
     ]),
