@@ -279,13 +279,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   font-size: 0.85rem;
   letter-spacing: 0.04em;
   cursor: pointer;
-  box-shadow: 0 4px 14px -2px var(--accent-dim);
   transition: filter 0.15s, transform 0.15s;
 }
 .btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn.secondary { background: transparent; border: 1px solid var(--line); color: var(--text); box-shadow: none; }
+.btn.secondary { background: transparent; border: 1px solid var(--line); color: var(--text); }
 .btn.secondary:hover { border-color: var(--text-dim); }
 .btn.small { padding: 6px 10px; font-size: 0.72rem; }
 .btn.danger { background: var(--red-dim); color: #fff; }
