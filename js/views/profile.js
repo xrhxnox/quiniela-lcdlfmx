@@ -417,123 +417,25 @@ function renderCompareResult(box, target, other, myHistory, theirHistory, elimin
 }
 
 function buildEditCard(profile, participants, legacyFavorites, refresh) {
-  const nameInput = h("input", { type: "text", value: profile.display_name });
   const errMsg = h("span", { class: "error-msg" });
-  const nameBtn = h(
-    "button",
-    {
-      class: "btn small",
-      onclick: async () => {
-        if (!nameInput.value.trim()) return;
-        nameBtn.disabled = true;
-        try {
-          const updated = await updateMyProfile({ display_name: nameInput.value.trim() });
-          await refresh(updated);
-        } catch (e) {
-          errMsg.textContent = "Error al guardar";
-          nameBtn.disabled = false;
-        }
-      },
-    },
-    "Guardar"
-  );
+  const successMsg = h("span", { class: "success-msg" });
 
+  const nameInput = h("input", { type: "text", value: profile.display_name });
   const bioInput = h("textarea", { rows: "2", maxlength: "140", placeholder: "Una frase corta para tu perfil…" }, profile.bio || "");
-  const bioBtn = h(
-    "button",
-    {
-      class: "btn small",
-      onclick: async () => {
-        bioBtn.disabled = true;
-        try {
-          const updated = await updateMyProfile({ bio: bioInput.value.trim() || " " });
-          await refresh(updated);
-        } catch (e) {
-          errMsg.textContent = "Error al guardar";
-          bioBtn.disabled = false;
-        }
-      },
-    },
-    "Guardar"
-  );
-
   const avatarFile = h("input", { type: "file", accept: "image/*" });
-  const avatarBtn = h(
-    "button",
-    {
-      class: "btn small",
-      onclick: async () => {
-        const file = avatarFile.files[0];
-        if (!file) return;
-        if (file.size > 3 * 1024 * 1024) {
-          errMsg.textContent = "La foto pesa demasiado (máximo 3MB). Usa una más ligera.";
-          return;
-        }
-        avatarBtn.disabled = true;
-        avatarBtn.textContent = "Subiendo…";
-        try {
-          const url = await uploadMyAvatar(profile.id, file);
-          const updated = await updateMyProfile({ avatar_url: url });
-          await refresh(updated);
-        } catch (e) {
-          errMsg.textContent = "No se pudo subir la foto";
-          avatarBtn.disabled = false;
-          avatarBtn.textContent = "Subir foto";
-        }
-      },
-    },
-    "Subir foto"
-  );
 
-  function pickSelect(currentId) {
+  function pickSelect(currentId, options) {
     return h(
       "select",
       {},
       [h("option", { value: "" }, "Sin elegir")].concat(
-        participants.map((p) => h("option", { value: p.id, selected: currentId === p.id ? "selected" : undefined }, p.name))
+        options.map((p) => h("option", { value: p.id, selected: currentId === p.id ? "selected" : undefined }, p.name))
       )
     );
   }
 
-  const favSelect = pickSelect(profile.favorite_participant_id);
-  const favBtn = h(
-    "button",
-    {
-      class: "btn small",
-      onclick: async () => {
-        favBtn.disabled = true;
-        try {
-          const value = favSelect.value;
-          const updated = await updateMyProfile(value ? { favorite_participant_id: Number(value) } : { clearFavorite: true });
-          await refresh(updated);
-        } catch (e) {
-          errMsg.textContent = "Error al guardar";
-          favBtn.disabled = false;
-        }
-      },
-    },
-    "Guardar"
-  );
-
-  const hatedSelect = pickSelect(profile.hated_participant_id);
-  const hatedBtn = h(
-    "button",
-    {
-      class: "btn small",
-      onclick: async () => {
-        hatedBtn.disabled = true;
-        try {
-          const value = hatedSelect.value;
-          const updated = await updateMyProfile(value ? { hated_participant_id: Number(value) } : { clearHated: true });
-          await refresh(updated);
-        } catch (e) {
-          errMsg.textContent = "Error al guardar";
-          hatedBtn.disabled = false;
-        }
-      },
-    },
-    "Guardar"
-  );
+  const favSelect = pickSelect(profile.favorite_participant_id, participants);
+  const hatedSelect = pickSelect(profile.hated_participant_id, participants);
 
   const roomSelect = h(
     "select",
@@ -541,23 +443,6 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     [h("option", { value: "" }, "Sin elegir")].concat(
       ROOM_OPTIONS.map((r) => h("option", { value: r, selected: profile.favorite_room === r ? "selected" : undefined }, r))
     )
-  );
-  const roomBtn = h(
-    "button",
-    {
-      class: "btn small",
-      onclick: async () => {
-        roomBtn.disabled = true;
-        try {
-          const updated = await updateMyProfile({ favorite_room: roomSelect.value || null });
-          await refresh(updated);
-        } catch (e) {
-          errMsg.textContent = "Error al guardar";
-          roomBtn.disabled = false;
-        }
-      },
-    },
-    "Guardar"
   );
 
   function legacySelect(season, currentId) {
@@ -571,115 +456,122 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     );
   }
 
-  function legacySaveField({ season, currentId, valueKey, clearKey }) {
-    const select = legacySelect(season, currentId);
-    const btn = h(
-      "button",
-      {
-        class: "btn small",
-        onclick: async () => {
-          btn.disabled = true;
-          try {
-            const value = select.value;
-            const updated = await updateMyProfile(value ? { [valueKey]: Number(value) } : { [clearKey]: true });
-            await refresh(updated);
-          } catch (e) {
-            errMsg.textContent = "Error al guardar";
-            btn.disabled = false;
-          }
-        },
-      },
-      "Guardar"
-    );
-    return h("div", { class: "row-flex", style: "margin-bottom:14px" }, [select, btn]);
-  }
+  const t1Select = legacySelect(1, profile.fav_season1_id);
+  const t2Select = legacySelect(2, profile.fav_season2_id);
+  const t3Select = legacySelect(3, profile.fav_season3_id);
 
-  const t1Field = legacySaveField({ season: 1, currentId: profile.fav_season1_id, valueKey: "fav_season1_id", clearKey: "clearFavSeason1" });
-  const t2Field = legacySaveField({ season: 2, currentId: profile.fav_season2_id, valueKey: "fav_season2_id", clearKey: "clearFavSeason2" });
-  const t3Field = legacySaveField({ season: 3, currentId: profile.fav_season3_id, valueKey: "fav_season3_id", clearKey: "clearFavSeason3" });
-
-  function legacyRoomField({ season, currentValue, valueKey }) {
+  function legacyRoomSelect(season, currentValue) {
     const options = LEGACY_ROOM_OPTIONS[season];
-    const select = h(
+    return h(
       "select",
       {},
       [h("option", { value: "" }, "Sin elegir")].concat(
         options.map((o) => h("option", { value: o, selected: currentValue === o ? "selected" : undefined }, o))
       )
     );
-    const btn = h(
-      "button",
-      {
-        class: "btn small",
-        onclick: async () => {
-          if (!select.value) return;
-          btn.disabled = true;
-          try {
-            const updated = await updateMyProfile({ [valueKey]: select.value });
-            await refresh(updated);
-          } catch (e) {
-            errMsg.textContent = "Error al guardar";
-            btn.disabled = false;
-          }
-        },
-      },
-      "Guardar"
-    );
-    return h("div", { class: "row-flex", style: "margin-bottom:14px" }, [select, btn]);
   }
 
-  const t1RoomField = legacyRoomField({ season: 1, currentValue: profile.legacy_room_t1, valueKey: "legacy_room_t1" });
-  const t2RoomField = legacyRoomField({ season: 2, currentValue: profile.legacy_room_t2, valueKey: "legacy_room_t2" });
-  const t3RoomField = legacyRoomField({ season: 3, currentValue: profile.legacy_room_t3, valueKey: "legacy_room_t3" });
+  const t1RoomSelect = legacyRoomSelect(1, profile.legacy_room_t1);
+  const t2RoomSelect = legacyRoomSelect(2, profile.legacy_room_t2);
+  const t3RoomSelect = legacyRoomSelect(3, profile.legacy_room_t3);
 
+  let selectedAccent = getAccentKey();
   const swatchWrap = h("div", { class: "swatches", style: "gap:12px" });
   Object.entries(ACCENTS).forEach(([key, theme]) => {
-    swatchWrap.appendChild(
-      h("button", {
-        class: `swatch${getAccentKey() === key ? " active" : ""}`,
-        style: `background:${theme.accent};width:28px;height:28px`,
-        title: theme.label,
-        type: "button",
-        onclick: async () => {
-          applyAccent(key);
-          try {
-            const updated = await updateMyProfile({ accent_color: key });
-            await refresh(updated);
-          } catch (e) {
-            errMsg.textContent = "El color se aplicó pero no se pudo guardar en tu cuenta";
-          }
-        },
-      })
-    );
+    const swatchBtn = h("button", {
+      class: `swatch${selectedAccent === key ? " active" : ""}`,
+      style: `background:${theme.accent};width:28px;height:28px`,
+      title: theme.label,
+      type: "button",
+      onclick: () => {
+        applyAccent(key);
+        selectedAccent = key;
+        [...swatchWrap.children].forEach((c) => c.classList.remove("active"));
+        swatchBtn.classList.add("active");
+      },
+    });
+    swatchWrap.appendChild(swatchBtn);
   });
+
+  const saveBtn = h(
+    "button",
+    {
+      class: "btn",
+      onclick: async () => {
+        errMsg.textContent = "";
+        successMsg.textContent = "";
+        const file = avatarFile.files[0];
+        if (file && file.size > 3 * 1024 * 1024) {
+          errMsg.textContent = "La foto pesa demasiado (máximo 3MB). Usa una más ligera.";
+          return;
+        }
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Guardando…";
+        try {
+          let avatar_url;
+          if (file) avatar_url = await uploadMyAvatar(profile.id, file);
+
+          const updated = await updateMyProfile({
+            display_name: nameInput.value.trim() || undefined,
+            bio: bioInput.value.trim() || " ",
+            avatar_url,
+            favorite_participant_id: favSelect.value ? Number(favSelect.value) : undefined,
+            clearFavorite: !favSelect.value,
+            hated_participant_id: hatedSelect.value ? Number(hatedSelect.value) : undefined,
+            clearHated: !hatedSelect.value,
+            favorite_room: roomSelect.value || null,
+            fav_season1_id: t1Select.value ? Number(t1Select.value) : undefined,
+            clearFavSeason1: !t1Select.value,
+            fav_season2_id: t2Select.value ? Number(t2Select.value) : undefined,
+            clearFavSeason2: !t2Select.value,
+            fav_season3_id: t3Select.value ? Number(t3Select.value) : undefined,
+            clearFavSeason3: !t3Select.value,
+            legacy_room_t1: t1RoomSelect.value || undefined,
+            legacy_room_t2: t2RoomSelect.value || undefined,
+            legacy_room_t3: t3RoomSelect.value || undefined,
+            accent_color: selectedAccent,
+          });
+          successMsg.textContent = "¡Cambios guardados!";
+          await refresh(updated);
+        } catch (e) {
+          errMsg.textContent = "No se pudieron guardar los cambios. Intenta de nuevo.";
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Guardar cambios";
+        }
+      },
+    },
+    "Guardar cambios"
+  );
 
   return h("div", { class: "card" }, [
     h("label", { style: "margin-top:0;display:block" }, "Foto de perfil"),
-    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [avatarFile, avatarBtn]),
+    h("div", { style: "margin-bottom:14px" }, [avatarFile]),
     h("label", {}, "Nombre para mostrar"),
-    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [nameInput, nameBtn]),
+    h("div", { style: "margin-bottom:14px" }, [nameInput]),
     h("label", {}, "Frase de perfil"),
-    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [bioInput, bioBtn]),
+    h("div", { style: "margin-bottom:14px" }, [bioInput]),
     h("label", {}, "Mi favorito"),
-    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [favSelect, favBtn]),
+    h("div", { style: "margin-bottom:14px" }, [favSelect]),
     h("label", {}, "Odiado"),
-    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [hatedSelect, hatedBtn]),
+    h("div", { style: "margin-bottom:14px" }, [hatedSelect]),
     h("label", {}, "Cuarto favorito"),
-    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [roomSelect, roomBtn]),
+    h("div", { style: "margin-bottom:14px" }, [roomSelect]),
     h("label", {}, "Favorito de Temporada 1"),
-    t1Field,
+    h("div", { style: "margin-bottom:14px" }, [t1Select]),
     h("label", {}, "Cuarto de Temporada 1 (Cielo o Infierno)"),
-    t1RoomField,
+    h("div", { style: "margin-bottom:14px" }, [t1RoomSelect]),
     h("label", {}, "Favorito de Temporada 2"),
-    t2Field,
+    h("div", { style: "margin-bottom:14px" }, [t2Select]),
     h("label", {}, "Cuarto de Temporada 2 (Mar o Tierra)"),
-    t2RoomField,
+    h("div", { style: "margin-bottom:14px" }, [t2RoomSelect]),
     h("label", {}, "Favorito de Temporada 3"),
-    t3Field,
+    h("div", { style: "margin-bottom:14px" }, [t3Select]),
     h("label", {}, "Cuarto de Temporada 3 (Día, Noche o Eclipse)"),
-    t3RoomField,
+    h("div", { style: "margin-bottom:14px" }, [t3RoomSelect]),
     h("label", {}, "Color de tema"),
-    swatchWrap,
+    h("div", { style: "margin-bottom:18px" }, [swatchWrap]),
+    saveBtn,
+    successMsg,
     errMsg,
   ]);
 }

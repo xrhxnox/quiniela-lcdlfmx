@@ -49,23 +49,8 @@ export async function renderReglas(container) {
         ]),
       ]),
 
-      ruleCard("fa-user", "Mi Perfil", [
-        h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
-          h("li", {}, "Muestra tu perfil exactamente igual que lo ven los demás: foto, nombre, frase, insignias, puntaje, posición en el ranking, % de acierto, tu favorito y el que te cae mal (con cuántas veces han sido nominados), tus favoritos de temporadas anteriores y tu historial completo de picks."),
-          h("li", { style: "margin-bottom:0" }, "Tu perfil es público: cualquiera puede verlo desde el botón “Ver perfil” en el Ranking."),
-        ]),
-      ]),
-
-      ruleCard("fa-pen-to-square", "Editar Perfil", [
-        h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
-          h("li", {}, "Cambia tu foto de perfil, nombre, frase, favorito, el que te cae mal, cuarto favorito y color de énfasis."),
-          h("li", {}, "También puedes elegir tu favorito y tu cuarto de Temporada 1 (Cielo o Infierno), Temporada 2 (Mar o Tierra) y Temporada 3 (Día, Noche o Eclipse)."),
-          h("li", { style: "margin-bottom:0" }, "Desde ahí también puedes comparar tu historial de picks contra el de cualquier otro jugador."),
-        ]),
-      ]),
-
       ruleCard("fa-medal", "Insignias", [
-        h("p", { class: "muted", style: "margin-bottom:10px" }, "Se calculan solas a partir de tu historial de picks y tus elecciones de perfil, nadie te las da manualmente."),
+        h("p", { class: "muted", style: "margin-bottom:10px" }, "Se calculan solas a partir de tu historial de picks y tus elecciones de perfil."),
         h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
           h("li", {}, [h("i", { class: "fa-solid fa-fire" }), " ", h("strong", {}, "Racha de X:"), " llevas 3 o más semanas seguidas acertando."]),
           h("li", {}, [h("i", { class: "fa-solid fa-crow" }), " ", h("strong", {}, "Ojo de águila:"), " en algún momento llegaste a una racha de 5 aciertos seguidos."]),
