@@ -32,7 +32,7 @@ function roomSelect(currentValue) {
   return h(
     "select",
     { style: "max-width:140px" },
-    [h("option", { value: "" }, "Sin cuarto")].concat(
+    [h("option", { value: "" }, "Elige...")].concat(
       options.map((r) => h("option", { value: r, selected: currentValue === r ? "selected" : undefined }, r))
     )
   );
