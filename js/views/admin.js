@@ -10,6 +10,7 @@ import {
   deleteWeek,
   getNominationsForWeek,
   setNomination,
+  setNominationSaved,
   removeNomination,
   getImmunitiesForWeek,
   addImmunity,
@@ -23,6 +24,19 @@ import { h, esc, initials, clearAndAppend } from "../utils.js";
 
 const STATUS_LABEL = { draft: "Borrador", voting_open: "Votación abierta", closed: "Cerrada" };
 const STATUS_BADGE = { draft: "gray", voting_open: "green", closed: "red" };
+const ROOM_OPTIONS = ["Ibiza", "Tulum", "Malibú"];
+
+function roomSelect(currentValue) {
+  const options = [...ROOM_OPTIONS];
+  if (currentValue && !options.includes(currentValue)) options.push(currentValue);
+  return h(
+    "select",
+    { style: "max-width:140px" },
+    [h("option", { value: "" }, "Sin cuarto")].concat(
+      options.map((r) => h("option", { value: r, selected: currentValue === r ? "selected" : undefined }, r))
+    )
+  );
+}
 
 // ============================================================
 // PARTICIPANTES
@@ -32,7 +46,7 @@ async function renderParticipantsAdmin(sub) {
   const participants = await getParticipants();
 
   const nameInput = h("input", { type: "text", placeholder: "Nombre" });
-  const roomInput = h("input", { type: "text", placeholder: "Cuarto (opcional)" });
+  const roomInput = roomSelect("");
   const fileInput = h("input", { type: "file", accept: "image/*" });
   const addErr = h("div", { class: "error-msg" });
   const addBtn = h(
@@ -49,7 +63,7 @@ async function renderParticipantsAdmin(sub) {
         try {
           let photo_url = null;
           if (fileInput.files[0]) photo_url = await uploadParticipantPhoto(fileInput.files[0]);
-          await createParticipant({ name: nameInput.value.trim(), room: roomInput.value.trim() || null, photo_url });
+          await createParticipant({ name: nameInput.value.trim(), room: roomInput.value || null, photo_url });
           await renderParticipantsAdmin(sub);
         } catch (e) {
           addErr.textContent = "No se pudo guardar. " + (e.message || "");
@@ -74,13 +88,13 @@ async function renderParticipantsAdmin(sub) {
 
   const items = participants.map((p) => {
     const nameField = h("input", { type: "text", value: p.name, style: "max-width:160px" });
-    const roomField = h("input", { type: "text", value: p.room, style: "max-width:120px" });
+    const roomField = roomSelect(p.room);
     const saveBtn = h(
       "button",
       {
         class: "btn small secondary",
         onclick: async () => {
-          await updateParticipant(p.id, { name: nameField.value.trim(), room: roomField.value.trim() || null });
+          await updateParticipant(p.id, { name: nameField.value.trim(), room: roomField.value || null });
           await renderParticipantsAdmin(sub);
         },
       },
@@ -152,11 +166,24 @@ async function renderWeekDetail(container, week, allParticipants) {
 
   // --- Nominados ---
   const nomineeChips = nominations.map((n) =>
-    h("span", { class: "chip-select" }, [
+    h("span", { class: `chip-select${n.saved ? " saved" : ""}` }, [
       `${n.participants.name} (${n.points}pts)`,
+      n.saved ? h("span", { class: "badge green", style: "margin:0 2px" }, "Salvado") : null,
       h(
         "button",
         {
+          title: n.saved ? "Quitar salvación" : "Marcar salvación",
+          onclick: async () => {
+            await setNominationSaved(week.id, n.participant_id, !n.saved);
+            await refresh();
+          },
+        },
+        h("i", { class: `fa-solid ${n.saved ? "fa-rotate-left" : "fa-shield-halved"}` })
+      ),
+      h(
+        "button",
+        {
+          title: "Quitar de nominados",
           onclick: async () => {
             await removeNomination(week.id, n.participant_id);
             await refresh();
@@ -223,7 +250,7 @@ async function renderWeekDetail(container, week, allParticipants) {
         await refresh();
       },
     },
-    "Marcar salvado/a"
+    "Marcar como líder"
   );
 
   // --- Estado / acciones ---
@@ -326,7 +353,7 @@ async function renderWeekDetail(container, week, allParticipants) {
       h("p", { style: "margin:10px 0 4px" }, h("strong", {}, "Nominados")),
       h("div", {}, nomineeChips.length ? nomineeChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [nomineeSelect, pointsInput, addNomBtn]),
-      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Salvados / inmunes")),
+      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Líder de la semana (inmunidad)")),
       h("div", {}, immuneChips.length ? immuneChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [immuneSelect, addImmuneBtn]),
       h("div", { style: "margin-top:16px" }, actionBlock),

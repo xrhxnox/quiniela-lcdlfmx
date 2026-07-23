@@ -24,6 +24,9 @@ async function renderVotingWeek(container, week, profile) {
   ]);
 
   let selected = myPred ? myPred.participant_id : null;
+  if (selected && nominations.find((n) => n.participant_id === selected)?.saved) {
+    selected = null;
+  }
 
   const statusMsg = h("div", { class: "success-msg" }, myPred ? "Ya tienes un pick guardado. Puedes cambiarlo mientras la votación siga abierta." : "");
   const errMsg = h("div", { class: "error-msg" });
@@ -33,15 +36,18 @@ async function renderVotingWeek(container, week, profile) {
     const card = h(
       "div",
       {
-        class: `nominee-card${selected === p.id ? " selected" : ""}`,
-        onclick: () => {
-          selected = p.id;
-          [...cardsWrap.children].forEach((c) => c.classList.remove("selected"));
-          card.classList.add("selected");
-        },
+        class: `nominee-card${selected === p.id ? " selected" : ""}${n.saved ? " saved" : ""}`,
+        onclick: n.saved
+          ? null
+          : () => {
+              selected = p.id;
+              [...cardsWrap.children].forEach((c) => c.classList.remove("selected"));
+              card.classList.add("selected");
+            },
       },
       [
         h("div", { class: "check" }, h("i", { class: "fa-solid fa-check" })),
+        n.saved ? h("div", { class: "saved-flag" }, [h("i", { class: "fa-solid fa-shield-halved" }), " Salvado"]) : null,
         photoOrInitials(p),
         h("div", { class: "info" }, [
           h("div", { class: "name" }, p.name),
@@ -59,7 +65,7 @@ async function renderVotingWeek(container, week, profile) {
     immunities.length > 0
       ? h("p", { class: "muted", style: "font-size:0.82rem" }, [
           h("i", { class: "fa-solid fa-shield-halved" }),
-          " Salvados esta semana: ",
+          " Líder de la semana / inmunes: ",
           h("strong", {}, immunities.map((i) => i.participants.name).join(", ")),
         ])
       : null;

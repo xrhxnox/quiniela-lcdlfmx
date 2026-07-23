@@ -1,17 +1,19 @@
 import { getSession, getMyProfile, logout, onAuthStateChange } from "./auth.js";
+import { updateMyProfile } from "./data.js";
 import { renderLogin } from "./views/login.js";
 import { renderHome } from "./views/home.js";
 import { renderRanking } from "./views/ranking.js";
 import { renderEliminados } from "./views/eliminados.js";
 import { renderParticipantes } from "./views/participantes.js";
 import { renderAdmin } from "./views/admin.js";
+import { renderProfile } from "./views/profile.js";
 import { h, clearAndAppend } from "./utils.js";
-import { ACCENTS, getAccentKey, applyAccent, initAccent } from "./theme.js";
+import { ACCENTS, getAccentKey, applyAccent, initAccent, syncAccentFromProfile } from "./theme.js";
 
 initAccent();
 
 const app = document.getElementById("app");
-const topbar = document.getElementById("topbar");
+const appHeaderWrap = document.getElementById("appHeaderWrap");
 const tabsEl = document.getElementById("tabs");
 const userChip = document.getElementById("userChip");
 const appFooter = document.getElementById("appFooter");
@@ -25,6 +27,16 @@ const ROUTES = [
   { path: "#/ranking", label: "Ranking", icon: "fa-trophy", render: renderRanking },
   { path: "#/eliminados", label: "Eliminados", icon: "fa-door-open", render: renderEliminados },
   { path: "#/participantes", label: "Participantes", icon: "fa-house", render: renderParticipantes },
+  {
+    path: "#/perfil",
+    label: "Mi Perfil",
+    icon: "fa-user",
+    render: (c) =>
+      renderProfile(c, currentProfile, (updated) => {
+        currentProfile = { ...currentProfile, ...updated };
+        renderNav();
+      }),
+  },
   { path: "#/admin", label: "Admin", icon: "fa-gear", render: renderAdmin, adminOnly: true },
 ];
 
@@ -38,8 +50,7 @@ function renderNav() {
     ]);
     tabsEl.appendChild(a);
   });
-  tabsEl.style.display = "flex";
-  topbar.style.display = "flex";
+  appHeaderWrap.style.display = "block";
   userChip.innerHTML = "";
   const swatchWrap = h("div", { class: "swatches" });
   Object.entries(ACCENTS).forEach(([key, theme]) => {
@@ -49,9 +60,15 @@ function renderNav() {
         style: `background:${theme.accent}`,
         title: theme.label,
         type: "button",
-        onclick: () => {
+        onclick: async () => {
           applyAccent(key);
           renderNav();
+          try {
+            const updated = await updateMyProfile({ accent_color: key });
+            currentProfile = { ...currentProfile, ...updated };
+          } catch (e) {
+            /* el color ya se aplicó localmente aunque falle guardarlo */
+          }
         },
       })
     );
@@ -96,15 +113,16 @@ async function renderRoute() {
 async function boot() {
   const session = await getSession();
   if (!session) {
-    topbar.style.display = "none";
-    tabsEl.style.display = "none";
+    appHeaderWrap.style.display = "none";
     renderLogin(app, async () => {
       currentProfile = await getMyProfile();
+      syncAccentFromProfile(currentProfile);
       await renderRoute();
     });
     return;
   }
   currentProfile = await getMyProfile();
+  syncAccentFromProfile(currentProfile);
   await renderRoute();
 }
 

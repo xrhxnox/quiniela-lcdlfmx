@@ -24,3 +24,11 @@ export function applyAccent(key) {
 export function initAccent() {
   applyAccent(getAccentKey());
 }
+
+// Si la cuenta ya tiene un color guardado en el servidor, ese manda
+// sobre lo que haya localmente (para que se vea igual en cualquier dispositivo).
+export function syncAccentFromProfile(profile) {
+  if (profile?.accent_color && ACCENTS[profile.accent_color]) {
+    applyAccent(profile.accent_color);
+  }
+}

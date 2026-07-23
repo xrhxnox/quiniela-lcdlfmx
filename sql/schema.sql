@@ -50,6 +50,38 @@ create table if not exists public.participants (
   created_at timestamptz not null default now()
 );
 
+-- columnas de perfil que dependen de que participants ya exista
+alter table public.profiles add column if not exists favorite_participant_id bigint references public.participants(id) on delete set null;
+alter table public.profiles add column if not exists accent_color text;
+
+-- Permite que cada quien actualice SOLO su propio nombre, favorito y color
+-- (nunca su rol), sin necesitar una política de UPDATE abierta en profiles.
+create or replace function public.update_my_profile(
+  new_display_name text default null,
+  new_favorite_participant_id bigint default null,
+  clear_favorite boolean default false,
+  new_accent_color text default null
+)
+returns public.profiles
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  result public.profiles;
+begin
+  update public.profiles
+  set
+    display_name = coalesce(new_display_name, display_name),
+    favorite_participant_id = case when clear_favorite then null else coalesce(new_favorite_participant_id, favorite_participant_id) end,
+    accent_color = coalesce(new_accent_color, accent_color)
+  where id = auth.uid()
+  returning * into result;
+  return result;
+end;
+$$;
+
+grant execute on function public.update_my_profile(text, bigint, boolean, text) to authenticated;
+
 -- ---------- SEMANAS ----------
 create table if not exists public.weeks (
   id bigint generated always as identity primary key,
@@ -75,6 +107,7 @@ create table if not exists public.nominations (
   points int not null default 0,
   primary key (week_id, participant_id)
 );
+alter table public.nominations add column if not exists saved boolean not null default false;
 
 -- ---------- ELIMINADOS confirmados de la semana ----------
 create table if not exists public.eliminations (

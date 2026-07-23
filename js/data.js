@@ -94,7 +94,7 @@ export async function getNominationsForWeek(weekId) {
   return unwrap(
     await supabase
       .from("nominations")
-      .select("week_id, participant_id, points, participants(*)")
+      .select("week_id, participant_id, points, saved, participants(*)")
       .eq("week_id", weekId)
       .order("points", { ascending: false })
   );
@@ -105,6 +105,18 @@ export async function setNomination(weekId, participantId, points) {
     await supabase
       .from("nominations")
       .upsert({ week_id: weekId, participant_id: participantId, points })
+      .select()
+      .single()
+  );
+}
+
+export async function setNominationSaved(weekId, participantId, saved) {
+  return unwrap(
+    await supabase
+      .from("nominations")
+      .update({ saved })
+      .eq("week_id", weekId)
+      .eq("participant_id", participantId)
       .select()
       .single()
   );
@@ -208,4 +220,26 @@ export async function setProfileRole(id, role) {
 
 export async function updateProfileDisplayName(id, display_name) {
   return unwrap(await supabase.from("profiles").update({ display_name }).eq("id", id).select().single());
+}
+
+// ---------- Mi perfil (self-service) ----------
+export async function updateMyProfile({ display_name, favorite_participant_id, clearFavorite, accent_color } = {}) {
+  return unwrap(
+    await supabase.rpc("update_my_profile", {
+      new_display_name: display_name ?? null,
+      new_favorite_participant_id: favorite_participant_id ?? null,
+      clear_favorite: clearFavorite ?? false,
+      new_accent_color: accent_color ?? null,
+    })
+  );
+}
+
+export async function getMyPredictionHistory(playerId) {
+  return unwrap(
+    await supabase
+      .from("predictions")
+      .select("week_id, participant_id, participants(name), weeks(week_number, label, status)")
+      .eq("player_id", playerId)
+      .order("week_id", { ascending: false })
+  );
 }
