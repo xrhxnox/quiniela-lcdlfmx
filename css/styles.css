@@ -262,7 +262,7 @@ main#app.fade-in { animation: fadeInUp 0.3s ease; }
 }
 
 label { font-size: 0.8rem; color: var(--text-dim); text-align: left; display: block; margin-bottom: 4px; }
-input[type=text], input[type=password], input[type=number], input[type=date], select, textarea {
+input[type=text], input[type=password], input[type=number], input[type=date], input[type=time], input[type=datetime-local], select, textarea {
   width: 100%;
   background: var(--bg-elev);
   border: 1px solid var(--line);
