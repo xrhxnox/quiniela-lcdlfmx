@@ -6,7 +6,7 @@ import { renderRanking } from "./views/ranking.js";
 import { renderEliminados } from "./views/eliminados.js";
 import { renderParticipantes } from "./views/participantes.js";
 import { renderAdmin } from "./views/admin.js";
-import { renderProfile } from "./views/profile.js";
+import { renderProfile, renderPublicProfile } from "./views/profile.js";
 import { h, clearAndAppend } from "./utils.js";
 import { ACCENTS, getAccentKey, applyAccent, initAccent, syncAccentFromProfile } from "./theme.js";
 
@@ -44,7 +44,8 @@ function renderNav() {
   tabsEl.innerHTML = "";
   const hash = location.hash || "#/";
   ROUTES.filter((r) => !r.adminOnly || currentProfile?.role === "admin").forEach((r) => {
-    const a = h("a", { href: r.path, class: hash === r.path ? "active" : "" }, [
+    const isActive = hash === r.path || (r.path === "#/perfil" && hash.startsWith("#/perfil/"));
+    const a = h("a", { href: r.path, class: isActive ? "active" : "" }, [
       h("i", { class: `fa-solid ${r.icon}` }),
       h("span", {}, r.label),
     ]);
@@ -93,12 +94,27 @@ function renderNav() {
 
 async function renderRoute() {
   const hash = location.hash || "#/";
+  renderNav();
+
+  if (hash.startsWith("#/perfil/")) {
+    const username = decodeURIComponent(hash.slice("#/perfil/".length));
+    try {
+      await renderPublicProfile(app, username, currentProfile);
+    } catch (e) {
+      console.error(e);
+      clearAndAppend(app, h("div", { class: "empty-state" }, "Ocurrió un error cargando este perfil."));
+    }
+    app.classList.remove("fade-in");
+    void app.offsetWidth;
+    app.classList.add("fade-in");
+    return;
+  }
+
   const route = ROUTES.find((r) => r.path === hash) || ROUTES[0];
   if (route.adminOnly && currentProfile?.role !== "admin") {
     clearAndAppend(app, h("div", { class: "empty-state" }, "No tienes permiso para ver esta sección."));
     return;
   }
-  renderNav();
   try {
     await route.render(app);
   } catch (e) {

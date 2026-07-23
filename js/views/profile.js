@@ -10,21 +10,19 @@ import { ACCENTS, getAccentKey, applyAccent } from "../theme.js";
 import { ROOM_OPTIONS } from "../rooms.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
-function photoOrInitials(p) {
-  if (!p) return h("div", { class: "avatar-sm" }, "?");
-  if (p.photo_url) return h("div", { class: "avatar-sm", style: `background-image:url('${esc(p.photo_url)}')` });
-  return h("div", { class: "avatar-sm" }, initials(p.name));
-}
-
-function bigPhotoOrInitials(p) {
-  if (!p) return null;
-  if (p.photo_url) return h("div", { class: "photo", style: `background-image:url('${esc(p.photo_url)}');width:90px;height:90px;border-radius:12px` });
-  return h("div", { class: "photo", style: "width:90px;height:90px;border-radius:12px;font-size:1.4rem" }, initials(p.name));
+function bigPhotoOrInitials(p, iconClass) {
+  if (p?.photo_url) {
+    return h("div", { class: "photo", style: `background-image:url('${esc(p.photo_url)}');width:90px;height:90px;border-radius:12px` });
+  }
+  if (p) {
+    return h("div", { class: "photo", style: "width:90px;height:90px;border-radius:12px;font-size:1.2rem" }, initials(p.name));
+  }
+  return h("div", { class: "photo", style: "width:90px;height:90px;border-radius:12px;font-size:1.2rem" }, h("i", { class: `fa-solid ${iconClass}` }));
 }
 
 function participantPickCard(label, participant, iconClass) {
   return h("div", { class: "row-flex", style: "gap:14px;align-items:center" }, [
-    bigPhotoOrInitials(participant) || h("div", { class: "photo", style: "width:90px;height:90px;border-radius:12px;font-size:1.2rem" }, h("i", { class: `fa-solid ${iconClass}` })),
+    bigPhotoOrInitials(participant, iconClass),
     h("div", {}, [
       h("div", { class: "muted", style: "font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
       h("div", { style: "font-weight:700;font-size:1.05rem" }, participant ? participant.name : "Sin definir"),
@@ -32,18 +30,18 @@ function participantPickCard(label, participant, iconClass) {
   ]);
 }
 
-export async function renderProfile(container, viewerProfile) {
-  await renderProfileInternal(container, viewerProfile.username, viewerProfile, true);
+export async function renderProfile(container, viewerProfile, onUpdate) {
+  await renderProfileInternal(container, viewerProfile.username, viewerProfile, true, onUpdate);
 }
 
 export async function renderPublicProfile(container, username, viewerProfile) {
-  await renderProfileInternal(container, username, viewerProfile, false);
+  await renderProfileInternal(container, username, viewerProfile, false, null);
 }
 
-async function renderProfileInternal(container, username, viewerProfile, editable) {
+async function renderProfileInternal(container, username, targetHint, editable, onUpdate) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
 
-  const target = editable ? viewerProfile : await getProfileByUsername(username);
+  const target = editable ? targetHint : await getProfileByUsername(username);
   if (!target) {
     clearAndAppend(container, h("div", { class: "empty-state" }, "No encontramos a ese jugador."));
     return;
@@ -55,6 +53,12 @@ async function renderProfileInternal(container, username, viewerProfile, editabl
     getAllEliminationsWithWeeks(),
     getLeaderboard(),
   ]);
+
+  const refresh = async (updatedProfile) => {
+    const nextTarget = updatedProfile || target;
+    onUpdate?.(nextTarget);
+    await renderProfileInternal(container, nextTarget.username, nextTarget, editable, onUpdate);
+  };
 
   const eliminatedSet = new Set(eliminations.map((e) => `${e.week_id}:${e.participant_id}`));
   const points = leaderboard.find((r) => r.player_id === target.id)?.points ?? 0;
@@ -91,10 +95,7 @@ async function renderProfileInternal(container, username, viewerProfile, editabl
   ]);
 
   const cards = [headerCard, favHatedCard];
-
-  if (editable) {
-    cards.push(buildEditCard(target, participants));
-  }
+  if (editable) cards.push(buildEditCard(target, participants, refresh));
 
   // ---------- Historial ----------
   const historyRows = history.map((row) => {
@@ -135,9 +136,9 @@ async function renderProfileInternal(container, username, viewerProfile, editabl
   );
 }
 
-function buildEditCard(profile, participants) {
+function buildEditCard(profile, participants, refresh) {
   const nameInput = h("input", { type: "text", value: profile.display_name });
-  const nameMsg = h("span", { class: "success-msg" });
+  const errMsg = h("span", { class: "error-msg" });
   const nameBtn = h(
     "button",
     {
@@ -146,11 +147,10 @@ function buildEditCard(profile, participants) {
         if (!nameInput.value.trim()) return;
         nameBtn.disabled = true;
         try {
-          await updateMyProfile({ display_name: nameInput.value.trim() });
-          nameMsg.textContent = "Guardado. Recarga la página para verlo reflejado arriba.";
+          const updated = await updateMyProfile({ display_name: nameInput.value.trim() });
+          await refresh(updated);
         } catch (e) {
-          nameMsg.textContent = "Error al guardar";
-        } finally {
+          errMsg.textContent = "Error al guardar";
           nameBtn.disabled = false;
         }
       },
@@ -169,7 +169,6 @@ function buildEditCard(profile, participants) {
   }
 
   const favSelect = pickSelect(profile.favorite_participant_id);
-  const favMsg = h("span", { class: "success-msg" });
   const favBtn = h(
     "button",
     {
@@ -178,11 +177,10 @@ function buildEditCard(profile, participants) {
         favBtn.disabled = true;
         try {
           const value = favSelect.value;
-          await updateMyProfile(value ? { favorite_participant_id: Number(value) } : { clearFavorite: true });
-          favMsg.textContent = "Guardado. Recarga la página para verlo reflejado arriba.";
+          const updated = await updateMyProfile(value ? { favorite_participant_id: Number(value) } : { clearFavorite: true });
+          await refresh(updated);
         } catch (e) {
-          favMsg.textContent = "Error al guardar";
-        } finally {
+          errMsg.textContent = "Error al guardar";
           favBtn.disabled = false;
         }
       },
@@ -191,7 +189,6 @@ function buildEditCard(profile, participants) {
   );
 
   const hatedSelect = pickSelect(profile.hated_participant_id);
-  const hatedMsg = h("span", { class: "success-msg" });
   const hatedBtn = h(
     "button",
     {
@@ -200,11 +197,10 @@ function buildEditCard(profile, participants) {
         hatedBtn.disabled = true;
         try {
           const value = hatedSelect.value;
-          await updateMyProfile(value ? { hated_participant_id: Number(value) } : { clearHated: true });
-          hatedMsg.textContent = "Guardado. Recarga la página para verlo reflejado arriba.";
+          const updated = await updateMyProfile(value ? { hated_participant_id: Number(value) } : { clearHated: true });
+          await refresh(updated);
         } catch (e) {
-          hatedMsg.textContent = "Error al guardar";
-        } finally {
+          errMsg.textContent = "Error al guardar";
           hatedBtn.disabled = false;
         }
       },
@@ -219,7 +215,6 @@ function buildEditCard(profile, participants) {
       ROOM_OPTIONS.map((r) => h("option", { value: r, selected: profile.favorite_room === r ? "selected" : undefined }, r))
     )
   );
-  const roomMsg = h("span", { class: "success-msg" });
   const roomBtn = h(
     "button",
     {
@@ -227,11 +222,10 @@ function buildEditCard(profile, participants) {
       onclick: async () => {
         roomBtn.disabled = true;
         try {
-          await updateMyProfile({ favorite_room: roomSelect.value || null });
-          roomMsg.textContent = "Guardado. Recarga la página para verlo reflejado arriba.";
+          const updated = await updateMyProfile({ favorite_room: roomSelect.value || null });
+          await refresh(updated);
         } catch (e) {
-          roomMsg.textContent = "Error al guardar";
-        } finally {
+          errMsg.textContent = "Error al guardar";
           roomBtn.disabled = false;
         }
       },
@@ -247,14 +241,13 @@ function buildEditCard(profile, participants) {
         style: `background:${theme.accent};width:28px;height:28px`,
         title: theme.label,
         type: "button",
-        onclick: async (ev) => {
+        onclick: async () => {
           applyAccent(key);
-          [...swatchWrap.children].forEach((c) => c.classList.remove("active"));
-          ev.currentTarget.classList.add("active");
           try {
-            await updateMyProfile({ accent_color: key });
+            const updated = await updateMyProfile({ accent_color: key });
+            await refresh(updated);
           } catch (e) {
-            /* el color ya se aplicó localmente aunque falle guardarlo */
+            errMsg.textContent = "El color se aplicó pero no se pudo guardar en tu cuenta";
           }
         },
       })
@@ -264,14 +257,15 @@ function buildEditCard(profile, participants) {
   return h("div", { class: "card" }, [
     h("p", { style: "margin-top:0" }, h("strong", {}, "Editar mi perfil")),
     h("label", {}, "Nombre para mostrar"),
-    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [nameInput, nameBtn, nameMsg]),
+    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [nameInput, nameBtn]),
     h("label", {}, "Mi favorito"),
-    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [favSelect, favBtn, favMsg]),
+    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [favSelect, favBtn]),
     h("label", {}, "El que me cae mal"),
-    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [hatedSelect, hatedBtn, hatedMsg]),
+    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [hatedSelect, hatedBtn]),
     h("label", {}, "Cuarto favorito"),
-    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [roomSelect, roomBtn, roomMsg]),
+    h("div", { class: "row-flex", style: "margin-bottom:14px" }, [roomSelect, roomBtn]),
     h("label", {}, "Color de énfasis"),
     swatchWrap,
+    errMsg,
   ]);
 }
