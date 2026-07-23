@@ -26,7 +26,7 @@ export async function renderParticipantes(container) {
             ? h("span", { class: "badge green" }, "En la casa")
             : h("span", { class: "badge red" }, "Eliminado/a"),
         ]),
-        h("div", { class: "points" }, `Nominado ${counts[p.id] || 0}x`),
+        h("div", { class: "points" }, `Nominado ${counts[p.id] || 0} veces`),
       ]),
     ]);
   });
