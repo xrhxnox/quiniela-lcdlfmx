@@ -570,8 +570,8 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
   let selectedThemeMode = getThemeMode();
   const themeModeWrap = h("div", { class: "row-flex", style: "gap:10px" });
   [
-    { key: "dark", label: "Oscuro", icon: "fa-moon" },
     { key: "light", label: "Claro", icon: "fa-sun" },
+    { key: "dark", label: "Oscuro", icon: "fa-moon" },
   ].forEach(({ key, label, icon }) => {
     const modeBtn = h(
       "button",

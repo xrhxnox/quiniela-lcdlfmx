@@ -73,7 +73,7 @@ function renderNav() {
           location.reload();
         },
       },
-      "Salir"
+      [h("i", { class: "fa-solid fa-right-from-bracket" }), " Cerrar Sesión"]
     )
   );
 }

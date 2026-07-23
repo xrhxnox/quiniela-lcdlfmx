@@ -131,14 +131,23 @@ header.topbar .user-chip strong {
 }
 
 .btn-logout {
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--text-dim);
-  border-radius: 8px;
-  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--accent-text);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.78rem;
   cursor: pointer;
+  transition: filter 0.15s, transform 0.15s;
 }
-.btn-logout:hover { border-color: var(--accent); color: var(--text); }
+.btn-logout:hover { filter: brightness(1.12); transform: translateY(-1px); }
 
 .swatches { display: flex; align-items: center; gap: 6px; }
 .swatch {
@@ -512,7 +521,7 @@ footer.app-footer {
 }
 
 @media (max-width: 480px) {
-  header.topbar .brand img { height: 44px; }
+  header.topbar .brand img { height: 62px; }
   .section-title { font-size: 1.15rem; }
   nav.tabs { gap: 4px; padding: 8px; }
   nav.tabs a { padding: 6px 11px; font-size: 0.68rem; gap: 5px; }
