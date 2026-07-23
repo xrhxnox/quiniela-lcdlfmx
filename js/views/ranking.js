@@ -52,13 +52,13 @@ export async function renderRanking(container) {
     container,
     h("div", {}, [
       h("div", { class: "section-title" }, "Ranking"),
-      activityFeed,
       h("div", { class: "card table-wrap" }, [
         h("table", { class: "data" }, [
           h("thead", {}, h("tr", {}, [h("th", {}, "#"), h("th", {}, "Jugador"), h("th", {}, "Puntos"), h("th", {}, "Perfil")])),
           h("tbody", {}, body),
         ]),
       ]),
+      activityFeed,
     ])
   );
 }
