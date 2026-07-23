@@ -53,8 +53,19 @@ export async function renderReglas(container) {
         h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
           h("li", {}, "Elige tu favorito, el que te cae mal, tu cuarto favorito, tu color de énfasis y una foto de perfil."),
           h("li", {}, "Tu perfil es público: cualquiera puede verlo desde el botón “Ver perfil” en el Ranking."),
-          h("li", {}, "Consigue insignias por racha de aciertos, buena puntería y por tu cuarto favorito."),
+          h("li", {}, "Consigue insignias automáticas según tu desempeño (ver abajo)."),
           h("li", { style: "margin-bottom:0" }, "Puedes comparar tu historial de picks contra el de cualquier otro jugador."),
+        ]),
+      ]),
+
+      ruleCard("fa-medal", "Insignias", [
+        h("p", { class: "muted", style: "margin-bottom:10px" }, "Se calculan solas a partir de tu historial de picks y tus elecciones de perfil, nadie te las da manualmente."),
+        h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
+          h("li", {}, [h("i", { class: "fa-solid fa-fire" }), " ", h("strong", {}, "Racha de X:"), " llevas 3 o más semanas seguidas acertando."]),
+          h("li", {}, [h("i", { class: "fa-solid fa-crow" }), " ", h("strong", {}, "Ojo de águila:"), " en algún momento llegaste a una racha de 5 aciertos seguidos."]),
+          h("li", {}, [h("i", { class: "fa-solid fa-bullseye" }), " ", h("strong", {}, "Francotirador:"), " 70% o más de acierto, con al menos 3 semanas votadas."]),
+          h("li", {}, [h("i", { class: "fa-solid fa-heart-crack" }), " ", h("strong", {}, "Corazón roto:"), " tu favorito ya fue eliminado de la casa."]),
+          h("li", { style: "margin-bottom:0" }, [h("i", { class: "fa-solid fa-umbrella-beach" }), " ", h("strong", {}, "Team {cuarto}:"), " aparece según el cuarto que elijas como favorito en tu perfil."]),
         ]),
       ]),
     ])

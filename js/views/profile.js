@@ -87,11 +87,12 @@ function computeStats(history, eliminatedSet) {
   return { totalClosed, correctCount, accuracyPct, currentStreak, bestStreak };
 }
 
-function buildBadges(stats) {
+function buildBadges(stats, favorite) {
   const badges = [];
   if (stats.currentStreak >= 3) badges.push({ icon: "fa-fire", label: `Racha de ${stats.currentStreak}` });
   if (stats.bestStreak >= 5) badges.push({ icon: "fa-crow", label: "Ojo de águila" });
   if (stats.totalClosed >= 3 && stats.accuracyPct >= 70) badges.push({ icon: "fa-bullseye", label: "Francotirador" });
+  if (favorite && favorite.active === false) badges.push({ icon: "fa-heart-crack", label: "Corazón roto" });
   return badges;
 }
 
@@ -148,7 +149,7 @@ async function renderProfileInternal(container, username, targetHint, editable, 
   const favorite = participants.find((p) => p.id === target.favorite_participant_id) || null;
   const hated = participants.find((p) => p.id === target.hated_participant_id) || null;
   const stats = computeStats(history, eliminatedSet);
-  const badges = buildBadges(stats);
+  const badges = buildBadges(stats, favorite);
 
   // ---------- Encabezado ----------
   const headerCard = h("div", { class: "card" }, [
