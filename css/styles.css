@@ -133,9 +133,12 @@ header.topbar .user-chip strong {
 .username-badge {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   background: #ffffff;
   color: #1a1a1a;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   padding: 8px 14px;
   border-radius: 999px;
   font-size: 0.8rem;
