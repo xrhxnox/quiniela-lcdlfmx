@@ -30,10 +30,10 @@ import { ROOM_OPTIONS } from "../rooms.js";
 const STATUS_LABEL = { draft: "Borrador", voting_open: "Votación abierta", closed: "Cerrada" };
 const STATUS_BADGE = { draft: "gray", voting_open: "green", closed: "red" };
 
-function toLocalDatetimeInputValue(isoString) {
+function toLocalTimeInputValue(isoString) {
   const d = new Date(isoString);
   const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function roomSelect(currentValue) {
@@ -355,21 +355,40 @@ async function renderWeekDetail(container, week, allParticipants) {
             type: "date",
             value: week.elimination_date || "",
             onchange: async (e) => {
-              await updateWeek(week.id, { elimination_date: e.target.value });
+              const fields = { elimination_date: e.target.value };
+              if (week.voting_closes_at && e.target.value) {
+                const time = toLocalTimeInputValue(week.voting_closes_at);
+                fields.voting_closes_at = new Date(`${e.target.value}T${time}:00`).toISOString();
+              }
+              await updateWeek(week.id, fields);
+              await refresh();
             },
           }),
         ]),
         h("div", {}, [
-          h("label", {}, "Cierre automático de votación"),
-          h("input", {
-            type: "datetime-local",
-            value: week.voting_closes_at ? toLocalDatetimeInputValue(week.voting_closes_at) : "",
-            onchange: async (e) => {
-              await updateWeek(week.id, {
-                voting_closes_at: e.target.value ? new Date(e.target.value).toISOString() : null,
-              });
-            },
-          }),
+          h("label", {}, "Cierre automático de votación (mismo día, 6–8 PM)"),
+          week.elimination_date
+            ? h("input", {
+                type: "time",
+                min: "18:00",
+                max: "20:59",
+                step: "60",
+                value: week.voting_closes_at ? toLocalTimeInputValue(week.voting_closes_at) : "",
+                onchange: async (e) => {
+                  if (!e.target.value) {
+                    await updateWeek(week.id, { voting_closes_at: null });
+                    return;
+                  }
+                  const [hh, mm] = e.target.value.split(":").map(Number);
+                  const clampedHour = Math.min(20, Math.max(18, hh));
+                  const clampedMinute = clampedHour === 20 ? Math.min(59, mm) : mm;
+                  const clamped = `${String(clampedHour).padStart(2, "0")}:${String(clampedMinute).padStart(2, "0")}`;
+                  e.target.value = clamped;
+                  const iso = new Date(`${week.elimination_date}T${clamped}:00`).toISOString();
+                  await updateWeek(week.id, { voting_closes_at: iso });
+                },
+              })
+            : h("p", { class: "muted", style: "font-size:0.82rem;margin:6px 0 0" }, "Define primero la fecha de eliminación."),
         ]),
       ]),
       h("p", { style: "margin:10px 0 4px" }, h("strong", {}, "Nominados")),
