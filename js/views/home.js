@@ -28,7 +28,7 @@ function formatCountdown(ms) {
 
 function countdownNode(closesAt, onClosed) {
   const closesAtMs = new Date(closesAt).getTime();
-  const el = h("p", { style: "margin:0;color:var(--accent)" });
+  const el = h("p", { style: "margin:0" });
   let fired = false;
   const render = () => {
     el.innerHTML = "";
@@ -41,7 +41,7 @@ function countdownNode(closesAt, onClosed) {
       }
       return false;
     }
-    el.append(h("i", { class: "fa-solid fa-hourglass-half" }), " Cierra en: ", h("strong", {}, formatCountdown(remaining)));
+    el.append(h("i", { class: "fa-solid fa-hourglass-half" }), " Cierra en: ", h("strong", { style: "color:var(--accent)" }, formatCountdown(remaining)));
     return true;
   };
   const tick = () => {
