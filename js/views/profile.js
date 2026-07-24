@@ -26,6 +26,7 @@ const PICK_TYPE_ICONS = {
   surprise: { icon: "fa-bomb", color: "var(--text)" },
   disappointment: { icon: "fa-heart-crack", color: "var(--text)" },
   random: { icon: "fa-shuffle", color: "var(--text)" },
+  winner: { icon: "fa-crown", color: "var(--text)" },
 };
 
 function pickTypeIcon(type) {
@@ -315,7 +316,9 @@ async function renderProfileInternal(container, username) {
   const secretHabitante = secretAssignment ? participants.find((p) => p.id === secretAssignment.participant_id) || null : null;
   const stats = computeStats(history, eliminatedSet);
   const winnerPick = eliminationOrder.find((r) => r.position === 1) || null;
-  const vidente = winnerPick ? participants.find((p) => p.id === winnerPick.participant_id)?.is_winner === true : false;
+  const winnerHabitante = winnerPick ? participants.find((p) => p.id === winnerPick.participant_id) || null : null;
+  const seasonWinnerDecided = participants.some((p) => p.is_winner);
+  const vidente = winnerHabitante?.is_winner === true;
   const suertudo = secretHabitante?.is_winner === true;
   const totalClosedWeeks = weeks.filter((w) => w.status === "closed").length;
   const fanatico = totalClosedWeeks > 0 && stats.totalClosed === totalClosedWeeks;
@@ -365,6 +368,7 @@ async function renderProfileInternal(container, username) {
       participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null),
       participantPickCard("Decepción", disappointment, "disappointment", counts, disappointment ? currentNominationMap[disappointment.id] : null),
       participantPickCard("Sorteo Ganador", secretHabitante, "random", counts, secretHabitante ? currentNominationMap[secretHabitante.id] : null),
+      participantPickCard("Ganador", winnerHabitante, "winner", counts, winnerHabitante ? currentNominationMap[winnerHabitante.id] : null),
     ]),
     secretHabitante
       ? h(
@@ -373,6 +377,17 @@ async function renderProfileInternal(container, username) {
           secretHabitante.is_winner
             ? "🏆 ¡Su habitante al azar ganó la temporada! +3 puntos."
             : "El habitante \"Sorteo Ganador\" da +3 puntos extra si termina ganando la temporada."
+        )
+      : null,
+    winnerHabitante
+      ? h(
+          "p",
+          { class: "muted", style: "font-size:0.72rem;text-align:center;margin:6px 0 0" },
+          seasonWinnerDecided
+            ? vidente
+              ? "🏆 ¡Acertó al ganador real de la temporada! (insignia Vidente)"
+              : "Su predicción de ganador en Orden de Salida no fue el/la ganador/a real."
+            : "Su predicción de quién ganará la temporada, elegida en Orden de Salida."
         )
       : null,
   ]);
