@@ -142,7 +142,7 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
       h("div", { class: "section-title" }, "El Oráculo"),
       h("div", { class: "card" }, [
         h("p", { style: "margin-top:0" }, [
-          h("i", { class: "fa-solid fa-list-ol" }),
+          h("i", { class: "fa-solid fa-hat-wizard" }),
           " Ordena a los habitantes del que crees que GANARÁ (arriba, posición 1) al que crees que saldrá PRIMERO (abajo). Por cada posición que aciertes, +1 punto.",
         ]),
         h("p", { class: "muted", style: "font-size:0.82rem;margin-bottom:4px" }, [

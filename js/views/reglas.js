@@ -71,7 +71,7 @@ export async function renderReglas(container) {
         ]),
       ]),
 
-      ruleCard("fa-list-ol", "El Oráculo", [
+      ruleCard("fa-hat-wizard", "El Oráculo", [
         h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
           h("li", {}, [
             "Antes de que se publique la Semana 1, arma en la pestaña \"El Oráculo\" tu predicción de todos los habitantes: ",
