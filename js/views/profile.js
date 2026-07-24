@@ -153,8 +153,11 @@ export function badgeNode(badge) {
   const style = BADGE_STYLES[badge.key];
   return h(
     "span",
-    { class: "badge", style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color}` },
-    [h("i", { class: `fa-solid ${style.icon}` }), " ", badge.label]
+    {
+      class: "badge",
+      style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color};display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:150px;text-align:center`,
+    },
+    [h("i", { class: `fa-solid ${style.icon}` }), badge.label]
   );
 }
 
