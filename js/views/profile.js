@@ -367,27 +367,27 @@ async function renderProfileInternal(container, username) {
       participantPickCard("Odiado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null),
       participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null),
       participantPickCard("Decepción", disappointment, "disappointment", counts, disappointment ? currentNominationMap[disappointment.id] : null),
-      participantPickCard("Sorteo Ganador", secretHabitante, "random", counts, secretHabitante ? currentNominationMap[secretHabitante.id] : null),
-      participantPickCard("Ganador", winnerHabitante, "winner", counts, winnerHabitante ? currentNominationMap[winnerHabitante.id] : null),
+      participantPickCard("Mi Ganador", winnerHabitante, "winner", counts, winnerHabitante ? currentNominationMap[winnerHabitante.id] : null),
+      participantPickCard("Sorteado", secretHabitante, "random", counts, secretHabitante ? currentNominationMap[secretHabitante.id] : null),
     ]),
-    secretHabitante
-      ? h(
-          "p",
-          { class: "muted", style: "font-size:0.72rem;text-align:center;margin:10px 0 0" },
-          secretHabitante.is_winner
-            ? "🏆 ¡Su habitante al azar ganó la temporada! +3 puntos."
-            : "El habitante \"Sorteo Ganador\" da +3 puntos extra si termina ganando la temporada."
-        )
-      : null,
     winnerHabitante
       ? h(
           "p",
-          { class: "muted", style: "font-size:0.72rem;text-align:center;margin:6px 0 0" },
+          { class: "muted", style: "font-size:0.72rem;text-align:center;margin:10px 0 0" },
           seasonWinnerDecided
             ? vidente
               ? "🏆 ¡Acertó al ganador real de la temporada! (insignia Vidente)"
               : "Su predicción de ganador en Orden de Salida no fue el/la ganador/a real."
             : "Su predicción de quién ganará la temporada, elegida en Orden de Salida."
+        )
+      : null,
+    secretHabitante
+      ? h(
+          "p",
+          { class: "muted", style: "font-size:0.72rem;text-align:center;margin:6px 0 0" },
+          secretHabitante.is_winner
+            ? "🏆 ¡Su habitante al azar ganó la temporada! +3 puntos."
+            : "El habitante \"Sorteado\" da +3 puntos extra si termina ganando la temporada."
         )
       : null,
   ]);
