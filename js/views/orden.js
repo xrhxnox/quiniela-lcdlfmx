@@ -123,6 +123,21 @@ function buildBlocks(eliminationsWithWeeks) {
   return blocks;
 }
 
+function orderThumb(participant, hit, position) {
+  const borderColor = hit ? "var(--green)" : "var(--red)";
+  const photo = participant?.photo_url
+    ? `background-image:url('${esc(participant.photo_url)}');background-size:cover;background-position:center;`
+    : `background:var(--photo-bg);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:var(--text-dim);`;
+  return h("div", { style: "display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0" }, [
+    h(
+      "div",
+      { style: `width:52px;height:52px;border-radius:50%;border:3px solid ${borderColor};${photo}`, title: participant?.name || "—" },
+      participant?.photo_url ? null : initials(participant?.name || "?")
+    ),
+    h("span", { class: "muted", style: "font-size:0.62rem" }, `${position}`),
+  ]);
+}
+
 function renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks) {
   const blocks = buildBlocks(eliminationsWithWeeks);
   const blockFor = (position) => blocks.find((b) => position >= b.start && position <= b.end) || null;
@@ -144,25 +159,17 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
       const items = rows.map((row) => {
         const block = blockFor(row.position);
         const hit = block ? block.ids.has(row.participant_id) : false;
-        return h("li", { style: "display:flex;align-items:center;gap:6px;padding:2px 0" }, [
-          h("span", { class: "muted", style: "min-width:18px" }, `${row.position}.`),
-          row.participants?.name || "—",
-          block
-            ? hit
-              ? h("i", { class: "fa-solid fa-check", style: "color:var(--green)" })
-              : h("i", { class: "fa-solid fa-xmark", style: "color:var(--red)" })
-            : null,
-        ]);
+        return orderThumb(row.participants, hit, row.position);
       });
       return h("div", { class: "card" }, [
-        h("div", { style: "display:flex;justify-content:space-between;align-items:center;margin-bottom:8px" }, [
+        h("div", { style: "display:flex;justify-content:space-between;align-items:center;margin-bottom:10px" }, [
           h("div", {}, [
             h("strong", {}, player?.display_name || "—"),
             isMe ? h("span", { class: "badge gold", style: "margin-left:6px" }, "Tú") : null,
           ]),
           h("span", { class: "badge green" }, `${scoreMap[playerId] || 0} pts`),
         ]),
-        h("ul", { style: "margin:0;padding-left:6px;list-style:none" }, items),
+        h("div", { style: "display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px" }, items),
       ]);
     });
 

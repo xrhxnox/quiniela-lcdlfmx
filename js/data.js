@@ -424,6 +424,16 @@ export async function assignSecretHabitantesRandomly() {
   return unwrap(await supabase.from("secret_assignments").insert(rows).select());
 }
 
+export async function clearSecretAssignment(playerId) {
+  return unwrap(await supabase.from("secret_assignments").delete().eq("player_id", playerId).select());
+}
+
+export async function resetSecretAssignments() {
+  return unwrap(
+    await supabase.from("secret_assignments").delete().neq("player_id", "00000000-0000-0000-0000-000000000000").select()
+  );
+}
+
 export async function reassignSecretHabitante(playerId, participantId) {
   return unwrap(
     await supabase

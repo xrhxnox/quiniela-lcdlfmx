@@ -26,6 +26,8 @@ import {
   getSecretAssignments,
   assignSecretHabitantesRandomly,
   reassignSecretHabitante,
+  clearSecretAssignment,
+  resetSecretAssignments,
   markParticipantAsWinner,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
@@ -657,6 +659,28 @@ async function renderDynamicsAdmin(sub) {
     "Asignar al azar"
   );
 
+  const resetBtn = h(
+    "button",
+    {
+      class: "btn small danger",
+      onclick: async () => {
+        if (!confirm("¿Borrar TODAS las asignaciones de habitante al azar? Podrás volver a asignar desde cero.")) return;
+        assignErr.textContent = "";
+        resetBtn.disabled = true;
+        resetBtn.textContent = "Reiniciando…";
+        try {
+          await resetSecretAssignments();
+          await renderDynamicsAdmin(sub);
+        } catch (e) {
+          assignErr.textContent = "No se pudo reiniciar. " + (e.message || "");
+          resetBtn.disabled = false;
+          resetBtn.textContent = "Reiniciar todo";
+        }
+      },
+    },
+    "Reiniciar todo"
+  );
+
   const assignmentRows = assignments.map((a) => {
     const select = h(
       "select",
@@ -676,9 +700,21 @@ async function renderDynamicsAdmin(sub) {
       },
       "Guardar"
     );
+    const blankBtn = h(
+      "button",
+      {
+        class: "btn small danger",
+        onclick: async () => {
+          if (!confirm(`¿Dejar en blanco la asignación de ${a.profiles?.display_name || "este jugador"}?`)) return;
+          await clearSecretAssignment(a.player_id);
+          await renderDynamicsAdmin(sub);
+        },
+      },
+      "Dejar en blanco"
+    );
     return h("div", { class: "list-item" }, [
       h("div", { class: "row-flex" }, [h("strong", {}, a.profiles?.display_name || "—"), select]),
-      saveBtn,
+      h("div", { class: "row-flex" }, [saveBtn, blankBtn]),
     ]);
   });
 
@@ -689,7 +725,7 @@ async function renderDynamicsAdmin(sub) {
       { class: "muted", style: "font-size:0.82rem" },
       "Le asigna un habitante al azar a cada jugador que todavía no tenga uno (sin repetir, salvo que haya más jugadores que habitantes). Si a alguien se le asigna el habitante que termina ganando la temporada, se lleva +3 puntos."
     ),
-    h("div", { style: "margin-bottom:14px" }, [assignBtn, assignErr]),
+    h("div", { style: "margin-bottom:14px" }, [assignBtn, resetBtn, assignErr]),
     assignmentRows.length ? h("div", {}, assignmentRows) : h("p", { class: "muted" }, "Nadie tiene asignación todavía."),
   ]);
 
