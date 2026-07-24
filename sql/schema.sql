@@ -418,20 +418,22 @@ create table if not exists public.elimination_order_predictions (
 );
 alter table public.elimination_order_predictions enable row level security;
 
--- se ve la propia siempre; la de los demás en cuanto exista al menos 1 eliminación confirmada
+-- se ve la propia siempre; la de los demás en cuanto se publique la Semana 1 (deje de estar en 'draft')
 drop policy if exists "eop_select" on public.elimination_order_predictions;
 create policy "eop_select" on public.elimination_order_predictions for select using (
   player_id = auth.uid()
   or public.is_admin()
-  or exists (select 1 from public.eliminations)
+  or exists (select 1 from public.weeks w where w.week_number = 1 and w.status <> 'draft')
 );
 
--- solo puedes escribir/borrar tu propia predicción, y solo mientras no exista NINGUNA eliminación confirmada
+-- solo puedes escribir/borrar tu propia predicción, y solo mientras la Semana 1 siga en 'draft' (sin publicar)
 drop policy if exists "eop_write_own" on public.elimination_order_predictions;
 create policy "eop_write_own" on public.elimination_order_predictions for all using (
-  player_id = auth.uid() and not exists (select 1 from public.eliminations)
+  player_id = auth.uid()
+  and not exists (select 1 from public.weeks w where w.week_number = 1 and w.status <> 'draft')
 ) with check (
-  player_id = auth.uid() and not exists (select 1 from public.eliminations)
+  player_id = auth.uid()
+  and not exists (select 1 from public.weeks w where w.week_number = 1 and w.status <> 'draft')
 );
 
 -- =========================================================

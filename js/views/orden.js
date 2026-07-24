@@ -2,7 +2,7 @@ import {
   getParticipants,
   getMyEliminationOrder,
   saveEliminationOrder,
-  hasEliminationsStarted,
+  hasFirstWeekStarted,
   getAllEliminationOrders,
   getEliminationOrderScores,
   getAllEliminationsWithWeeks,
@@ -68,8 +68,8 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
             h("i", { class: "fa-solid fa-arrow-down" })
           ),
         ]),
-      ])
-    );
+      ]);
+    });
     clearAndAppend(listWrap, h("div", {}, rows));
   }
   renderList();
@@ -108,7 +108,7 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
         h(
           "p",
           { class: "muted", style: "font-size:0.82rem;margin-bottom:0" },
-          "Se bloquea en cuanto se confirme la primera eliminación — después de eso ya no se puede cambiar."
+          "Se bloquea en cuanto se publique la Semana 1 (se abra la votación) — después de eso ya no se puede cambiar."
         ),
       ]),
       listWrap,
@@ -198,7 +198,7 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
 
 export async function renderOrdenSalida(container, profile) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
-  const started = await hasEliminationsStarted();
+  const started = await hasFirstWeekStarted();
 
   if (!started) {
     const [participants, existingOrder] = await Promise.all([getParticipants(), getMyEliminationOrder(profile.id)]);

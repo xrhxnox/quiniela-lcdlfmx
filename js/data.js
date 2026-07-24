@@ -488,8 +488,12 @@ export async function getEliminationOrderScores() {
   return unwrap(await supabase.from("elimination_order_score").select("*"));
 }
 
-export async function hasEliminationsStarted() {
-  const { count, error } = await supabase.from("eliminations").select("*", { count: "exact", head: true });
+export async function hasFirstWeekStarted() {
+  const { count, error } = await supabase
+    .from("weeks")
+    .select("*", { count: "exact", head: true })
+    .eq("week_number", 1)
+    .neq("status", "draft");
   if (error) throw error;
   return (count ?? 0) > 0;
 }
