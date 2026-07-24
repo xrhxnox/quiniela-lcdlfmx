@@ -68,7 +68,9 @@ function participantPickCard(label, participant, type, counts, currentNomination
       h("div", { class: "name" }, participant.name),
       participant.room ? h("div", { class: "room" }, participant.room) : null,
       h("div", { style: "margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
-        participant.active
+        participant.is_winner
+          ? h("span", { class: "badge gold" }, "GANADOR")
+          : participant.active
           ? h("span", { class: "badge green" }, "En la casa")
           : h("span", { class: "badge red" }, "Eliminado/a"),
         weekBadge,
@@ -373,7 +375,7 @@ async function renderProfileInternal(container, username) {
     winnerHabitante
       ? h(
           "p",
-          { class: "muted", style: "font-size:0.72rem;text-align:center;margin:10px 0 0" },
+          { class: "muted", style: "font-size:0.72rem;text-align:center;margin:22px 0 0" },
           seasonWinnerDecided
             ? vidente
               ? "🏆 ¡Acertó al ganador real de la temporada! (insignia Vidente)"
