@@ -305,8 +305,6 @@ async function renderProfileInternal(container, username) {
   // ---------- Favorito / odiado ----------
   const favHatedCard = h("div", { class: "card" }, [
     h("p", { style: "margin-top:0;text-align:center" }, [
-      h("i", { class: "fa-solid fa-dice-four" }),
-      " ",
       h("strong", {}, "Temporada 4"),
       " ",
       h("span", { class: "live-dot", title: "En vivo" }),
@@ -319,11 +317,9 @@ async function renderProfileInternal(container, username) {
     ]),
   ]);
 
-  const SEASON_DICE_ICONS = { 1: "fa-dice-one", 2: "fa-dice-two", 3: "fa-dice-three" };
-
   function legacySeasonCard(season, fav, hated, surprise, disappointment) {
     return h("div", { class: "card" }, [
-      h("p", { style: "margin-top:0;text-align:center" }, [h("i", { class: `fa-solid ${SEASON_DICE_ICONS[season]}` }), " ", h("strong", {}, `Temporada ${season}`)]),
+      h("p", { style: "margin-top:0;text-align:center" }, [h("strong", {}, `Temporada ${season}`)]),
       h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit, minmax(140px, 140px));justify-content:center" }, [
         legacyPickCard("Favorito", fav, "favorite"),
         legacyPickCard("Odiado", hated, "hated"),
