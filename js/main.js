@@ -28,8 +28,8 @@ const ROUTES = [
   { path: "#/", label: "Votar", icon: "fa-circle-check", render: (c) => renderHome(c, currentProfile) },
   { path: "#/participantes", label: "Habitantes", icon: "fa-house", render: renderParticipantes },
   { path: "#/eliminados", label: "Eliminados", icon: "fa-trash", render: renderEliminados },
-  { path: "#/ranking", label: "Ranking", icon: "fa-trophy", render: renderRanking },
   { path: "#/orden", label: "Orden de Salida", icon: "fa-list-ol", render: (c) => renderOrdenSalida(c, currentProfile) },
+  { path: "#/ranking", label: "Ranking", icon: "fa-trophy", render: renderRanking },
   { path: "#/reglas", label: "Reglas", icon: "fa-scroll", render: renderReglas },
   {
     path: "#/perfil",

@@ -318,7 +318,7 @@ async function renderProfileInternal(container, username) {
       participantPickCard("Odiado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null),
       participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null),
       participantPickCard("Decepción", disappointment, "disappointment", counts, disappointment ? currentNominationMap[disappointment.id] : null),
-      participantPickCard("Al azar", secretHabitante, "random", counts, secretHabitante ? currentNominationMap[secretHabitante.id] : null),
+      participantPickCard("Sorteo Ganador", secretHabitante, "random", counts, secretHabitante ? currentNominationMap[secretHabitante.id] : null),
     ]),
     secretHabitante
       ? h(
@@ -326,7 +326,7 @@ async function renderProfileInternal(container, username) {
           { class: "muted", style: "font-size:0.72rem;text-align:center;margin:10px 0 0" },
           secretHabitante.is_winner
             ? "🏆 ¡Su habitante al azar ganó la temporada! +3 puntos."
-            : "El habitante \"Al azar\" da +3 puntos extra si termina ganando la temporada."
+            : "El habitante \"Sorteo Ganador\" da +3 puntos extra si termina ganando la temporada."
         )
       : null,
   ]);

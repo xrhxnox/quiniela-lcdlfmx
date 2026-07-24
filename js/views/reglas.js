@@ -55,6 +55,22 @@ export async function renderReglas(container) {
         ]),
       ]),
 
+      ruleCard("fa-shuffle", "Sorteo Ganador", [
+        h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
+          h("li", {}, "A cada jugador se le asigna un habitante al azar (sin repetir, salvo que haya más jugadores que habitantes). Lo asigna el admin, no se elige."),
+          h("li", {}, "Se ve en tu perfil, dentro de la tarjeta de Temporada 4."),
+          h("li", { style: "margin-bottom:0" }, [h("strong", {}, "Si ese habitante termina ganando la temporada completa, +3 puntos.")]),
+        ]),
+      ]),
+
+      ruleCard("fa-list-ol", "Orden de Salida", [
+        h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
+          h("li", {}, "Antes de que se confirme la primera eliminación, arma en la pestaña \"Orden de Salida\" tu predicción del orden completo en el que crees que irán saliendo todos los habitantes."),
+          h("li", {}, [h("strong", {}, "Por cada posición que aciertes, +1 punto."), " En cuanto se confirma la primera eliminación, tu orden se bloquea y ya no se puede cambiar."]),
+          h("li", { style: "margin-bottom:0" }, "Si algún día salen 2 o más habitantes en la misma semana (doble eliminación), cuentan como bloque: no hace falta acertar el orden exacto entre ellos, basta con haber puesto a cualquiera en alguna de las posiciones de esa semana."),
+        ]),
+      ]),
+
       ruleCard("fa-medal", "Insignias", [
         h("p", { class: "muted", style: "margin-bottom:10px" }, "Se calculan solas a partir de tu historial de picks y tus elecciones de perfil."),
         h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
