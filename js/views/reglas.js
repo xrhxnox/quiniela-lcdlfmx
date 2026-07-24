@@ -93,12 +93,6 @@ export async function renderReglas(container) {
           badgeRow("vidente", "Vidente", "en Orden de Salida, pusiste en la posición 1 (ganador) al habitante que efectivamente ganó la temporada."),
           badgeRow("suertudo", "Suertudo", "el habitante que te tocó al azar en Sorteo Ganador terminó ganando la temporada."),
           badgeRow("fanatico", "Fanático", "votaste en todas las semanas cerradas de la temporada, sin faltar a ninguna."),
-          h("li", { style: "margin-bottom:0;display:flex;align-items:center;gap:10px" }, [
-            h("i", { class: "fa-solid fa-umbrella-beach" }),
-            " ",
-            h("strong", {}, "Team {cuarto}:"),
-            " aparece por cada cuarto que elijas — el de esta temporada (Ibiza, Tulum, Malibú, Sin Cuarto) y los de temporadas anteriores (Cielo/Infierno, Mar/Tierra, Día/Noche/Eclipse). Cada uno tiene su propio color e ícono.",
-          ]),
         ]),
       ]),
     ])
