@@ -304,7 +304,13 @@ async function renderProfileInternal(container, username) {
 
   // ---------- Favorito / odiado ----------
   const favHatedCard = h("div", { class: "card" }, [
-    h("p", { style: "margin-top:0;text-align:center" }, [h("i", { class: "fa-solid fa-calendar-days" }), " ", h("strong", {}, "Cuarta Temporada ")]),
+    h("p", { style: "margin-top:0;text-align:center" }, [
+      h("i", { class: "fa-solid fa-dice-four" }),
+      " ",
+      h("strong", {}, "Temporada 4"),
+      " ",
+      h("span", { class: "live-dot", title: "En vivo" }),
+    ]),
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit, minmax(140px, 140px));justify-content:center" }, [
       participantPickCard("Favorito", favorite, "favorite", counts, favorite ? currentNominationMap[favorite.id] : null),
       participantPickCard("Odiado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null),
