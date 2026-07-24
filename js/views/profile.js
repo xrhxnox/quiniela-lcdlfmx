@@ -13,6 +13,8 @@ import {
   getVotingWeek,
   getNominationsForWeek,
   getMySecretAssignment,
+  getMyEliminationOrder,
+  getWeeks,
 } from "../data.js";
 import { ACCENTS, getAccentKey, applyAccent, getThemeMode, applyThemeMode } from "../theme.js";
 import { ROOM_OPTIONS, LEGACY_ROOM_OPTIONS } from "../rooms.js";
@@ -125,13 +127,35 @@ function computeStats(history, eliminatedSet) {
   return { totalClosed, correctCount, accuracyPct, currentStreak, bestStreak };
 }
 
-function buildBadges(stats, favorite) {
+export const BADGE_STYLES = {
+  racha: { icon: "fa-fire", color: "#ff7b39" },
+  ojo: { icon: "fa-crow", color: "#8b5cf6" },
+  francotirador: { icon: "fa-bullseye", color: "#ef4444" },
+  corazon: { icon: "fa-heart-crack", color: "#ec4899" },
+  vidente: { icon: "fa-eye", color: "#22d3ee" },
+  suertudo: { icon: "fa-clover", color: "#22c55e" },
+  fanatico: { icon: "fa-calendar-check", color: "#3b82f6" },
+};
+
+function buildBadges(stats, favorite, extra = {}) {
   const badges = [];
-  if (stats.currentStreak >= 3) badges.push({ icon: "fa-fire", label: `Racha de ${stats.currentStreak}` });
-  if (stats.bestStreak >= 5) badges.push({ icon: "fa-crow", label: "Ojo de águila" });
-  if (stats.totalClosed >= 3 && stats.accuracyPct >= 70) badges.push({ icon: "fa-bullseye", label: "Francotirador" });
-  if (favorite && favorite.active === false) badges.push({ icon: "fa-heart-crack", label: "Corazón roto" });
+  if (stats.currentStreak >= 3) badges.push({ key: "racha", label: `Racha de ${stats.currentStreak}` });
+  if (stats.bestStreak >= 5) badges.push({ key: "ojo", label: "Ojo de águila" });
+  if (stats.totalClosed >= 3 && stats.accuracyPct >= 70) badges.push({ key: "francotirador", label: "Francotirador" });
+  if (favorite && favorite.active === false) badges.push({ key: "corazon", label: "Corazón roto" });
+  if (extra.vidente) badges.push({ key: "vidente", label: "Vidente" });
+  if (extra.suertudo) badges.push({ key: "suertudo", label: "Suertudo" });
+  if (extra.fanatico) badges.push({ key: "fanatico", label: "Fanático" });
   return badges;
+}
+
+export function badgeNode(badge) {
+  const style = BADGE_STYLES[badge.key];
+  return h(
+    "span",
+    { class: "badge", style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color}` },
+    [h("i", { class: `fa-solid ${style.icon}` }), " ", badge.label]
+  );
 }
 
 const ROOM_BADGE_STYLES = {
@@ -234,19 +258,33 @@ async function renderProfileInternal(container, username) {
     return;
   }
 
-  const [participants, history, eliminations, leaderboard, legacyFavorites, nominationCounts, immunityCounts, savedCounts, votingWeek, secretAssignment] =
-    await Promise.all([
-      getParticipants(),
-      getMyPredictionHistory(target.id),
-      getAllEliminationsWithWeeks(),
-      getLeaderboard(),
-      getLegacyFavorites(),
-      getNominationCounts(),
-      getImmunityCounts(),
-      getSavedCounts(),
-      getVotingWeek(),
-      getMySecretAssignment(target.id),
-    ]);
+  const [
+    participants,
+    history,
+    eliminations,
+    leaderboard,
+    legacyFavorites,
+    nominationCounts,
+    immunityCounts,
+    savedCounts,
+    votingWeek,
+    secretAssignment,
+    eliminationOrder,
+    weeks,
+  ] = await Promise.all([
+    getParticipants(),
+    getMyPredictionHistory(target.id),
+    getAllEliminationsWithWeeks(),
+    getLeaderboard(),
+    getLegacyFavorites(),
+    getNominationCounts(),
+    getImmunityCounts(),
+    getSavedCounts(),
+    getVotingWeek(),
+    getMySecretAssignment(target.id),
+    getMyEliminationOrder(target.id),
+    getWeeks(),
+  ]);
   const counts = { nomination: nominationCounts, immunity: immunityCounts, saved: savedCounts };
   const currentNominations = votingWeek ? await getNominationsForWeek(votingWeek.id) : [];
   const currentNominationMap = {};
@@ -273,7 +311,12 @@ async function renderProfileInternal(container, username) {
   const disappointmentT3 = legacyFavorites.find((f) => f.id === target.disappointment_season3_id) || null;
   const secretHabitante = secretAssignment ? participants.find((p) => p.id === secretAssignment.participant_id) || null : null;
   const stats = computeStats(history, eliminatedSet);
-  const badges = buildBadges(stats, favorite);
+  const winnerPick = eliminationOrder.find((r) => r.position === 1) || null;
+  const vidente = winnerPick ? participants.find((p) => p.id === winnerPick.participant_id)?.is_winner === true : false;
+  const suertudo = secretHabitante?.is_winner === true;
+  const totalClosedWeeks = weeks.filter((w) => w.status === "closed").length;
+  const fanatico = totalClosedWeeks > 0 && stats.totalClosed === totalClosedWeeks;
+  const badges = buildBadges(stats, favorite, { vidente, suertudo, fanatico });
   const legacyRoomBadges = [target.legacy_room_t1, target.legacy_room_t2, target.legacy_room_t3]
     .map(legacyRoomBadgeNode)
     .filter(Boolean);
@@ -300,7 +343,7 @@ async function renderProfileInternal(container, username) {
         ? h(
             "div",
             { style: "margin-top:12px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px" },
-            badges.map((b) => h("span", { class: "badge gold" }, [h("i", { class: `fa-solid ${b.icon}` }), " ", b.label]))
+            badges.map(badgeNode)
           )
         : null,
     ]

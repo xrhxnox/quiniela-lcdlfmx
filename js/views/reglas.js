@@ -1,4 +1,12 @@
 import { h, clearAndAppend } from "../utils.js";
+import { badgeNode } from "./profile.js";
+
+function badgeRow(key, label, desc) {
+  return h("li", { style: "display:flex;align-items:center;gap:10px;margin-bottom:10px" }, [
+    badgeNode({ key, label }),
+    h("span", {}, desc),
+  ]);
+}
 
 function ruleCard(icon, title, children) {
   return h("div", { class: "card" }, [
@@ -77,12 +85,15 @@ export async function renderReglas(container) {
 
       ruleCard("fa-medal", "Insignias", [
         h("p", { class: "muted", style: "margin-bottom:10px" }, "Se calculan solas a partir de tu historial de picks y tus elecciones de perfil."),
-        h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
-          h("li", {}, [h("i", { class: "fa-solid fa-fire" }), " ", h("strong", {}, "Racha de X:"), " llevas 3 o más semanas seguidas acertando."]),
-          h("li", {}, [h("i", { class: "fa-solid fa-crow" }), " ", h("strong", {}, "Ojo de águila:"), " en algún momento llegaste a una racha de 5 aciertos seguidos."]),
-          h("li", {}, [h("i", { class: "fa-solid fa-bullseye" }), " ", h("strong", {}, "Francotirador:"), " 70% o más de acierto, con al menos 3 semanas votadas."]),
-          h("li", {}, [h("i", { class: "fa-solid fa-heart-crack" }), " ", h("strong", {}, "Corazón roto:"), " tu favorito ya fue eliminado de la casa."]),
-          h("li", { style: "margin-bottom:0" }, [
+        h("ul", { style: "margin:0;padding-left:0;list-style:none;margin-bottom:0" }, [
+          badgeRow("racha", "Racha de X", "llevas 3 o más semanas seguidas acertando."),
+          badgeRow("ojo", "Ojo de águila", "en algún momento llegaste a una racha de 5 aciertos seguidos."),
+          badgeRow("francotirador", "Francotirador", "70% o más de acierto, con al menos 3 semanas votadas."),
+          badgeRow("corazon", "Corazón roto", "tu favorito ya fue eliminado de la casa."),
+          badgeRow("vidente", "Vidente", "en Orden de Salida, pusiste en la posición 1 (ganador) al habitante que efectivamente ganó la temporada."),
+          badgeRow("suertudo", "Suertudo", "el habitante que te tocó al azar en Sorteo Ganador terminó ganando la temporada."),
+          badgeRow("fanatico", "Fanático", "votaste en todas las semanas cerradas de la temporada, sin faltar a ninguna."),
+          h("li", { style: "margin-bottom:0;display:flex;align-items:center;gap:10px" }, [
             h("i", { class: "fa-solid fa-umbrella-beach" }),
             " ",
             h("strong", {}, "Team {cuarto}:"),
