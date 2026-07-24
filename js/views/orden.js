@@ -87,36 +87,10 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
       const rowEl = h("div", { class: "list-item" }, [
         h("div", { class: "row-flex" }, [
           handle,
-          h("strong", {}, `${i + 1}.`),
+          h("strong", { style: "min-width:1.6em;display:inline-block" }, `${String(i + 1).padStart(2, "0")}.`),
           h("span", { class: `badge ${isFirst ? "gold" : "red"}` }, isFirst ? "Ganador" : "Eliminado"),
           photoOrInitials(p),
           p.name,
-        ]),
-        h("div", { class: "row-flex" }, [
-          h(
-            "button",
-            {
-              class: "btn small secondary",
-              disabled: i === 0 ? "disabled" : undefined,
-              onclick: () => {
-                [order[i - 1], order[i]] = [order[i], order[i - 1]];
-                renderList();
-              },
-            },
-            h("i", { class: "fa-solid fa-arrow-up" })
-          ),
-          h(
-            "button",
-            {
-              class: "btn small secondary",
-              disabled: i === order.length - 1 ? "disabled" : undefined,
-              onclick: () => {
-                [order[i + 1], order[i]] = [order[i], order[i + 1]];
-                renderList();
-              },
-            },
-            h("i", { class: "fa-solid fa-arrow-down" })
-          ),
         ]),
       ]);
 
@@ -173,7 +147,7 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
         ]),
         h("p", { class: "muted", style: "font-size:0.82rem;margin-bottom:4px" }, [
           h("i", { class: "fa-solid fa-grip-lines" }),
-          " Arrastra desde el ícono para reordenar, o usa las flechas.",
+          " Arrastra desde el ícono para reordenar.",
         ]),
         h(
           "p",
