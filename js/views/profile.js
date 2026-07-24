@@ -150,13 +150,13 @@ function buildBadges(stats, favorite, extra = {}) {
   return badges;
 }
 
-export function badgeNode(badge) {
+export function badgeNode(badge, { fixedWidth = false } = {}) {
   const style = BADGE_STYLES[badge.key];
   return h(
     "span",
     {
       class: "badge",
-      style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color};display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:150px;text-align:center`,
+      style: `background:${style.color}26;color:${style.color};border:1px solid ${style.color};display:inline-flex;align-items:center;justify-content:center;gap:4px;${fixedWidth ? "min-width:150px;" : ""}text-align:center`,
     },
     [h("i", { class: `fa-solid ${style.icon}` }), badge.label]
   );
@@ -349,7 +349,7 @@ async function renderProfileInternal(container, username) {
         ? h(
             "div",
             { style: "margin-top:12px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px" },
-            badges.map(badgeNode)
+            badges.map((b) => badgeNode(b))
           )
         : null,
     ]

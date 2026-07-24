@@ -3,7 +3,7 @@ import { badgeNode } from "./profile.js";
 
 function badgeRow(key, label, desc) {
   return h("li", { style: "display:flex;align-items:center;gap:10px;margin-bottom:10px" }, [
-    badgeNode({ key, label }),
+    badgeNode({ key, label }, { fixedWidth: true }),
     h("span", {}, desc),
   ]);
 }
