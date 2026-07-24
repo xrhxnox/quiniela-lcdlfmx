@@ -162,16 +162,20 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
 }
 
 // Posición 1 = predicho ganador (nunca aparece en "eliminations"). Posiciones 2+ =
-// orden de salida en reversa cronológica: el eliminado MÁS RECIENTE va en la
-// posición 2, y el eliminado más antiguo (el primero en salir) va hasta el final.
-function buildBlocks(eliminationsWithWeeks) {
-  const weekNumbers = [...new Set(eliminationsWithWeeks.map((e) => e.weeks.week_number))].sort((a, b) => b - a);
+// orden de salida en reversa: posición = totalParticipants + 1 - lugar cronológico
+// real de salida. Así, el primero en salir SIEMPRE cae en la última posición desde
+// el momento en que se confirma, sin importar cuántas eliminaciones falten para el
+// resto de la temporada (misma fórmula que la vista SQL elimination_order_score).
+function buildBlocks(eliminationsWithWeeks, totalParticipants) {
+  const weekNumbers = [...new Set(eliminationsWithWeeks.map((e) => e.weeks.week_number))].sort((a, b) => a - b);
   const blocks = [];
-  let cursor = 2;
+  let fwdCursor = 1;
   weekNumbers.forEach((wn) => {
     const ids = eliminationsWithWeeks.filter((e) => e.weeks.week_number === wn).map((e) => e.participant_id);
-    blocks.push({ start: cursor, end: cursor + ids.length - 1, ids: new Set(ids) });
-    cursor += ids.length;
+    const fwdStart = fwdCursor;
+    const fwdEnd = fwdCursor + ids.length - 1;
+    blocks.push({ start: totalParticipants - fwdEnd + 1, end: totalParticipants - fwdStart + 1, ids: new Set(ids) });
+    fwdCursor += ids.length;
   });
   return blocks;
 }
@@ -191,10 +195,10 @@ function orderThumb(participant, status, position) {
   ]);
 }
 
-function renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks) {
-  const blocks = buildBlocks(eliminationsWithWeeks);
+function renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, totalParticipants) {
+  const blocks = buildBlocks(eliminationsWithWeeks, totalParticipants);
   const blockFor = (position) => blocks.find((b) => position >= b.start && position <= b.end) || null;
-  const maxResolvedPosition = 1 + eliminationsWithWeeks.length;
+  const minResolvedPosition = totalParticipants - eliminationsWithWeeks.length + 1;
   const winnerExists = allOrders.some((r) => r.participants?.is_winner);
 
   const byPlayer = new Map();
@@ -215,7 +219,7 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
         let status;
         if (row.position === 1) {
           status = !winnerExists ? "pending" : row.participants?.is_winner ? "hit" : "miss";
-        } else if (row.position <= maxResolvedPosition) {
+        } else if (row.position >= minResolvedPosition) {
           const block = blockFor(row.position);
           status = block && block.ids.has(row.participant_id) ? "hit" : "miss";
         } else {
@@ -262,10 +266,11 @@ export async function renderOrdenSalida(container, profile) {
     return;
   }
 
-  const [allOrders, scores, eliminationsWithWeeks] = await Promise.all([
+  const [allOrders, scores, eliminationsWithWeeks, participants] = await Promise.all([
     getAllEliminationOrders(),
     getEliminationOrderScores(),
     getAllEliminationsWithWeeks(),
+    getParticipants(),
   ]);
-  renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks);
+  renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, participants.length);
 }

@@ -449,13 +449,18 @@ where p.is_winner = true;
 
 -- Puntaje de la predicción de "orden de salida". Posición 1 = predicho ganador
 -- (acierta si coincide con participants.is_winner). Posiciones 2+ = orden de
--- salida en reversa cronológica (el eliminado MÁS RECIENTE va en la posición 2,
--- el primero en salir va hasta el final), por bloques: una semana = un bloque,
--- basta con haber puesto a cualquiera de los eliminados de esa semana en alguna
--- de las posiciones de ese bloque, sin importar el orden exacto entre ellos.
+-- salida en reversa (posición = total de habitantes + 1 - lugar cronológico
+-- real de salida, así que el primero en salir SIEMPRE cae en la última
+-- posición, sin importar cuántas eliminaciones falten para el resto de la
+-- temporada), por bloques: una semana = un bloque, basta con haber puesto a
+-- cualquiera de los eliminados de esa semana en alguna de las posiciones de
+-- ese bloque, sin importar el orden exacto entre ellos.
 create or replace view public.elimination_order_score as
-with actual_blocks as (
-  select e.participant_id, dense_rank() over (order by w.week_number desc) as block_no
+with total_participants as (
+  select count(*)::int as n from public.participants
+),
+actual_blocks as (
+  select e.participant_id, dense_rank() over (order by w.week_number asc) as block_no
   from public.eliminations e
   join public.weeks w on w.id = e.week_id
 ),
@@ -465,13 +470,19 @@ block_sizes as (
 block_bounds as (
   select
     block_no,
-    coalesce(sum(block_size) over (order by block_no rows between unbounded preceding and 1 preceding), 0) + 2 as start_pos,
-    sum(block_size) over (order by block_no) + 1 as end_pos
+    coalesce(sum(block_size) over (order by block_no rows between unbounded preceding and 1 preceding), 0) + 1 as fwd_start,
+    sum(block_size) over (order by block_no) as fwd_end
   from block_sizes
 ),
 block_membership as (
-  select ab.block_no, ab.participant_id, bb.start_pos, bb.end_pos
-  from actual_blocks ab join block_bounds bb using (block_no)
+  select
+    ab.block_no,
+    ab.participant_id,
+    (tp.n - bb.fwd_end + 1) as start_pos,
+    (tp.n - bb.fwd_start + 1) as end_pos
+  from actual_blocks ab
+  join block_bounds bb using (block_no)
+  cross join total_participants tp
 ),
 winner_hits as (
   select pr.player_id
