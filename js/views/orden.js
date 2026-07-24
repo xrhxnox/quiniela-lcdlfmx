@@ -176,8 +176,8 @@ function buildBlocks(eliminationsWithWeeks) {
   return blocks;
 }
 
-function orderThumb(participant, hit, position) {
-  const borderColor = hit ? "var(--green)" : "var(--red)";
+function orderThumb(participant, status, position) {
+  const borderColor = status === "hit" ? "var(--green)" : status === "miss" ? "var(--red)" : "var(--line)";
   const photo = participant?.photo_url
     ? `background-image:url('${esc(participant.photo_url)}');background-size:cover;background-position:center;`
     : `background:var(--photo-bg);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:var(--text-dim);`;
@@ -194,6 +194,8 @@ function orderThumb(participant, hit, position) {
 function renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks) {
   const blocks = buildBlocks(eliminationsWithWeeks);
   const blockFor = (position) => blocks.find((b) => position >= b.start && position <= b.end) || null;
+  const maxResolvedPosition = 1 + eliminationsWithWeeks.length;
+  const winnerExists = allOrders.some((r) => r.participants?.is_winner);
 
   const byPlayer = new Map();
   allOrders.forEach((row) => {
@@ -210,14 +212,16 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
       rows.sort((a, b) => b.position - a.position);
       const isMe = playerId === profile.id;
       const items = rows.map((row) => {
-        let hit;
+        let status;
         if (row.position === 1) {
-          hit = !!row.participants?.is_winner;
-        } else {
+          status = !winnerExists ? "pending" : row.participants?.is_winner ? "hit" : "miss";
+        } else if (row.position <= maxResolvedPosition) {
           const block = blockFor(row.position);
-          hit = block ? block.ids.has(row.participant_id) : false;
+          status = block && block.ids.has(row.participant_id) ? "hit" : "miss";
+        } else {
+          status = "pending";
         }
-        return orderThumb(row.participants, hit, row.position);
+        return orderThumb(row.participants, status, row.position);
       });
       return h("div", { class: "card" }, [
         h("div", { style: "display:flex;justify-content:space-between;align-items:center;margin-bottom:10px" }, [
