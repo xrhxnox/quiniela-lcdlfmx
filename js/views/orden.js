@@ -33,9 +33,15 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
   const listWrap = h("div", { class: "card" });
 
   function renderList() {
-    const rows = order.map((p, i) =>
-      h("div", { class: "list-item" }, [
-        h("div", { class: "row-flex" }, [h("strong", {}, `${i + 1}.`), photoOrInitials(p), p.name]),
+    const rows = order.map((p, i) => {
+      const isLast = i === order.length - 1;
+      return h("div", { class: "list-item" }, [
+        h("div", { class: "row-flex" }, [
+          h("strong", {}, `${i + 1}.`),
+          h("span", { class: `badge ${isLast ? "gold" : "red"}` }, isLast ? "Ganador" : "Eliminado"),
+          photoOrInitials(p),
+          p.name,
+        ]),
         h("div", { class: "row-flex" }, [
           h(
             "button",
