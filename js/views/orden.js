@@ -124,7 +124,7 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
         saveBtn.textContent = "Guardando…";
         try {
           await saveEliminationOrder(profile.id, order.map((p) => p.id));
-          successMsg.textContent = "¡Orden guardado! Puedes seguir reordenando hasta que se confirme la primera eliminación.";
+          successMsg.textContent = "¡Orden guardado! Puedes seguir reordenando hasta que se publique la Semana 1.";
         } catch (e) {
           errMsg.textContent = "No se pudo guardar. Intenta de nuevo.";
         } finally {
@@ -251,7 +251,7 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
       ]),
       playerCards.length
         ? h("div", {}, playerCards)
-        : h("div", { class: "empty-state" }, "Nadie registró un orden antes de la primera eliminación."),
+        : h("div", { class: "empty-state" }, "Nadie registró un orden antes de que se publicara la Semana 1."),
     ])
   );
 }
