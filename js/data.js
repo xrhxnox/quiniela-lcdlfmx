@@ -449,6 +449,10 @@ export async function markParticipantAsWinner(participantId) {
   return unwrap(await supabase.from("participants").update({ is_winner: true }).eq("id", participantId).select().single());
 }
 
+export async function clearWinner() {
+  return unwrap(await supabase.from("participants").update({ is_winner: false }).eq("is_winner", true).select());
+}
+
 // ---------- Dinámica: Orden de salida ----------
 export async function getMyEliminationOrder(playerId) {
   return unwrap(

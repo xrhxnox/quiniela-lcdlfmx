@@ -29,6 +29,7 @@ import {
   clearSecretAssignment,
   resetSecretAssignments,
   markParticipantAsWinner,
+  clearWinner,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 import { ROOM_OPTIONS } from "../rooms.js";
@@ -736,11 +737,15 @@ async function renderDynamicsAdmin(sub) {
       {
         class: `btn small${p.is_winner ? "" : " secondary"}`,
         onclick: async () => {
-          await markParticipantAsWinner(p.id);
+          if (p.is_winner) {
+            await clearWinner();
+          } else {
+            await markParticipantAsWinner(p.id);
+          }
           await renderDynamicsAdmin(sub);
         },
       },
-      p.is_winner ? [h("i", { class: "fa-solid fa-crown" }), " Ganador/a"] : "Marcar como ganador/a"
+      p.is_winner ? [h("i", { class: "fa-solid fa-crown" }), " Ganador/a (quitar)"] : "Marcar como ganador/a"
     );
     const avatar = p.photo_url
       ? h("div", { class: "avatar-sm", style: `background-image:url('${esc(p.photo_url)}')` })
