@@ -207,7 +207,7 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
   const playerCards = [...byPlayer.entries()]
     .sort((a, b) => (scoreMap[b[0]] || 0) - (scoreMap[a[0]] || 0))
     .map(([playerId, { player, rows }]) => {
-      rows.sort((a, b) => a.position - b.position);
+      rows.sort((a, b) => b.position - a.position);
       const isMe = playerId === profile.id;
       const items = rows.map((row) => {
         let hit;
