@@ -36,14 +36,11 @@ export async function renderRanking(container) {
 
   const body = rows.map((r, i) =>
     h("tr", { class: `rank-row${i === 0 ? " top1" : ""}` }, [
-      h("td", {}, [`${i + 1} `, i === 0 ? h("i", { class: "fa-solid fa-crown" }) : null]),
+      h("td", {}, i === 0 ? h("i", { class: "fa-solid fa-crown" }) : `${i + 1}`),
       h("td", { style: "font-weight:700" }, r.display_name),
       h("td", { class: "num" }, String(r.points)),
       h("td", {}, [
-        h("a", { href: `#/perfil/${encodeURIComponent(r.username)}`, class: "player-link" }, [
-          h("i", { class: "fa-solid fa-user" }),
-          " Ver perfil",
-        ]),
+        h("a", { href: `#/perfil/${encodeURIComponent(r.username)}`, class: "player-link" }, "Ver perfil"),
       ]),
     ])
   );
