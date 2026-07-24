@@ -23,6 +23,10 @@ import {
   createLegacyFavorite,
   updateLegacyFavorite,
   deleteLegacyFavorite,
+  getSecretAssignments,
+  assignSecretHabitantesRandomly,
+  reassignSecretHabitante,
+  markParticipantAsWinner,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 import { ROOM_OPTIONS } from "../rooms.js";
@@ -624,6 +628,103 @@ async function renderLegacyAdmin(sub) {
 }
 
 // ============================================================
+// DINÁMICAS (habitante al azar + ganador de la temporada)
+// ============================================================
+async function renderDynamicsAdmin(sub) {
+  clearAndAppend(sub, h("div", { class: "loading" }, "Cargando…"));
+  const [participants, assignments] = await Promise.all([getParticipants(), getSecretAssignments()]);
+
+  // --- Habitante al azar ---
+  const assignErr = h("div", { class: "error-msg" });
+  const assignBtn = h(
+    "button",
+    {
+      class: "btn small",
+      onclick: async () => {
+        assignErr.textContent = "";
+        assignBtn.disabled = true;
+        assignBtn.textContent = "Asignando…";
+        try {
+          await assignSecretHabitantesRandomly();
+          await renderDynamicsAdmin(sub);
+        } catch (e) {
+          assignErr.textContent = "No se pudo asignar. " + (e.message || "");
+          assignBtn.disabled = false;
+          assignBtn.textContent = "Asignar al azar";
+        }
+      },
+    },
+    "Asignar al azar"
+  );
+
+  const assignmentRows = assignments.map((a) => {
+    const select = h(
+      "select",
+      { style: "max-width:200px" },
+      participants.map((p) =>
+        h("option", { value: p.id, selected: p.id === a.participant_id ? "selected" : undefined }, p.name)
+      )
+    );
+    const saveBtn = h(
+      "button",
+      {
+        class: "btn small secondary",
+        onclick: async () => {
+          await reassignSecretHabitante(a.player_id, Number(select.value));
+          await renderDynamicsAdmin(sub);
+        },
+      },
+      "Guardar"
+    );
+    return h("div", { class: "list-item" }, [
+      h("div", { class: "row-flex" }, [h("strong", {}, a.profiles?.display_name || "—"), select]),
+      saveBtn,
+    ]);
+  });
+
+  const secretCard = h("div", { class: "card" }, [
+    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-shuffle" }), " ", h("strong", {}, "Habitante al azar")]),
+    h(
+      "p",
+      { class: "muted", style: "font-size:0.82rem" },
+      "Le asigna un habitante al azar a cada jugador que todavía no tenga uno (sin repetir, salvo que haya más jugadores que habitantes). Si a alguien se le asigna el habitante que termina ganando la temporada, se lleva +3 puntos."
+    ),
+    h("div", { style: "margin-bottom:14px" }, [assignBtn, assignErr]),
+    assignmentRows.length ? h("div", {}, assignmentRows) : h("p", { class: "muted" }, "Nadie tiene asignación todavía."),
+  ]);
+
+  // --- Ganador de la temporada ---
+  const winnerRows = participants.map((p) => {
+    const btn = h(
+      "button",
+      {
+        class: `btn small${p.is_winner ? "" : " secondary"}`,
+        onclick: async () => {
+          await markParticipantAsWinner(p.id);
+          await renderDynamicsAdmin(sub);
+        },
+      },
+      p.is_winner ? [h("i", { class: "fa-solid fa-crown" }), " Ganador/a"] : "Marcar como ganador/a"
+    );
+    const avatar = p.photo_url
+      ? h("div", { class: "avatar-sm", style: `background-image:url('${esc(p.photo_url)}')` })
+      : h("div", { class: "avatar-sm" }, initials(p.name));
+    return h("div", { class: "list-item" }, [
+      h("div", { class: "row-flex" }, [avatar, p.name, p.is_winner ? h("span", { class: "badge gold" }, "Ganador/a") : null]),
+      btn,
+    ]);
+  });
+
+  const winnerCard = h("div", { class: "card" }, [
+    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-crown" }), " ", h("strong", {}, "Ganador/a de la temporada")]),
+    h("p", { class: "muted", style: "font-size:0.82rem" }, "Márcalo aquí cuando la final termine de definirse."),
+    h("div", {}, winnerRows.length ? winnerRows : [h("p", { class: "muted" }, "Sin habitantes todavía.")]),
+  ]);
+
+  clearAndAppend(sub, h("div", {}, [secretCard, winnerCard]));
+}
+
+// ============================================================
 // MAIN
 // ============================================================
 export async function renderAdmin(container) {
@@ -635,6 +736,7 @@ export async function renderAdmin(container) {
     { key: "weeks", label: "Semanas", render: renderWeeksAdmin },
     { key: "participants", label: "Habitantes", render: renderParticipantsAdmin },
     { key: "legacy", label: "Favoritos históricos", render: renderLegacyAdmin },
+    { key: "dynamics", label: "Dinámicas", render: renderDynamicsAdmin },
     { key: "users", label: "Usuarios", render: renderUsersAdmin },
   ];
 

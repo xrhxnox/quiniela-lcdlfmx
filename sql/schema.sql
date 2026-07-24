@@ -379,23 +379,118 @@ create policy "predictions_update_own" on public.predictions for update using (
 );
 
 -- =========================================================
+-- DINÁMICA 1: Habitante al azar ("amigo secreto")
+-- Cada jugador tiene un habitante asignado; si ese habitante
+-- gana la temporada, el jugador se lleva +3 puntos. Es pública
+-- (se muestra en el perfil de cada jugador).
+-- =========================================================
+alter table public.participants add column if not exists is_winner boolean not null default false;
+
+drop index if exists participants_one_winner;
+create unique index if not exists participants_one_winner on public.participants ((is_winner)) where is_winner = true;
+
+create table if not exists public.secret_assignments (
+  player_id uuid primary key references public.profiles(id) on delete cascade,
+  participant_id bigint not null references public.participants(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.secret_assignments enable row level security;
+
+drop policy if exists "secret_assignments_select" on public.secret_assignments;
+create policy "secret_assignments_select" on public.secret_assignments for select using (true);
+drop policy if exists "secret_assignments_write_admin" on public.secret_assignments;
+create policy "secret_assignments_write_admin" on public.secret_assignments for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- =========================================================
+-- DINÁMICA 2: Orden de salida
+-- Cada jugador predice, antes de la primera eliminación
+-- confirmada, el orden completo en el que cree que irán
+-- saliendo los habitantes. +1 punto por cada posición que
+-- caiga dentro del "bloque" (semana) correcto.
+-- =========================================================
+create table if not exists public.elimination_order_predictions (
+  player_id uuid not null references public.profiles(id) on delete cascade,
+  position int not null,
+  participant_id bigint not null references public.participants(id) on delete cascade,
+  primary key (player_id, position),
+  unique (player_id, participant_id)
+);
+alter table public.elimination_order_predictions enable row level security;
+
+-- se ve la propia siempre; la de los demás en cuanto exista al menos 1 eliminación confirmada
+drop policy if exists "eop_select" on public.elimination_order_predictions;
+create policy "eop_select" on public.elimination_order_predictions for select using (
+  player_id = auth.uid()
+  or public.is_admin()
+  or exists (select 1 from public.eliminations)
+);
+
+-- solo puedes escribir/borrar tu propia predicción, y solo mientras no exista NINGUNA eliminación confirmada
+drop policy if exists "eop_write_own" on public.elimination_order_predictions;
+create policy "eop_write_own" on public.elimination_order_predictions for all using (
+  player_id = auth.uid() and not exists (select 1 from public.eliminations)
+) with check (
+  player_id = auth.uid() and not exists (select 1 from public.eliminations)
+);
+
+-- =========================================================
 -- VISTAS de apoyo
 -- =========================================================
 
--- Puntaje total por jugador (aciertos de eliminación)
+-- Bono de +3 pts para quien tenga asignado (al azar) al ganador de la temporada
+create or replace view public.secret_assignment_bonus as
+select sa.player_id, 3 as points
+from public.secret_assignments sa
+join public.participants p on p.id = sa.participant_id
+where p.is_winner = true;
+
+-- Puntaje de la predicción de "orden de salida", por bloques (una semana = un bloque;
+-- basta con haber puesto a cualquiera de los eliminados de esa semana en alguna de
+-- las posiciones que le corresponden a ese bloque, sin importar el orden exacto entre ellos).
+create or replace view public.elimination_order_score as
+with actual_blocks as (
+  select e.participant_id, dense_rank() over (order by w.week_number) as block_no
+  from public.eliminations e
+  join public.weeks w on w.id = e.week_id
+),
+block_sizes as (
+  select block_no, count(*) as block_size from actual_blocks group by block_no
+),
+block_bounds as (
+  select
+    block_no,
+    coalesce(sum(block_size) over (order by block_no rows between unbounded preceding and 1 preceding), 0) + 1 as start_pos,
+    sum(block_size) over (order by block_no) as end_pos
+  from block_sizes
+),
+block_membership as (
+  select ab.block_no, ab.participant_id, bb.start_pos, bb.end_pos
+  from actual_blocks ab join block_bounds bb using (block_no)
+)
+select pr.player_id, count(*) as points
+from public.elimination_order_predictions pr
+join block_membership bm
+  on pr.position between bm.start_pos and bm.end_pos
+  and pr.participant_id = bm.participant_id
+group by pr.player_id;
+
+-- Puntaje total por jugador (aciertos de eliminación semanal + bono habitante al azar + orden de salida)
 create or replace view public.leaderboard as
 select
   p.id as player_id,
   p.username,
   p.display_name,
-  count(*) filter (
-    where e.participant_id is not null
-  ) as points
+  coalesce(pred_pts.pts, 0) + coalesce(sab.points, 0) + coalesce(eos.points, 0) as points
 from public.profiles p
-left join public.predictions pr on pr.player_id = p.id
-left join public.eliminations e
-  on e.week_id = pr.week_id and e.participant_id = pr.participant_id
-group by p.id, p.username, p.display_name
+left join (
+  select pr.player_id, count(*) as pts
+  from public.predictions pr
+  join public.eliminations e on e.week_id = pr.week_id and e.participant_id = pr.participant_id
+  group by pr.player_id
+) pred_pts on pred_pts.player_id = p.id
+left join public.secret_assignment_bonus sab on sab.player_id = p.id
+left join public.elimination_order_score eos on eos.player_id = p.id
 order by points desc, display_name asc;
 
 -- Veces que cada participante ha sido nominado

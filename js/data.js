@@ -381,3 +381,101 @@ export async function getMyPredictionHistory(playerId) {
       .order("week_id", { ascending: false })
   );
 }
+
+// ---------- Dinámica: Habitante al azar ----------
+export async function getSecretAssignments() {
+  return unwrap(
+    await supabase
+      .from("secret_assignments")
+      .select("player_id, participant_id, profiles(display_name, username), participants(name, photo_url, active, is_winner)")
+  );
+}
+
+export async function getMySecretAssignment(playerId) {
+  const { data, error } = await supabase
+    .from("secret_assignments")
+    .select("participant_id, participants(name, photo_url, active, is_winner)")
+    .eq("player_id", playerId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function assignSecretHabitantesRandomly() {
+  const [profiles, participants, assignments] = await Promise.all([
+    getAllProfiles(),
+    getParticipants(),
+    getSecretAssignments(),
+  ]);
+  const assignedPlayerIds = new Set(assignments.map((a) => a.player_id));
+  const unassignedPlayers = profiles.filter((p) => !assignedPlayerIds.has(p.id));
+  if (unassignedPlayers.length === 0 || participants.length === 0) return [];
+
+  const shuffled = [...participants];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  const rows = unassignedPlayers.map((player, i) => ({
+    player_id: player.id,
+    participant_id: shuffled[i % shuffled.length].id,
+  }));
+  return unwrap(await supabase.from("secret_assignments").insert(rows).select());
+}
+
+export async function reassignSecretHabitante(playerId, participantId) {
+  return unwrap(
+    await supabase
+      .from("secret_assignments")
+      .upsert({ player_id: playerId, participant_id: participantId })
+      .select()
+      .single()
+  );
+}
+
+export async function markParticipantAsWinner(participantId) {
+  await supabase.from("participants").update({ is_winner: false }).eq("is_winner", true);
+  return unwrap(await supabase.from("participants").update({ is_winner: true }).eq("id", participantId).select().single());
+}
+
+// ---------- Dinámica: Orden de salida ----------
+export async function getMyEliminationOrder(playerId) {
+  return unwrap(
+    await supabase
+      .from("elimination_order_predictions")
+      .select("position, participant_id, participants(name, photo_url)")
+      .eq("player_id", playerId)
+      .order("position")
+  );
+}
+
+export async function saveEliminationOrder(playerId, orderedParticipantIds) {
+  await supabase.from("elimination_order_predictions").delete().eq("player_id", playerId);
+  const rows = orderedParticipantIds.map((participant_id, i) => ({
+    player_id: playerId,
+    position: i + 1,
+    participant_id,
+  }));
+  return unwrap(await supabase.from("elimination_order_predictions").insert(rows).select());
+}
+
+export async function getAllEliminationOrders() {
+  return unwrap(
+    await supabase
+      .from("elimination_order_predictions")
+      .select("player_id, position, participant_id, participants(name, photo_url), profiles(display_name, username)")
+      .order("player_id")
+      .order("position")
+  );
+}
+
+export async function getEliminationOrderScores() {
+  return unwrap(await supabase.from("elimination_order_score").select("*"));
+}
+
+export async function hasEliminationsStarted() {
+  const { count, error } = await supabase.from("eliminations").select("*", { count: "exact", head: true });
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}

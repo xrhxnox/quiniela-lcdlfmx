@@ -12,6 +12,7 @@ import {
   getSavedCounts,
   getVotingWeek,
   getNominationsForWeek,
+  getMySecretAssignment,
 } from "../data.js";
 import { ACCENTS, getAccentKey, applyAccent, getThemeMode, applyThemeMode } from "../theme.js";
 import { ROOM_OPTIONS, LEGACY_ROOM_OPTIONS } from "../rooms.js";
@@ -22,6 +23,7 @@ const PICK_TYPE_ICONS = {
   hated: { icon: "fa-skull-crossbones", color: "var(--text)" },
   surprise: { icon: "fa-bomb", color: "var(--text)" },
   disappointment: { icon: "fa-heart-crack", color: "var(--text)" },
+  random: { icon: "fa-shuffle", color: "var(--text)" },
 };
 
 function pickTypeIcon(type) {
@@ -232,7 +234,7 @@ async function renderProfileInternal(container, username) {
     return;
   }
 
-  const [participants, history, eliminations, leaderboard, legacyFavorites, nominationCounts, immunityCounts, savedCounts, votingWeek] =
+  const [participants, history, eliminations, leaderboard, legacyFavorites, nominationCounts, immunityCounts, savedCounts, votingWeek, secretAssignment] =
     await Promise.all([
       getParticipants(),
       getMyPredictionHistory(target.id),
@@ -243,6 +245,7 @@ async function renderProfileInternal(container, username) {
       getImmunityCounts(),
       getSavedCounts(),
       getVotingWeek(),
+      getMySecretAssignment(target.id),
     ]);
   const counts = { nomination: nominationCounts, immunity: immunityCounts, saved: savedCounts };
   const currentNominations = votingWeek ? await getNominationsForWeek(votingWeek.id) : [];
@@ -268,6 +271,7 @@ async function renderProfileInternal(container, username) {
   const disappointmentT1 = legacyFavorites.find((f) => f.id === target.disappointment_season1_id) || null;
   const disappointmentT2 = legacyFavorites.find((f) => f.id === target.disappointment_season2_id) || null;
   const disappointmentT3 = legacyFavorites.find((f) => f.id === target.disappointment_season3_id) || null;
+  const secretHabitante = secretAssignment ? participants.find((p) => p.id === secretAssignment.participant_id) || null : null;
   const stats = computeStats(history, eliminatedSet);
   const badges = buildBadges(stats, favorite);
   const legacyRoomBadges = [target.legacy_room_t1, target.legacy_room_t2, target.legacy_room_t3]
@@ -314,7 +318,17 @@ async function renderProfileInternal(container, username) {
       participantPickCard("Odiado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null),
       participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null),
       participantPickCard("Decepción", disappointment, "disappointment", counts, disappointment ? currentNominationMap[disappointment.id] : null),
+      participantPickCard("Al azar", secretHabitante, "random", counts, secretHabitante ? currentNominationMap[secretHabitante.id] : null),
     ]),
+    secretHabitante
+      ? h(
+          "p",
+          { class: "muted", style: "font-size:0.72rem;text-align:center;margin:10px 0 0" },
+          secretHabitante.is_winner
+            ? "🏆 ¡Su habitante al azar ganó la temporada! +3 puntos."
+            : "El habitante \"Al azar\" da +3 puntos extra si termina ganando la temporada."
+        )
+      : null,
   ]);
 
   function legacySeasonCard(season, fav, hated, surprise, disappointment) {
