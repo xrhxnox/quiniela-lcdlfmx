@@ -76,7 +76,7 @@ function participantPickCard(label, participant, type, counts, currentNomination
 }
 
 function avatarNode(profile, size) {
-  const style = `width:${size}px;height:${size}px;border-radius:50%;flex-shrink:0;`;
+  const style = `width:${size}px;height:${size}px;border-radius:50%;flex-shrink:0;border:3px solid var(--line);`;
   if (profile.avatar_url) {
     return h("div", {
       style: `${style}background:var(--bg-elev) url('${esc(profile.avatar_url)}') center/contain no-repeat;`,
