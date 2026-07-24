@@ -32,11 +32,61 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
   const successMsg = h("div", { class: "success-msg" });
   const listWrap = h("div", { class: "card" });
 
-  function renderList() {
+  let dragging = null; // { fromIndex, startY, rowEl }
+
+  function clearDragStyles(el) {
+    el.style.position = "";
+    el.style.zIndex = "";
+    el.style.opacity = "";
+    el.style.transform = "";
+    el.style.boxShadow = "";
+  }
+
+  function applyDragStyles(el) {
+    el.style.position = "relative";
+    el.style.zIndex = "5";
+    el.style.opacity = "0.9";
+    el.style.boxShadow = "0 6px 18px rgba(0,0,0,0.35)";
+  }
+
+  function onPointerMove(e) {
+    if (!dragging) return;
+    const deltaY = e.clientY - dragging.startY;
+    dragging.rowEl.style.transform = `translateY(${deltaY}px)`;
+
+    const rowsEls = [...listWrap.firstElementChild.children];
+    const hoveredIndex = rowsEls.findIndex((el) => {
+      if (el === dragging.rowEl) return false;
+      const rect = el.getBoundingClientRect();
+      return e.clientY >= rect.top && e.clientY <= rect.bottom;
+    });
+    if (hoveredIndex !== -1 && hoveredIndex !== dragging.fromIndex) {
+      const [moved] = order.splice(dragging.fromIndex, 1);
+      order.splice(hoveredIndex, 0, moved);
+      dragging.fromIndex = hoveredIndex;
+      dragging.startY = e.clientY;
+      renderList(hoveredIndex);
+    }
+  }
+
+  function onPointerUp() {
+    if (dragging) clearDragStyles(dragging.rowEl);
+    dragging = null;
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
+  }
+
+  function renderList(reacquireIndex) {
     const rows = order.map((p, i) => {
       const isFirst = i === 0;
-      return h("div", { class: "list-item" }, [
+      const handle = h("i", {
+        class: "fa-solid fa-grip-lines",
+        style: "cursor:grab;color:var(--text-dim);padding:4px 10px;touch-action:none",
+      });
+      const rowEl = h("div", { class: "list-item" }, [
         h("div", { class: "row-flex" }, [
+          handle,
           h("strong", {}, `${i + 1}.`),
           h("span", { class: `badge ${isFirst ? "gold" : "red"}` }, isFirst ? "Ganador" : "Eliminado"),
           photoOrInitials(p),
@@ -69,6 +119,22 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
           ),
         ]),
       ]);
+
+      handle.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        dragging = { fromIndex: i, startY: e.clientY, rowEl };
+        applyDragStyles(rowEl);
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+        window.addEventListener("pointercancel", onPointerUp);
+      });
+
+      if (dragging && reacquireIndex === i) {
+        dragging.rowEl = rowEl;
+        applyDragStyles(rowEl);
+      }
+
+      return rowEl;
     });
     clearAndAppend(listWrap, h("div", {}, rows));
   }
@@ -104,6 +170,10 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
         h("p", { style: "margin-top:0" }, [
           h("i", { class: "fa-solid fa-list-ol" }),
           " Ordena a los habitantes del que crees que GANARÁ (arriba, posición 1) al que crees que saldrá PRIMERO (abajo). Por cada posición que aciertes, +1 punto.",
+        ]),
+        h("p", { class: "muted", style: "font-size:0.82rem;margin-bottom:4px" }, [
+          h("i", { class: "fa-solid fa-grip-lines" }),
+          " Arrastra desde el ícono para reordenar, o usa las flechas.",
         ]),
         h(
           "p",
