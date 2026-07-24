@@ -478,7 +478,7 @@ export async function getAllEliminationOrders() {
   return unwrap(
     await supabase
       .from("elimination_order_predictions")
-      .select("player_id, position, participant_id, participants(name, photo_url), profiles(display_name, username)")
+      .select("player_id, position, participant_id, participants(name, photo_url, is_winner), profiles(display_name, username)")
       .order("player_id")
       .order("position")
   );

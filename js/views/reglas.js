@@ -65,8 +65,12 @@ export async function renderReglas(container) {
 
       ruleCard("fa-list-ol", "Orden de Salida", [
         h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
-          h("li", {}, "Antes de que se confirme la primera eliminación, arma en la pestaña \"Orden de Salida\" tu predicción del orden completo en el que crees que irán saliendo todos los habitantes."),
-          h("li", {}, [h("strong", {}, "Por cada posición que aciertes, +1 punto."), " En cuanto se confirma la primera eliminación, tu orden se bloquea y ya no se puede cambiar."]),
+          h("li", {}, [
+            "Antes de que se publique la Semana 1, arma en la pestaña \"Orden de Salida\" tu predicción de todos los habitantes: ",
+            h("strong", {}, "posición 1 = quién crees que va a GANAR"),
+            ", y de ahí hacia abajo en reversa: posición 2 = el último en salir antes de la final, hasta la última posición = quién crees que sale PRIMERO.",
+          ]),
+          h("li", {}, [h("strong", {}, "Por cada posición que aciertes, +1 punto."), " En cuanto se publica la Semana 1 (se abre la votación), tu orden se bloquea y ya no se puede cambiar."]),
           h("li", { style: "margin-bottom:0" }, "Si algún día salen 2 o más habitantes en la misma semana (doble eliminación), cuentan como bloque: no hace falta acertar el orden exacto entre ellos, basta con haber puesto a cualquiera en alguna de las posiciones de esa semana."),
         ]),
       ]),

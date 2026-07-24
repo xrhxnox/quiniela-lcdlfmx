@@ -34,11 +34,11 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
 
   function renderList() {
     const rows = order.map((p, i) => {
-      const isLast = i === order.length - 1;
+      const isFirst = i === 0;
       return h("div", { class: "list-item" }, [
         h("div", { class: "row-flex" }, [
           h("strong", {}, `${i + 1}.`),
-          h("span", { class: `badge ${isLast ? "gold" : "red"}` }, isLast ? "Ganador" : "Eliminado"),
+          h("span", { class: `badge ${isFirst ? "gold" : "red"}` }, isFirst ? "Ganador" : "Eliminado"),
           photoOrInitials(p),
           p.name,
         ]),
@@ -103,7 +103,7 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
       h("div", { class: "card" }, [
         h("p", { style: "margin-top:0" }, [
           h("i", { class: "fa-solid fa-list-ol" }),
-          " Ordena a los habitantes del que crees que saldrá PRIMERO al que crees que ganará. Por cada posición que aciertes, +1 punto.",
+          " Ordena a los habitantes del que crees que GANARÁ (arriba, posición 1) al que crees que saldrá PRIMERO (abajo). Por cada posición que aciertes, +1 punto.",
         ]),
         h(
           "p",
@@ -117,10 +117,13 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
   );
 }
 
+// Posición 1 = predicho ganador (nunca aparece en "eliminations"). Posiciones 2+ =
+// orden de salida en reversa cronológica: el eliminado MÁS RECIENTE va en la
+// posición 2, y el eliminado más antiguo (el primero en salir) va hasta el final.
 function buildBlocks(eliminationsWithWeeks) {
-  const weekNumbers = [...new Set(eliminationsWithWeeks.map((e) => e.weeks.week_number))].sort((a, b) => a - b);
+  const weekNumbers = [...new Set(eliminationsWithWeeks.map((e) => e.weeks.week_number))].sort((a, b) => b - a);
   const blocks = [];
-  let cursor = 1;
+  let cursor = 2;
   weekNumbers.forEach((wn) => {
     const ids = eliminationsWithWeeks.filter((e) => e.weeks.week_number === wn).map((e) => e.participant_id);
     blocks.push({ start: cursor, end: cursor + ids.length - 1, ids: new Set(ids) });
@@ -163,8 +166,13 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
       rows.sort((a, b) => a.position - b.position);
       const isMe = playerId === profile.id;
       const items = rows.map((row) => {
-        const block = blockFor(row.position);
-        const hit = block ? block.ids.has(row.participant_id) : false;
+        let hit;
+        if (row.position === 1) {
+          hit = !!row.participants?.is_winner;
+        } else {
+          const block = blockFor(row.position);
+          hit = block ? block.ids.has(row.participant_id) : false;
+        }
         return orderThumb(row.participants, hit, row.position);
       });
       return h("div", { class: "card" }, [

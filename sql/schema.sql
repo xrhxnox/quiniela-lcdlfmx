@@ -447,12 +447,15 @@ from public.secret_assignments sa
 join public.participants p on p.id = sa.participant_id
 where p.is_winner = true;
 
--- Puntaje de la predicción de "orden de salida", por bloques (una semana = un bloque;
--- basta con haber puesto a cualquiera de los eliminados de esa semana en alguna de
--- las posiciones que le corresponden a ese bloque, sin importar el orden exacto entre ellos).
+-- Puntaje de la predicción de "orden de salida". Posición 1 = predicho ganador
+-- (acierta si coincide con participants.is_winner). Posiciones 2+ = orden de
+-- salida en reversa cronológica (el eliminado MÁS RECIENTE va en la posición 2,
+-- el primero en salir va hasta el final), por bloques: una semana = un bloque,
+-- basta con haber puesto a cualquiera de los eliminados de esa semana en alguna
+-- de las posiciones de ese bloque, sin importar el orden exacto entre ellos.
 create or replace view public.elimination_order_score as
 with actual_blocks as (
-  select e.participant_id, dense_rank() over (order by w.week_number) as block_no
+  select e.participant_id, dense_rank() over (order by w.week_number desc) as block_no
   from public.eliminations e
   join public.weeks w on w.id = e.week_id
 ),
@@ -462,20 +465,35 @@ block_sizes as (
 block_bounds as (
   select
     block_no,
-    coalesce(sum(block_size) over (order by block_no rows between unbounded preceding and 1 preceding), 0) + 1 as start_pos,
-    sum(block_size) over (order by block_no) as end_pos
+    coalesce(sum(block_size) over (order by block_no rows between unbounded preceding and 1 preceding), 0) + 2 as start_pos,
+    sum(block_size) over (order by block_no) + 1 as end_pos
   from block_sizes
 ),
 block_membership as (
   select ab.block_no, ab.participant_id, bb.start_pos, bb.end_pos
   from actual_blocks ab join block_bounds bb using (block_no)
+),
+winner_hits as (
+  select pr.player_id
+  from public.elimination_order_predictions pr
+  join public.participants p on p.id = pr.participant_id and p.is_winner = true
+  where pr.position = 1
+),
+elimination_hits as (
+  select pr.player_id
+  from public.elimination_order_predictions pr
+  join block_membership bm
+    on pr.position between bm.start_pos and bm.end_pos
+    and pr.participant_id = bm.participant_id
+),
+all_hits as (
+  select player_id from winner_hits
+  union all
+  select player_id from elimination_hits
 )
-select pr.player_id, count(*) as points
-from public.elimination_order_predictions pr
-join block_membership bm
-  on pr.position between bm.start_pos and bm.end_pos
-  and pr.participant_id = bm.participant_id
-group by pr.player_id;
+select player_id, count(*) as points
+from all_hits
+group by player_id;
 
 -- Puntaje total por jugador (aciertos de eliminación semanal + bono habitante al azar + orden de salida)
 create or replace view public.leaderboard as
