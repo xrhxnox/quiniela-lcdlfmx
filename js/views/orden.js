@@ -139,7 +139,7 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
   clearAndAppend(
     container,
     h("div", {}, [
-      h("div", { class: "section-title" }, "Orden de Salida"),
+      h("div", { class: "section-title" }, "El Oráculo"),
       h("div", { class: "card" }, [
         h("p", { style: "margin-top:0" }, [
           h("i", { class: "fa-solid fa-list-ol" }),
@@ -242,7 +242,7 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
   clearAndAppend(
     container,
     h("div", {}, [
-      h("div", { class: "section-title" }, "Orden de Salida"),
+      h("div", { class: "section-title" }, "El Oráculo"),
       h("div", { class: "card" }, [
         h("p", { style: "margin-top:0;margin-bottom:0" }, [
           h("i", { class: "fa-solid fa-lock" }),

@@ -377,8 +377,8 @@ async function renderProfileInternal(container, username) {
           seasonWinnerDecided
             ? vidente
               ? "🏆 ¡Acertó al ganador real de la temporada! (insignia Vidente)"
-              : "Su predicción de ganador en Orden de Salida no fue el/la ganador/a real."
-            : "Su predicción de quién ganará la temporada, elegida en Orden de Salida."
+              : "Su predicción de ganador en El Oráculo no fue el/la ganador/a real."
+            : "Su predicción de quién ganará la temporada, elegida en El Oráculo."
         )
       : null,
     secretHabitante

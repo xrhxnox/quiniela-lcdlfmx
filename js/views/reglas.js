@@ -71,10 +71,10 @@ export async function renderReglas(container) {
         ]),
       ]),
 
-      ruleCard("fa-list-ol", "Orden de Salida", [
+      ruleCard("fa-list-ol", "El Oráculo", [
         h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
           h("li", {}, [
-            "Antes de que se publique la Semana 1, arma en la pestaña \"Orden de Salida\" tu predicción de todos los habitantes: ",
+            "Antes de que se publique la Semana 1, arma en la pestaña \"El Oráculo\" tu predicción de todos los habitantes: ",
             h("strong", {}, "posición 1 = quién crees que va a GANAR"),
             ", y de ahí hacia abajo en reversa: posición 2 = el último en salir antes de la final, hasta la última posición = quién crees que sale PRIMERO.",
           ]),
@@ -90,7 +90,7 @@ export async function renderReglas(container) {
           badgeRow("ojo", "Ojo de águila", "en algún momento llegaste a una racha de 5 aciertos seguidos."),
           badgeRow("francotirador", "Francotirador", "70% o más de acierto, con al menos 3 semanas votadas."),
           badgeRow("corazon", "Corazón roto", "tu favorito ya fue eliminado de la casa."),
-          badgeRow("vidente", "Vidente", "en Orden de Salida, pusiste en la posición 1 (ganador) al habitante que efectivamente ganó la temporada."),
+          badgeRow("vidente", "Vidente", "en El Oráculo, pusiste en la posición 1 (ganador) al habitante que efectivamente ganó la temporada."),
           badgeRow("suertudo", "Suertudo", "el habitante que te tocó al azar en Sorteo Ganador terminó ganando la temporada."),
           badgeRow("fanatico", "Fanático", "votaste en todas las semanas cerradas de la temporada, sin faltar a ninguna."),
         ]),
