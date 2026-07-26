@@ -38,7 +38,7 @@ export async function renderReglas(container) {
             h("i", { class: "fa-solid fa-hourglass-half" }),
             " ",
             h("strong", {}, "Cuenta regresiva:"),
-            " el día de la eliminación, en Votar aparece un contador en vivo hasta la hora exacta en que se cierra la votación (entre 6 y 8 PM). Al llegar a cero, ya no puedes votar ni cambiar tu pick, aunque el admin todavía no haya confirmado quién salió — así nadie puede copiar el resultado en vivo.",
+            " el día de la nominación, en Votar aparece un contador en vivo hasta el dia y hora exacta en que se cierra la votación (entre 6 y 8 PM del domingo). Al llegar a cero, ya no puedes votar ni cambiar tu pick, aunque el admin todavía no haya confirmado quién salió — así nadie puede copiar el resultado en vivo.",
           ]),
         ]),
       ]),
