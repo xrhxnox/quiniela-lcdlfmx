@@ -43,6 +43,19 @@ export async function renderReglas(container) {
         ]),
       ]),
 
+      ruleCard("fa-tv", "Cronograma del Programa", [
+        h("p", { class: "muted", style: "margin-bottom:10px" }, "Así se mueve la semana dentro de la casa, día por día."),
+        h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
+          h("li", {}, [h("strong", {}, "Lunes:"), " Prueba de líder."]),
+          h("li", {}, [h("strong", {}, "Martes:"), " Inicio de prueba semanal, Noche de Cine, Vida en Fotos, Cabina de las tentaciones."]),
+          h("li", {}, [h("strong", {}, "Miércoles:"), " Noche de nominación."]),
+          h("li", {}, [h("strong", {}, "Jueves:"), " Prueba robo de salvación, Final de prueba semanal, Moneda o caja del destino, Cena de nominados."]),
+          h("li", {}, [h("strong", {}, "Viernes:"), " Robo de Salvación, Fiesta Temática."]),
+          h("li", {}, [h("strong", {}, "Sábado:"), " Compra de despensa."]),
+          h("li", { style: "margin-bottom:0" }, [h("strong", {}, "Domingo:"), " Posicionamiento, Sinceramiento, Gala de Eliminación."]),
+        ]),
+      ]),
+
       ruleCard("fa-shield-halved", "Líder, nominados y salvación", [
         h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
           h("li", {}, "El líder de la semana gana inmunidad y no puede ser nominado."),
