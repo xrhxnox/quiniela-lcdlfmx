@@ -31,7 +31,7 @@ export async function renderJugadores(container) {
 
   const cards = leaderboard.map((r, i) => {
     const profile = profileMap[r.player_id];
-    return h("div", { class: "card", style: "text-align:center" }, [
+    return h("div", { class: "card player-card", style: "text-align:center" }, [
       playerAvatar(profile, 84),
       h("div", { style: "margin-top:10px;font-weight:700" }, r.display_name),
       h("div", { class: "muted", style: "font-size:0.8rem;margin-top:2px" }, [

@@ -272,6 +272,15 @@ main#app.fade-in { animation: fadeInUp 0.3s ease; }
   box-shadow: 0 6px 18px rgba(0,0,0,0.25);
 }
 
+.player-card {
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+.player-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+  border-color: var(--accent);
+}
+
 .muted { color: var(--text-dim); }
 
 .badge {
@@ -354,6 +363,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   text-transform: uppercase;
   font-size: 0.85rem;
   letter-spacing: 0.04em;
+  text-decoration: none;
   cursor: pointer;
   transition: filter 0.15s, transform 0.15s;
 }
