@@ -27,11 +27,11 @@ let currentProfile = null;
 
 const ROUTES = [
   { path: "#/", label: "Votar", icon: "fa-circle-check", render: (c) => renderHome(c, currentProfile) },
-  { path: "#/ranking", label: "Ranking", icon: "fa-trophy", render: renderRanking },
-  { path: "#/jugadores", label: "Jugadores", icon: "fa-users", render: renderJugadores },
   { path: "#/participantes", label: "Habitantes", icon: "fa-house", render: renderParticipantes },
   { path: "#/eliminados", label: "Eliminados", icon: "fa-trash", render: renderEliminados },
   { path: "#/orden", label: "El Oráculo", icon: "fa-hat-wizard", render: (c) => renderOrdenSalida(c, currentProfile) },
+  { path: "#/jugadores", label: "Jugadores", icon: "fa-users", render: renderJugadores },
+  { path: "#/ranking", label: "Ranking", icon: "fa-trophy", render: renderRanking },
   { path: "#/reglas", label: "Reglas", icon: "fa-scroll", render: renderReglas },
   {
     path: "#/perfil",
