@@ -48,6 +48,6 @@ export async function renderJugadores(container) {
 
   clearAndAppend(
     container,
-    h("div", {}, [h("div", { class: "section-title" }, "Participantes"), h("div", { class: "grid" }, cards)])
+    h("div", {}, [h("div", { class: "section-title" }, "Jugadores"), h("div", { class: "grid" }, cards)])
   );
 }
