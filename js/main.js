@@ -8,6 +8,7 @@ import { renderAdmin } from "./views/admin.js";
 import { renderProfile, renderPublicProfile, renderEditProfile } from "./views/profile.js";
 import { renderReglas } from "./views/reglas.js";
 import { renderOrdenSalida } from "./views/orden.js";
+import { renderJugadores } from "./views/jugadores.js";
 import { h, clearAndAppend } from "./utils.js";
 import { initAccent, syncAccentFromProfile, initThemeMode, syncThemeModeFromProfile } from "./theme.js";
 
@@ -29,6 +30,7 @@ const ROUTES = [
   { path: "#/participantes", label: "Habitantes", icon: "fa-house", render: renderParticipantes },
   { path: "#/eliminados", label: "Eliminados", icon: "fa-trash", render: renderEliminados },
   { path: "#/orden", label: "El Oráculo", icon: "fa-hat-wizard", render: (c) => renderOrdenSalida(c, currentProfile) },
+  { path: "#/jugadores", label: "Participantes", icon: "fa-users", render: renderJugadores },
   { path: "#/ranking", label: "Ranking", icon: "fa-trophy", render: renderRanking },
   { path: "#/reglas", label: "Reglas", icon: "fa-scroll", render: renderReglas },
   {
