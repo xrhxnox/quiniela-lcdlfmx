@@ -10,7 +10,7 @@ function badgeRow(key, label, desc) {
 
 function ruleCard(icon, title, children) {
   return h("div", { class: "card" }, [
-    h("p", { style: "margin-top:0" }, [h("i", { class: `fa-solid ${icon}` }), " ", h("strong", {}, title)]),
+    h("p", { style: "margin-top:0;font-size:1.15rem" }, [h("i", { class: `fa-solid ${icon}` }), " ", h("strong", {}, title)]),
     ...children,
   ]);
 }
