@@ -422,22 +422,44 @@ create table if not exists public.elimination_order_predictions (
 );
 alter table public.elimination_order_predictions enable row level security;
 
--- se ve la propia siempre; la de los demás en cuanto se publique la Semana 1 (deje de estar en 'draft')
+-- Bloqueo de El Oráculo controlado por el admin (independiente del estado de la
+-- Semana 1, para poder reabrirlo si hace falta, p.ej. cuando se revela info nueva
+-- del programa y se decide reiniciar las predicciones de todos). Fila única.
+create table if not exists public.oraculo_settings (
+  id boolean primary key default true,
+  locked boolean not null default false,
+  constraint oraculo_settings_single_row check (id)
+);
+insert into public.oraculo_settings (id, locked)
+values (true, exists (select 1 from public.weeks w where w.week_number = 1 and w.status <> 'draft'))
+on conflict (id) do nothing;
+alter table public.oraculo_settings enable row level security;
+
+drop policy if exists "oraculo_settings_select" on public.oraculo_settings;
+create policy "oraculo_settings_select" on public.oraculo_settings for select using (true);
+
+drop policy if exists "oraculo_settings_write_admin" on public.oraculo_settings;
+create policy "oraculo_settings_write_admin" on public.oraculo_settings for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- se ve la propia siempre; la de los demás solo si El Oráculo está bloqueado
 drop policy if exists "eop_select" on public.elimination_order_predictions;
 create policy "eop_select" on public.elimination_order_predictions for select using (
   player_id = auth.uid()
   or public.is_admin()
-  or exists (select 1 from public.weeks w where w.week_number = 1 and w.status <> 'draft')
+  or coalesce((select locked from public.oraculo_settings limit 1), false)
 );
 
--- solo puedes escribir/borrar tu propia predicción, y solo mientras la Semana 1 siga en 'draft' (sin publicar)
+-- solo puedes escribir/borrar tu propia predicción, y solo mientras El Oráculo NO esté
+-- bloqueado; el admin puede escribir/borrar cualquier fila en cualquier momento (para
+-- poder reiniciar las predicciones de todos)
 drop policy if exists "eop_write_own" on public.elimination_order_predictions;
 create policy "eop_write_own" on public.elimination_order_predictions for all using (
-  player_id = auth.uid()
-  and not exists (select 1 from public.weeks w where w.week_number = 1 and w.status <> 'draft')
+  public.is_admin()
+  or (player_id = auth.uid() and not coalesce((select locked from public.oraculo_settings limit 1), false))
 ) with check (
-  player_id = auth.uid()
-  and not exists (select 1 from public.weeks w where w.week_number = 1 and w.status <> 'draft')
+  public.is_admin()
+  or (player_id = auth.uid() and not coalesce((select locked from public.oraculo_settings limit 1), false))
 );
 
 -- =========================================================

@@ -87,11 +87,11 @@ export async function renderReglas(container) {
       ruleCard("fa-hat-wizard", "El Oráculo", [
         h("ul", { style: "margin:0;padding-left:20px;margin-bottom:0" }, [
           h("li", {}, [
-            "Antes de que se publique la Semana 1, arma en la pestaña \"El Oráculo\" tu predicción de todos los habitantes: ",
+            "Mientras El Oráculo esté abierto, arma en esa pestaña tu predicción de todos los habitantes: ",
             h("strong", {}, "posición 1 = quién crees que va a GANAR"),
             ", y de ahí hacia abajo en reversa: posición 2 = el último en salir antes de la final, hasta la última posición = quién crees que sale PRIMERO.",
           ]),
-          h("li", {}, [h("strong", {}, "Por cada posición que aciertes, +1 punto."), " En cuanto se publica la Semana 1 (se abre la votación), tu orden se bloquea y ya no se puede cambiar."]),
+          h("li", {}, [h("strong", {}, "Por cada posición que aciertes, +1 punto."), " El admin cierra El Oráculo cuando decide (y puede reiniciarlo más adelante si hace falta, por ejemplo tras una revelación grande del programa); mientras esté cerrado no se puede cambiar tu orden."]),
           h("li", { style: "margin-bottom:0" }, "Si algún día salen 2 o más habitantes en la misma semana (doble eliminación), cuentan como bloque: no hace falta acertar el orden exacto entre ellos, basta con haber puesto a cualquiera en alguna de las posiciones de esa semana."),
         ]),
       ]),

@@ -30,6 +30,9 @@ import {
   resetSecretAssignments,
   markParticipantAsWinner,
   clearWinner,
+  isOraculoLocked,
+  setOraculoLocked,
+  resetOraculo,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 import { ROOM_OPTIONS } from "../rooms.js";
@@ -649,7 +652,11 @@ async function renderLegacyAdmin(sub) {
 // ============================================================
 async function renderDynamicsAdmin(sub) {
   clearAndAppend(sub, h("div", { class: "loading" }, "Cargando…"));
-  const [participants, assignments] = await Promise.all([getParticipants(), getSecretAssignments()]);
+  const [participants, assignments, oraculoLocked] = await Promise.all([
+    getParticipants(),
+    getSecretAssignments(),
+    isOraculoLocked(),
+  ]);
 
   // --- Habitante al azar ---
   const assignErr = h("div", { class: "error-msg" });
@@ -777,7 +784,57 @@ async function renderDynamicsAdmin(sub) {
     h("div", {}, winnerRows.length ? winnerRows : [h("p", { class: "muted" }, "Sin habitantes todavía.")]),
   ]);
 
-  clearAndAppend(sub, h("div", {}, [secretCard, winnerCard]));
+  // --- El Oráculo ---
+  const oraculoErr = h("div", { class: "error-msg" });
+  const lockToggleBtn = h(
+    "button",
+    {
+      class: "btn small",
+      onclick: async () => {
+        await setOraculoLocked(!oraculoLocked);
+        await renderDynamicsAdmin(sub);
+      },
+    },
+    oraculoLocked ? "Abrir El Oráculo" : "Cerrar El Oráculo"
+  );
+  const resetOraculoBtn = h(
+    "button",
+    {
+      class: "btn small danger",
+      onclick: async () => {
+        if (!confirm("¿Reiniciar El Oráculo? Se borrarán TODAS las predicciones de todos los jugadores y se reabrirá para que vuelvan a armar su orden desde cero.")) return;
+        oraculoErr.textContent = "";
+        resetOraculoBtn.disabled = true;
+        resetOraculoBtn.textContent = "Reiniciando…";
+        try {
+          await resetOraculo();
+          await renderDynamicsAdmin(sub);
+        } catch (e) {
+          oraculoErr.textContent = "No se pudo reiniciar. " + (e.message || "");
+          resetOraculoBtn.disabled = false;
+          resetOraculoBtn.textContent = "Reiniciar todo";
+        }
+      },
+    },
+    "Reiniciar todo"
+  );
+  const oraculoCard = h("div", { class: "card" }, [
+    h("p", { style: "margin-top:0" }, [
+      h("i", { class: "fa-solid fa-hat-wizard" }),
+      " ",
+      h("strong", {}, "El Oráculo"),
+      " ",
+      oraculoLocked ? h("span", { class: "badge red" }, "Cerrado") : h("span", { class: "badge green" }, "Abierto"),
+    ]),
+    h(
+      "p",
+      { class: "muted", style: "font-size:0.82rem" },
+      "Mientras esté abierto, los jugadores pueden armar/editar su predicción de orden de salida. Ciérralo cuando ya no debas dejar cambios, o reinícialo (borra todas las predicciones) si necesitas que todos vuelvan a empezar de cero, por ejemplo tras una revelación grande del programa."
+    ),
+    h("div", {}, [lockToggleBtn, resetOraculoBtn, oraculoErr]),
+  ]);
+
+  clearAndAppend(sub, h("div", {}, [secretCard, winnerCard, oraculoCard]));
 }
 
 // ============================================================

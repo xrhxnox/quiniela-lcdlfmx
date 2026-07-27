@@ -479,7 +479,7 @@ export async function getAllEliminationOrders() {
   return unwrap(
     await supabase
       .from("elimination_order_predictions")
-      .select("player_id, position, participant_id, participants(name, photo_url, is_winner), profiles(display_name, username)")
+      .select("player_id, position, participant_id, participants(name, photo_url, is_winner, is_infiltrado), profiles(display_name, username)")
       .order("player_id")
       .order("position")
   );
@@ -489,12 +489,17 @@ export async function getEliminationOrderScores() {
   return unwrap(await supabase.from("elimination_order_score").select("*"));
 }
 
-export async function hasFirstWeekStarted() {
-  const { count, error } = await supabase
-    .from("weeks")
-    .select("*", { count: "exact", head: true })
-    .eq("week_number", 1)
-    .neq("status", "draft");
+export async function isOraculoLocked() {
+  const { data, error } = await supabase.from("oraculo_settings").select("locked").limit(1).maybeSingle();
   if (error) throw error;
-  return (count ?? 0) > 0;
+  return data?.locked ?? false;
+}
+
+export async function setOraculoLocked(locked) {
+  return unwrap(await supabase.from("oraculo_settings").update({ locked }).eq("id", true).select().single());
+}
+
+export async function resetOraculo() {
+  await supabase.from("elimination_order_predictions").delete().neq("player_id", "00000000-0000-0000-0000-000000000000");
+  return setOraculoLocked(false);
 }

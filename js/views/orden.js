@@ -2,7 +2,7 @@ import {
   getParticipants,
   getMyEliminationOrder,
   saveEliminationOrder,
-  hasFirstWeekStarted,
+  isOraculoLocked,
   getAllEliminationOrders,
   getEliminationOrderScores,
   getAllEliminationsWithWeeks,
@@ -124,7 +124,7 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
         saveBtn.textContent = "Guardando…";
         try {
           await saveEliminationOrder(profile.id, order.map((p) => p.id));
-          successMsg.textContent = "¡Orden guardado! Puedes seguir reordenando hasta que se publique la Semana 1.";
+          successMsg.textContent = "¡Orden guardado! Puedes seguir reordenando hasta que el admin cierre El Oráculo.";
         } catch (e) {
           errMsg.textContent = "No se pudo guardar. Intenta de nuevo.";
         } finally {
@@ -152,7 +152,7 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
         h(
           "p",
           { class: "muted", style: "font-size:0.82rem;margin-bottom:0" },
-          "Se bloquea en cuanto se publique la Semana 1 (se abra la votación) — después de eso ya no se puede cambiar."
+          "El admin cierra El Oráculo cuando decide — después de eso ya no se puede cambiar hasta que lo reinicie."
         ),
       ]),
       listWrap,
@@ -196,17 +196,17 @@ function orderThumb(participant, status, position) {
 }
 
 function renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, totalParticipants) {
-  // Los infiltrados no cuentan para el puntaje de El Oráculo (no pueden ganar la
-  // temporada), así que su eliminación no genera bloque — misma exclusión que en
-  // la vista SQL elimination_order_score.
+  // Los infiltrados no participan en El Oráculo (no pueden ganar la temporada):
+  // no se muestran en el listado de nadie ni cuentan para el puntaje.
+  const eligibleOrders = allOrders.filter((row) => !row.participants?.is_infiltrado);
   const eligibleEliminations = eliminationsWithWeeks.filter((e) => !e.participants?.is_infiltrado);
   const blocks = buildBlocks(eligibleEliminations, totalParticipants);
   const blockFor = (position) => blocks.find((b) => position >= b.start && position <= b.end) || null;
   const minResolvedPosition = totalParticipants - eligibleEliminations.length + 1;
-  const winnerExists = allOrders.some((r) => r.participants?.is_winner);
+  const winnerExists = eligibleOrders.some((r) => r.participants?.is_winner);
 
   const byPlayer = new Map();
-  allOrders.forEach((row) => {
+  eligibleOrders.forEach((row) => {
     if (!byPlayer.has(row.player_id)) byPlayer.set(row.player_id, { player: row.profiles, rows: [] });
     byPlayer.get(row.player_id).rows.push(row);
   });
@@ -255,18 +255,19 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
       ]),
       playerCards.length
         ? h("div", {}, playerCards)
-        : h("div", { class: "empty-state" }, "Nadie registró un orden antes de que se publicara la Semana 1."),
+        : h("div", { class: "empty-state" }, "Nadie registró un orden antes de que se cerrara El Oráculo."),
     ])
   );
 }
 
 export async function renderOrdenSalida(container, profile) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
-  const started = await hasFirstWeekStarted();
+  const locked = await isOraculoLocked();
 
-  if (!started) {
+  if (!locked) {
     const [participants, existingOrder] = await Promise.all([getParticipants(), getMyEliminationOrder(profile.id)]);
-    renderBuildPhase(container, profile, participants, existingOrder);
+    const eligibleParticipants = participants.filter((p) => !p.is_infiltrado);
+    renderBuildPhase(container, profile, eligibleParticipants, existingOrder);
     return;
   }
 
