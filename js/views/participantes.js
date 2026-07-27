@@ -20,8 +20,8 @@ export async function renderParticipantes(container) {
 
   const sorted = [...participants].sort((a, b) => (a.active === b.active ? a.name.localeCompare(b.name) : a.active ? -1 : 1));
 
-  const gridEl = h("div", { class: "grid" });
-  const filterBar = h("div", { style: "display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" });
+  const gridWrap = h("div", {});
+  const filterWrap = h("div", {});
 
   let activeRoom = null;
 
@@ -52,7 +52,10 @@ export async function renderParticipantes(container) {
         ]),
       ]);
     });
-    clearAndAppend(gridEl, cards.length ? cards : [h("div", { class: "empty-state" }, "Nadie en este cuarto.")]);
+    clearAndAppend(
+      gridWrap,
+      cards.length ? h("div", { class: "grid" }, cards) : h("div", { class: "empty-state" }, "Nadie en este cuarto.")
+    );
   }
 
   function renderFilterBar() {
@@ -69,7 +72,10 @@ export async function renderParticipantes(container) {
         },
         label
       );
-    clearAndAppend(filterBar, [chip("Todos", null), ...rooms.map((r) => chip(r, r))]);
+    clearAndAppend(
+      filterWrap,
+      h("div", { style: "display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" }, [chip("Todos", null), ...rooms.map((r) => chip(r, r))])
+    );
   }
 
   renderFilterBar();
@@ -77,6 +83,6 @@ export async function renderParticipantes(container) {
 
   clearAndAppend(
     container,
-    h("div", {}, [h("div", { class: "section-title" }, "Habitantes"), filterBar, gridEl])
+    h("div", {}, [h("div", { class: "section-title" }, "Habitantes"), filterWrap, gridWrap])
   );
 }
