@@ -17,10 +17,9 @@ function playerAvatar(profile, size) {
   );
 }
 
-function pickLine(icon, label, participant) {
+function pickLine(icon, participant) {
   return h("div", { class: "muted", style: "font-size:0.72rem;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:5px" }, [
     h("i", { class: `fa-solid ${icon}` }),
-    ` ${label}: `,
     h("strong", { style: "color:var(--text)" }, participant?.name || "Sin definir"),
   ]);
 }
@@ -59,8 +58,8 @@ export async function renderJugadores(container) {
         i === 0 ? h("i", { class: "fa-solid fa-crown", style: "color:var(--gold)" }) : `#${i + 1}`,
         ` · ${r.points} pts`,
       ]),
-      pickLine("fa-crown", "Mi Ganador", winnerPickMap[r.player_id]),
-      pickLine("fa-shuffle", "Sorteado", secretMap[r.player_id]),
+      pickLine("fa-crown", winnerPickMap[r.player_id]),
+      pickLine("fa-shuffle", secretMap[r.player_id]),
       h(
         "a",
         { href: `#/perfil/${encodeURIComponent(r.username)}`, class: "btn small", style: "margin-top:10px;display:inline-block" },
