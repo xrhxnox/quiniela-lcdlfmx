@@ -1,4 +1,4 @@
-import { getLeaderboard, getAllProfiles } from "../data.js";
+import { getLeaderboard, getAllProfiles, getAllEliminationOrders, getSecretAssignments } from "../data.js";
 import { ACCENTS } from "../theme.js";
 import { h, esc, clearAndAppend } from "../utils.js";
 
@@ -17,9 +17,22 @@ function playerAvatar(profile, size) {
   );
 }
 
+function pickLine(icon, label, participant) {
+  return h("div", { class: "muted", style: "font-size:0.72rem;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:5px" }, [
+    h("i", { class: `fa-solid ${icon}` }),
+    ` ${label}: `,
+    h("strong", { style: "color:var(--text)" }, participant?.name || "Sin definir"),
+  ]);
+}
+
 export async function renderJugadores(container) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
-  const [leaderboard, profiles] = await Promise.all([getLeaderboard(), getAllProfiles()]);
+  const [leaderboard, profiles, allOrders, assignments] = await Promise.all([
+    getLeaderboard(),
+    getAllProfiles(),
+    getAllEliminationOrders(),
+    getSecretAssignments(),
+  ]);
 
   if (leaderboard.length === 0) {
     clearAndAppend(container, h("div", { class: "empty-state" }, "Aún no hay jugadores registrados."));
@@ -28,6 +41,14 @@ export async function renderJugadores(container) {
 
   const profileMap = {};
   profiles.forEach((p) => (profileMap[p.id] = p));
+
+  const winnerPickMap = {};
+  allOrders.forEach((row) => {
+    if (row.position === 1) winnerPickMap[row.player_id] = row.participants;
+  });
+
+  const secretMap = {};
+  assignments.forEach((a) => (secretMap[a.player_id] = a.participants));
 
   const cards = leaderboard.map((r, i) => {
     const profile = profileMap[r.player_id];
@@ -38,6 +59,8 @@ export async function renderJugadores(container) {
         i === 0 ? h("i", { class: "fa-solid fa-crown", style: "color:var(--gold)" }) : `#${i + 1}`,
         ` · ${r.points} pts`,
       ]),
+      pickLine("fa-crown", "Mi Ganador", winnerPickMap[r.player_id]),
+      pickLine("fa-shuffle", "Sorteado", secretMap[r.player_id]),
       h(
         "a",
         { href: `#/perfil/${encodeURIComponent(r.username)}`, class: "btn small", style: "margin-top:10px;display:inline-block" },
