@@ -389,6 +389,10 @@ alter table public.participants add column if not exists is_winner boolean not n
 drop index if exists participants_one_winner;
 create unique index if not exists participants_one_winner on public.participants ((is_winner)) where is_winner = true;
 
+-- Habitante "infiltrado": puede ser nominado y eliminado normalmente, pero no
+-- puede ganar la temporada, así que se excluye del Sorteo (Dinámica 1).
+alter table public.participants add column if not exists is_infiltrado boolean not null default false;
+
 create table if not exists public.secret_assignments (
   player_id uuid primary key references public.profiles(id) on delete cascade,
   participant_id bigint not null references public.participants(id) on delete cascade,

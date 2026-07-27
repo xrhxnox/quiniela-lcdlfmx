@@ -73,6 +73,9 @@ function participantPickCard(label, participant, type, counts, currentNomination
           : participant.active
           ? h("span", { class: "badge green" }, "En la casa")
           : h("span", { class: "badge red" }, "Eliminado/a"),
+        participant.is_infiltrado
+          ? h("span", { class: "badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
+          : null,
         weekBadge,
       ]),
       h("div", { class: "points" }, `Líder ${timesLeader} veces`),

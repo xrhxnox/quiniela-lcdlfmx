@@ -141,6 +141,17 @@ async function renderParticipantsAdmin(sub) {
       },
       p.active ? "Marcar eliminado" : "Marcar activo"
     );
+    const infiltradoBtn = h(
+      "button",
+      {
+        class: "btn small secondary",
+        onclick: async () => {
+          await updateParticipant(p.id, { is_infiltrado: !p.is_infiltrado });
+          await renderParticipantsAdmin(sub);
+        },
+      },
+      p.is_infiltrado ? "Quitar infiltrado" : "Marcar infiltrado"
+    );
     const delBtn = h(
       "button",
       {
@@ -164,8 +175,11 @@ async function renderParticipantsAdmin(sub) {
         roomField,
         photoField,
         p.active ? h("span", { class: "badge green" }, "activo") : h("span", { class: "badge red" }, "eliminado"),
+        p.is_infiltrado
+          ? h("span", { class: "badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "infiltrado")
+          : null,
       ]),
-      h("div", { class: "row-flex" }, [saveBtn, toggleBtn, delBtn]),
+      h("div", { class: "row-flex" }, [saveBtn, toggleBtn, infiltradoBtn, delBtn]),
       itemErr,
     ]);
   });
@@ -682,11 +696,12 @@ async function renderDynamicsAdmin(sub) {
     "Reiniciar todo"
   );
 
+  const sorteoEligible = participants.filter((p) => !p.is_infiltrado);
   const assignmentRows = assignments.map((a) => {
     const select = h(
       "select",
       { style: "max-width:200px" },
-      participants.map((p) =>
+      sorteoEligible.map((p) =>
         h("option", { value: p.id, selected: p.id === a.participant_id ? "selected" : undefined }, p.name)
       )
     );
@@ -724,7 +739,7 @@ async function renderDynamicsAdmin(sub) {
     h(
       "p",
       { class: "muted", style: "font-size:0.82rem" },
-      "Le asigna un habitante al azar a cada jugador que todavía no tenga uno (sin repetir, salvo que haya más jugadores que habitantes). Si a alguien se le asigna el habitante que termina ganando la temporada, se lleva +3 puntos."
+      "Le asigna un habitante al azar a cada jugador que todavía no tenga uno (sin repetir, salvo que haya más jugadores que habitantes). Si a alguien se le asigna el habitante que termina ganando la temporada, se lleva +3 puntos. Los habitantes marcados como Infiltrado quedan fuera de este sorteo."
     ),
     h("div", { style: "margin-bottom:14px" }, [assignBtn, resetBtn, assignErr]),
     assignmentRows.length ? h("div", {}, assignmentRows) : h("p", { class: "muted" }, "Nadie tiene asignación todavía."),

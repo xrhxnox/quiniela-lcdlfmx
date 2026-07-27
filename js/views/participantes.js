@@ -26,10 +26,15 @@ export async function renderParticipantes(container) {
       h("div", { class: "info" }, [
         h("div", { class: "name" }, p.name),
         p.room ? h("div", { class: "room" }, "Cuarto: " + p.room) : null,
-        h("div", { style: "margin-top:6px" }, [
-          p.active
+        h("div", { style: "margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
+          p.is_winner
+            ? h("span", { class: "badge gold" }, "GANADOR")
+            : p.active
             ? h("span", { class: "badge green" }, "En la casa")
             : h("span", { class: "badge red" }, "Eliminado/a"),
+          p.is_infiltrado
+            ? h("span", { class: "badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
+            : null,
         ]),
         h("div", { class: "points" }, `Líder ${leaderCounts[p.id] || 0} veces`),
         h("div", { class: "points" }, `Salvado ${savedCounts[p.id] || 0} veces`),

@@ -409,9 +409,10 @@ export async function assignSecretHabitantesRandomly() {
   ]);
   const assignedPlayerIds = new Set(assignments.map((a) => a.player_id));
   const unassignedPlayers = profiles.filter((p) => !assignedPlayerIds.has(p.id));
-  if (unassignedPlayers.length === 0 || participants.length === 0) return [];
+  const eligibleParticipants = participants.filter((p) => !p.is_infiltrado);
+  if (unassignedPlayers.length === 0 || eligibleParticipants.length === 0) return [];
 
-  const shuffled = [...participants];
+  const shuffled = [...eligibleParticipants];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
