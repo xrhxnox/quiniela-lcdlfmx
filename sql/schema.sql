@@ -458,7 +458,10 @@ where p.is_winner = true;
 -- posición, sin importar cuántas eliminaciones falten para el resto de la
 -- temporada), por bloques: una semana = un bloque, basta con haber puesto a
 -- cualquiera de los eliminados de esa semana en alguna de las posiciones de
--- ese bloque, sin importar el orden exacto entre ellos.
+-- ese bloque, sin importar el orden exacto entre ellos. Los habitantes marcados
+-- como "infiltrado" (is_infiltrado) no pueden ganar la temporada, así que su
+-- eliminación no genera bloque de puntaje: nadie gana ni pierde puntos por
+-- predecir su lugar de salida (esa posición queda pendiente para siempre).
 create or replace view public.elimination_order_score as
 with total_participants as (
   select count(*)::int as n from public.participants
@@ -467,6 +470,8 @@ actual_blocks as (
   select e.participant_id, dense_rank() over (order by w.week_number asc) as block_no
   from public.eliminations e
   join public.weeks w on w.id = e.week_id
+  join public.participants p on p.id = e.participant_id
+  where p.is_infiltrado = false
 ),
 block_sizes as (
   select block_no, count(*) as block_size from actual_blocks group by block_no

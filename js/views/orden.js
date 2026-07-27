@@ -196,9 +196,13 @@ function orderThumb(participant, status, position) {
 }
 
 function renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, totalParticipants) {
-  const blocks = buildBlocks(eliminationsWithWeeks, totalParticipants);
+  // Los infiltrados no cuentan para el puntaje de El Oráculo (no pueden ganar la
+  // temporada), así que su eliminación no genera bloque — misma exclusión que en
+  // la vista SQL elimination_order_score.
+  const eligibleEliminations = eliminationsWithWeeks.filter((e) => !e.participants?.is_infiltrado);
+  const blocks = buildBlocks(eligibleEliminations, totalParticipants);
   const blockFor = (position) => blocks.find((b) => position >= b.start && position <= b.end) || null;
-  const minResolvedPosition = totalParticipants - eliminationsWithWeeks.length + 1;
+  const minResolvedPosition = totalParticipants - eligibleEliminations.length + 1;
   const winnerExists = allOrders.some((r) => r.participants?.is_winner);
 
   const byPlayer = new Map();
