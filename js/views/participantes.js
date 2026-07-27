@@ -54,7 +54,7 @@ export async function renderParticipantes(container) {
     });
     clearAndAppend(
       gridWrap,
-      cards.length ? h("div", { class: "grid" }, cards) : h("div", { class: "empty-state" }, "Nadie en este cuarto.")
+      cards.length ? h("div", { class: "grid habitantes-grid" }, cards) : h("div", { class: "empty-state" }, "Nadie en este cuarto.")
     );
   }
 

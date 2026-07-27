@@ -385,6 +385,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   gap: 14px;
 }
 
+@media (min-width: 641px) {
+  .habitantes-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .nominee-card {
   background: var(--bg-card);
   border: 2px solid var(--line);
