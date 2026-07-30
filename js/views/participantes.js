@@ -49,7 +49,7 @@ export async function renderParticipantes(container) {
         h("div", { class: "info" }, [
           h("div", { class: "name" }, p.name),
           p.room ? h("div", { class: "room" }, "Cuarto: " + p.room) : null,
-          h("div", { style: "margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
+          h("div", { style: "margin-top:6px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
             p.is_winner
               ? h("span", { class: "badge gold status-badge" }, "GANADOR")
               : p.active
@@ -78,6 +78,13 @@ export async function renderParticipantes(container) {
       gridWrap,
       cards.length ? h("div", { class: "grid" }, cards) : h("div", { class: "empty-state" }, "Nadie en este cuarto.")
     );
+    setTimeout(() => {
+      const cardEls = [...gridWrap.querySelectorAll(".nominee-card")];
+      if (!cardEls.length) return;
+      cardEls.forEach((c) => (c.style.minHeight = ""));
+      const max = Math.max(...cardEls.map((c) => c.getBoundingClientRect().height));
+      cardEls.forEach((c) => (c.style.minHeight = `${max}px`));
+    });
   }
 
   function renderFilterBar() {

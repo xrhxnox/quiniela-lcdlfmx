@@ -16,10 +16,10 @@ function officialVoteButton() {
       href: "https://www.lacasadelosfamososmexico.tv/vota",
       target: "_blank",
       rel: "noopener noreferrer",
-      class: "btn secondary",
+      class: "btn",
       style: "display:inline-flex;align-items:center;gap:8px;text-decoration:none",
     },
-    [h("i", { class: "fa-solid fa-arrow-up-right-from-square" }), "Votar en la página oficial (para salvar)"]
+    [h("i", { class: "fa-solid fa-arrow-up-right-from-square" }), "Vota en la página oficial"]
   );
 }
 
