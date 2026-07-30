@@ -297,6 +297,7 @@ main#app.fade-in { animation: fadeInUp 0.3s ease; }
 .badge.red { background: rgba(227,6,19,0.15); color: #ff5b63; border: 1px solid var(--red); }
 .badge.green { background: rgba(47,174,90,0.15); color: var(--green); border: 1px solid var(--green); }
 .badge.gray { background: rgba(255,255,255,0.06); color: var(--text-dim); border: 1px solid var(--line); }
+.status-badge { min-width: 110px; display: inline-block; text-align: center; }
 
 /* ---------- Login ---------- */
 .login-wrap {

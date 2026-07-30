@@ -56,8 +56,8 @@ function participantPickCard(label, participant, type, counts, currentNomination
   let weekBadge = null;
   if (participant.active && currentNomination) {
     weekBadge = currentNomination.saved
-      ? h("span", { class: "badge green" }, "Salvado")
-      : h("span", { class: "badge gold" }, "Nominado");
+      ? h("span", { class: "badge green status-badge" }, "Salvado")
+      : h("span", { class: "badge gold status-badge" }, "Nominado");
   }
 
   return h("div", { class: "nominee-card", style: "cursor:default" }, [
@@ -69,12 +69,12 @@ function participantPickCard(label, participant, type, counts, currentNomination
       participant.room ? h("div", { class: "room" }, participant.room) : null,
       h("div", { style: "margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
         participant.is_winner
-          ? h("span", { class: "badge gold" }, "GANADOR")
+          ? h("span", { class: "badge gold status-badge" }, "GANADOR")
           : participant.active
-          ? h("span", { class: "badge green" }, "En la casa")
-          : h("span", { class: "badge red" }, "Eliminado/a"),
+          ? h("span", { class: "badge green status-badge" }, "En la casa")
+          : h("span", { class: "badge red status-badge" }, "Eliminado/a"),
         participant.is_infiltrado
-          ? h("span", { class: "badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
+          ? h("span", { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
           : null,
         weekBadge,
       ]),

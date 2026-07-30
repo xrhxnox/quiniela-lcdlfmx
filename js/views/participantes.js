@@ -51,15 +51,15 @@ export async function renderParticipantes(container) {
           p.room ? h("div", { class: "room" }, "Cuarto: " + p.room) : null,
           h("div", { style: "margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
             p.is_winner
-              ? h("span", { class: "badge gold" }, "GANADOR")
+              ? h("span", { class: "badge gold status-badge" }, "GANADOR")
               : p.active
-              ? h("span", { class: "badge green" }, "En la casa")
-              : h("span", { class: "badge red" }, "Eliminado/a"),
+              ? h("span", { class: "badge green status-badge" }, "En la casa")
+              : h("span", { class: "badge red status-badge" }, "Eliminado/a"),
             p.is_infiltrado
-              ? h("span", { class: "badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
+              ? h("span", { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
               : null,
-            currentLeaderIds.has(p.id) ? h("span", { class: "badge gold" }, [h("i", { class: "fa-solid fa-crown" }), " Líder"]) : null,
-            currentImmuneIds.has(p.id) ? h("span", { class: "badge green" }, [h("i", { class: "fa-solid fa-shield-halved" }), " Inmune"]) : null,
+            currentLeaderIds.has(p.id) ? h("span", { class: "badge gold status-badge" }, [h("i", { class: "fa-solid fa-crown" }), " Líder"]) : null,
+            currentImmuneIds.has(p.id) ? h("span", { class: "badge green status-badge" }, [h("i", { class: "fa-solid fa-shield-halved" }), " Inmune"]) : null,
           ]),
           h("div", { class: "points" }, `Líder ${leaderCounts[p.id] || 0} veces`),
           h("div", { class: "points" }, `Inmune ${immuneCounts[p.id] || 0} veces`),
