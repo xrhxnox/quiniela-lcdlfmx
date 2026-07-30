@@ -59,7 +59,13 @@ export async function renderParticipantes(container) {
               ? h("span", { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
               : null,
             currentLeaderIds.has(p.id) ? h("span", { class: "badge gold status-badge" }, [h("i", { class: "fa-solid fa-crown" }), " Líder"]) : null,
-            currentImmuneIds.has(p.id) ? h("span", { class: "badge green status-badge" }, [h("i", { class: "fa-solid fa-shield-halved" }), " Inmune"]) : null,
+            currentImmuneIds.has(p.id)
+              ? h(
+                  "span",
+                  { class: "badge status-badge", style: "background:#ff7a1a26;color:#ff7a1a;border:1px solid #ff7a1a" },
+                  [h("i", { class: "fa-solid fa-shield-halved" }), " Inmune"]
+                )
+              : null,
           ]),
           h("div", { class: "points" }, `Líder ${leaderCounts[p.id] || 0} veces`),
           h("div", { class: "points" }, `Inmune ${immuneCounts[p.id] || 0} veces`),
