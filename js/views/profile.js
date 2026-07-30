@@ -9,9 +9,11 @@ import {
   getLegacyFavorites,
   getNominationCounts,
   getImmunityCounts,
+  getSpecialImmunityCounts,
   getSavedCounts,
   getVotingWeek,
   getNominationsForWeek,
+  getImmunitiesForWeek,
   getMySecretAssignment,
   getMyEliminationOrder,
   getWeeks,
@@ -35,7 +37,7 @@ function pickTypeIcon(type) {
   return h("div", { class: "pick-type-icon", style: `color:${style.color}` }, h("i", { class: `fa-solid ${style.icon}` }));
 }
 
-function participantPickCard(label, participant, type, counts, currentNomination) {
+function participantPickCard(label, participant, type, counts, currentNomination, currentLeaderIds, currentImmuneIds) {
   if (!participant) {
     return h("div", { class: "nominee-card", style: "cursor:default" }, [
       h("div", { class: "photo" }, h("i", { class: `fa-solid ${PICK_TYPE_ICONS[type]?.icon || "fa-user"}` })),
@@ -51,6 +53,7 @@ function participantPickCard(label, participant, type, counts, currentNomination
     : h("div", { class: "photo" }, initials(participant.name));
   const timesNominated = counts?.nomination?.[participant.id] || 0;
   const timesLeader = counts?.immunity?.[participant.id] || 0;
+  const timesImmune = counts?.specialImmunity?.[participant.id] || 0;
   const timesSaved = counts?.saved?.[participant.id] || 0;
 
   let weekBadge = null;
@@ -76,9 +79,18 @@ function participantPickCard(label, participant, type, counts, currentNomination
         participant.is_infiltrado
           ? h("span", { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
           : null,
+        currentLeaderIds?.has(participant.id) ? h("span", { class: "badge gold status-badge" }, [h("i", { class: "fa-solid fa-crown" }), " Líder"]) : null,
+        currentImmuneIds?.has(participant.id)
+          ? h(
+              "span",
+              { class: "badge status-badge", style: "background:#ff7a1a26;color:#ff7a1a;border:1px solid #ff7a1a" },
+              [h("i", { class: "fa-solid fa-shield-halved" }), " Inmune"]
+            )
+          : null,
         weekBadge,
       ]),
       h("div", { class: "points" }, `Líder ${timesLeader} veces`),
+      h("div", { class: "points" }, `Inmune ${timesImmune} veces`),
       h("div", { class: "points" }, `Salvado ${timesSaved} veces`),
       h("div", { class: "points" }, `Nominado ${timesNominated} veces`),
     ]),
@@ -275,6 +287,7 @@ async function renderProfileInternal(container, username) {
     legacyFavorites,
     nominationCounts,
     immunityCounts,
+    specialImmunityCounts,
     savedCounts,
     votingWeek,
     secretAssignment,
@@ -288,16 +301,20 @@ async function renderProfileInternal(container, username) {
     getLegacyFavorites(),
     getNominationCounts(),
     getImmunityCounts(),
+    getSpecialImmunityCounts(),
     getSavedCounts(),
     getVotingWeek(),
     getMySecretAssignment(target.id),
     getMyEliminationOrder(target.id),
     getWeeks(),
   ]);
-  const counts = { nomination: nominationCounts, immunity: immunityCounts, saved: savedCounts };
+  const counts = { nomination: nominationCounts, immunity: immunityCounts, specialImmunity: specialImmunityCounts, saved: savedCounts };
   const currentNominations = votingWeek ? await getNominationsForWeek(votingWeek.id) : [];
   const currentNominationMap = {};
   currentNominations.forEach((n) => (currentNominationMap[n.participant_id] = n));
+  const currentImmunities = votingWeek ? await getImmunitiesForWeek(votingWeek.id) : [];
+  const currentLeaderIds = new Set(currentImmunities.filter((i) => i.is_leader).map((i) => i.participant_id));
+  const currentImmuneIds = new Set(currentImmunities.filter((i) => !i.is_leader).map((i) => i.participant_id));
 
   const eliminatedSet = new Set(eliminations.map((e) => `${e.week_id}:${e.participant_id}`));
   const rankIndex = leaderboard.findIndex((r) => r.player_id === target.id);
@@ -368,12 +385,12 @@ async function renderProfileInternal(container, username) {
       h("span", { class: "live-dot", title: "En vivo" }),
     ]),
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit, minmax(140px, 140px));justify-content:center" }, [
-      participantPickCard("Favorito", favorite, "favorite", counts, favorite ? currentNominationMap[favorite.id] : null),
-      participantPickCard("Odiado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null),
-      participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null),
-      participantPickCard("Decepción", disappointment, "disappointment", counts, disappointment ? currentNominationMap[disappointment.id] : null),
-      participantPickCard("Mi Ganador", winnerHabitante, "winner", counts, winnerHabitante ? currentNominationMap[winnerHabitante.id] : null),
-      participantPickCard("Sorteado", secretHabitante, "random", counts, secretHabitante ? currentNominationMap[secretHabitante.id] : null),
+      participantPickCard("Favorito", favorite, "favorite", counts, favorite ? currentNominationMap[favorite.id] : null, currentLeaderIds, currentImmuneIds),
+      participantPickCard("Odiado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null, currentLeaderIds, currentImmuneIds),
+      participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null, currentLeaderIds, currentImmuneIds),
+      participantPickCard("Decepción", disappointment, "disappointment", counts, disappointment ? currentNominationMap[disappointment.id] : null, currentLeaderIds, currentImmuneIds),
+      participantPickCard("Mi Ganador", winnerHabitante, "winner", counts, winnerHabitante ? currentNominationMap[winnerHabitante.id] : null, currentLeaderIds, currentImmuneIds),
+      participantPickCard("Sorteado", secretHabitante, "random", counts, secretHabitante ? currentNominationMap[secretHabitante.id] : null, currentLeaderIds, currentImmuneIds),
     ]),
     winnerHabitante
       ? h(

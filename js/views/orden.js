@@ -88,7 +88,7 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
         h("div", { class: "row-flex" }, [
           handle,
           h("strong", { style: "min-width:1.6em;display:inline-block" }, `${String(i + 1).padStart(2, "0")}.`),
-          h("span", { class: `badge ${isFirst ? "gold" : "red"}` }, isFirst ? "Ganador" : "Eliminado"),
+          h("span", { class: `badge status-badge ${isFirst ? "gold" : "red"}` }, isFirst ? "Ganador" : "Eliminado"),
           photoOrInitials(p),
           p.name,
         ]),
