@@ -103,12 +103,24 @@ async function renderVotingWeek(container, week, profile) {
 
   const cardsWrap = h("div", { class: "grid" }, cards);
 
+  const leaders = immunities.filter((i) => i.is_leader);
+  const immunes = immunities.filter((i) => !i.is_leader);
+
+  const leaderBlock =
+    leaders.length > 0
+      ? h("p", { class: "muted", style: "font-size:0.82rem" }, [
+          h("i", { class: "fa-solid fa-crown" }),
+          " Líder de la semana: ",
+          h("strong", {}, leaders.map((i) => i.participants.name).join(", ")),
+        ])
+      : null;
+
   const immuneBlock =
-    immunities.length > 0
+    immunes.length > 0
       ? h("p", { class: "muted", style: "font-size:0.82rem" }, [
           h("i", { class: "fa-solid fa-shield-halved" }),
-          " Líder de la semana / inmunes: ",
-          h("strong", {}, immunities.map((i) => i.participants.name).join(", ")),
+          " Inmune: ",
+          h("strong", {}, immunes.map((i) => i.participants.name).join(", ")),
         ])
       : null;
 
@@ -165,6 +177,7 @@ async function renderVotingWeek(container, week, profile) {
             : []),
         ]),
         countdown,
+        leaderBlock,
         immuneBlock,
         h("p", { class: "muted", style: "font-size:0.82rem" }, "Elige entre los nominados quién crees que será eliminado. Si le atinas, sumas 1 punto."),
       ]),

@@ -69,6 +69,13 @@ export async function getImmunityCounts() {
   return map;
 }
 
+export async function getSpecialImmunityCounts() {
+  const rows = unwrap(await supabase.from("special_immunity_counts").select("*"));
+  const map = {};
+  rows.forEach((r) => (map[r.participant_id] = r.times_immune));
+  return map;
+}
+
 export async function getSavedCounts() {
   const rows = unwrap(await supabase.from("saved_counts").select("*"));
   const map = {};
@@ -165,13 +172,13 @@ export async function removeNomination(weekId, participantId) {
 // ---------- Immunities ----------
 export async function getImmunitiesForWeek(weekId) {
   return unwrap(
-    await supabase.from("immunities").select("week_id, participant_id, participants(*)").eq("week_id", weekId)
+    await supabase.from("immunities").select("week_id, participant_id, is_leader, participants(*)").eq("week_id", weekId)
   );
 }
 
-export async function addImmunity(weekId, participantId) {
+export async function addImmunity(weekId, participantId, isLeader = false) {
   return unwrap(
-    await supabase.from("immunities").insert({ week_id: weekId, participant_id: participantId })
+    await supabase.from("immunities").insert({ week_id: weekId, participant_id: participantId, is_leader: isLeader })
   );
 }
 

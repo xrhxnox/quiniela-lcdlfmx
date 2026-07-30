@@ -232,11 +232,15 @@ create table if not exists public.weeks (
 alter table public.weeks add column if not exists voting_closes_at timestamptz;
 
 -- ---------- INMUNES de la semana ----------
+-- is_leader distingue al líder de la semana (inmunidad "de oficio") de un
+-- habitante marcado inmune por otro motivo (reto especial, etc.). Las filas
+-- existentes se quedan como líder (true) para no alterar el historial.
 create table if not exists public.immunities (
   week_id bigint not null references public.weeks(id) on delete cascade,
   participant_id bigint not null references public.participants(id) on delete cascade,
   primary key (week_id, participant_id)
 );
+alter table public.immunities add column if not exists is_leader boolean not null default true;
 
 -- ---------- NOMINADOS de la semana (con puntos de nominación) ----------
 create table if not exists public.nominations (
@@ -561,10 +565,18 @@ select participant_id, count(*) as times_nominated
 from public.nominations
 group by participant_id;
 
--- Veces que cada participante ha sido líder de la semana (inmune)
+-- Veces que cada participante ha sido líder de la semana
 create or replace view public.immunity_counts as
 select participant_id, count(*) as times_leader
 from public.immunities
+where is_leader = true
+group by participant_id;
+
+-- Veces que cada participante ha sido inmune por otro motivo (no líder)
+create or replace view public.special_immunity_counts as
+select participant_id, count(*) as times_immune
+from public.immunities
+where is_leader = false
 group by participant_id;
 
 -- Veces que cada participante ha ganado la salvación

@@ -1,14 +1,27 @@
-import { getParticipants, getNominationCounts, getImmunityCounts, getSavedCounts } from "../data.js";
+import {
+  getParticipants,
+  getNominationCounts,
+  getImmunityCounts,
+  getSpecialImmunityCounts,
+  getSavedCounts,
+  getVotingWeek,
+  getImmunitiesForWeek,
+} from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
 export async function renderParticipantes(container) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
-  const [participants, counts, leaderCounts, savedCounts] = await Promise.all([
+  const [participants, counts, leaderCounts, immuneCounts, savedCounts, votingWeek] = await Promise.all([
     getParticipants(),
     getNominationCounts(),
     getImmunityCounts(),
+    getSpecialImmunityCounts(),
     getSavedCounts(),
+    getVotingWeek(),
   ]);
+  const currentImmunities = votingWeek ? await getImmunitiesForWeek(votingWeek.id) : [];
+  const currentLeaderIds = new Set(currentImmunities.filter((i) => i.is_leader).map((i) => i.participant_id));
+  const currentImmuneIds = new Set(currentImmunities.filter((i) => !i.is_leader).map((i) => i.participant_id));
 
   if (participants.length === 0) {
     clearAndAppend(container, h("div", { class: "empty-state" }, "El admin todavía no ha agregado participantes."));
@@ -45,8 +58,11 @@ export async function renderParticipantes(container) {
             p.is_infiltrado
               ? h("span", { class: "badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
               : null,
+            currentLeaderIds.has(p.id) ? h("span", { class: "badge gold" }, [h("i", { class: "fa-solid fa-crown" }), " Líder"]) : null,
+            currentImmuneIds.has(p.id) ? h("span", { class: "badge green" }, [h("i", { class: "fa-solid fa-shield-halved" }), " Inmune"]) : null,
           ]),
           h("div", { class: "points" }, `Líder ${leaderCounts[p.id] || 0} veces`),
+          h("div", { class: "points" }, `Inmune ${immuneCounts[p.id] || 0} veces`),
           h("div", { class: "points" }, `Salvado ${savedCounts[p.id] || 0} veces`),
           h("div", { class: "points" }, `Nominado ${counts[p.id] || 0} veces`),
         ]),

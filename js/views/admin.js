@@ -266,8 +266,46 @@ async function renderWeekDetail(container, week, allParticipants) {
     "Nominar"
   );
 
-  // --- Inmunes ---
-  const immuneChips = immunities.map((i) =>
+  // --- Líder de la semana ---
+  const leaders = immunities.filter((i) => i.is_leader);
+  const leaderChips = leaders.map((i) =>
+    h("span", { class: "chip-select" }, [
+      i.participants.name,
+      h(
+        "button",
+        {
+          onclick: async () => {
+            await removeImmunity(week.id, i.participant_id);
+            await refresh();
+          },
+        },
+        h("i", { class: "fa-solid fa-xmark" })
+      ),
+    ])
+  );
+  const leaderSelect = h(
+    "select",
+    {},
+    [h("option", { value: "" }, "Elige participante…")].concat(
+      allParticipants.filter((p) => p.active && !immuneIds.has(p.id)).map((p) => h("option", { value: p.id }, p.name))
+    )
+  );
+  const addLeaderBtn = h(
+    "button",
+    {
+      class: "btn small",
+      onclick: async () => {
+        if (!leaderSelect.value) return;
+        await addImmunity(week.id, Number(leaderSelect.value), true);
+        await refresh();
+      },
+    },
+    "Marcar como líder"
+  );
+
+  // --- Inmune (separado del líder) ---
+  const immunesOnly = immunities.filter((i) => !i.is_leader);
+  const immuneChips = immunesOnly.map((i) =>
     h("span", { class: "chip-select" }, [
       i.participants.name,
       h(
@@ -295,11 +333,11 @@ async function renderWeekDetail(container, week, allParticipants) {
       class: "btn small",
       onclick: async () => {
         if (!immuneSelect.value) return;
-        await addImmunity(week.id, Number(immuneSelect.value));
+        await addImmunity(week.id, Number(immuneSelect.value), false);
         await refresh();
       },
     },
-    "Marcar como líder"
+    "Marcar como inmune"
   );
 
   // --- Estado / acciones ---
@@ -434,6 +472,9 @@ async function renderWeekDetail(container, week, allParticipants) {
       h("div", {}, nomineeChips.length ? nomineeChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [nomineeSelect, pointsInput, addNomBtn]),
       h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Líder de la semana (inmunidad)")),
+      h("div", {}, leaderChips.length ? leaderChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
+      h("div", { class: "row-flex", style: "margin-top:8px" }, [leaderSelect, addLeaderBtn]),
+      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Inmune (separado del líder)")),
       h("div", {}, immuneChips.length ? immuneChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [immuneSelect, addImmuneBtn]),
       h("div", { style: "margin-top:16px" }, actionBlock),
