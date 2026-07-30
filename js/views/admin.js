@@ -693,10 +693,11 @@ async function renderLegacyAdmin(sub) {
 // ============================================================
 async function renderDynamicsAdmin(sub) {
   clearAndAppend(sub, h("div", { class: "loading" }, "Cargando…"));
-  const [participants, assignments, oraculoLocked] = await Promise.all([
+  const [participants, assignments, oraculoLocked, profiles] = await Promise.all([
     getParticipants(),
     getSecretAssignments(),
     isOraculoLocked(),
+    getAllProfiles(),
   ]);
 
   // --- Habitante al azar ---
@@ -782,6 +783,39 @@ async function renderDynamicsAdmin(sub) {
     ]);
   });
 
+  const assignedPlayerIds = new Set(assignments.map((a) => a.player_id));
+  const unassignedPlayers = profiles.filter((p) => !assignedPlayerIds.has(p.id));
+  const unassignedRows = unassignedPlayers.map((player) => {
+    const select = h(
+      "select",
+      { style: "max-width:200px" },
+      [h("option", { value: "" }, "Elige habitante…")].concat(
+        sorteoEligible.map((p) => h("option", { value: p.id }, p.name))
+      )
+    );
+    const err = h("div", { class: "error-msg" });
+    const assignPlayerBtn = h(
+      "button",
+      {
+        class: "btn small",
+        onclick: async () => {
+          if (!select.value) {
+            err.textContent = "Elige un habitante primero.";
+            return;
+          }
+          await reassignSecretHabitante(player.id, Number(select.value));
+          await renderDynamicsAdmin(sub);
+        },
+      },
+      "Asignar"
+    );
+    return h("div", { class: "list-item" }, [
+      h("div", { class: "row-flex" }, [h("strong", {}, player.display_name), select]),
+      h("div", { class: "row-flex" }, [assignPlayerBtn]),
+      err,
+    ]);
+  });
+
   const secretCard = h("div", { class: "card" }, [
     h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-shuffle" }), " ", h("strong", {}, "Habitante al azar")]),
     h(
@@ -791,6 +825,12 @@ async function renderDynamicsAdmin(sub) {
     ),
     h("div", { style: "margin-bottom:14px" }, [assignBtn, resetBtn, assignErr]),
     assignmentRows.length ? h("div", {}, assignmentRows) : h("p", { class: "muted" }, "Nadie tiene asignación todavía."),
+    unassignedRows.length
+      ? h("div", { style: "margin-top:14px" }, [
+          h("p", { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" }, "Jugadores sin asignación (elige uno manualmente o usa \"Asignar al azar\"):"),
+          h("div", {}, unassignedRows),
+        ])
+      : null,
   ]);
 
   // --- Ganador de la temporada ---
