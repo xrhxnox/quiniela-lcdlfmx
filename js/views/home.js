@@ -86,7 +86,7 @@ async function renderVotingWeek(container, week, profile) {
   const pickedName = myPred ? nominations.find((n) => n.participant_id === myPred.participant_id)?.participants?.name : null;
   const statusMsg = h(
     "div",
-    { class: "success-msg" },
+    { class: "success-msg", style: "margin-top:10px" },
     myPred ? `Ya tienes un pick guardado: ${pickedName || "—"}. Puedes cambiarlo mientras la votación siga abierta.` : ""
   );
   const errMsg = h("div", { class: "error-msg" });
@@ -238,13 +238,14 @@ async function renderVotingWeek(container, week, profile) {
         leaderBlock,
         immuneBlock,
         h("p", { class: "muted", style: "font-size:0.82rem" }, "Elige entre los nominados quién crees que será eliminado. Si le atinas, sumas 1 punto."),
+        h("div", { style: "margin-top:10px" }, [officialVoteButton()]),
       ]),
       nominations.length === 0
         ? h("div", { class: "empty-state" }, "Aún no hay nominados publicados para esta semana.")
         : h("div", {}, [
             cardsWrap,
             h("div", { style: "margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:6px" }, [submitBtn, statusMsg, errMsg]),
-            h("div", { style: "margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [officialVoteButton(), toggleNominationsBtn]),
+            h("div", { style: "margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [toggleNominationsBtn]),
             nominationsWrap,
           ]),
     ])
