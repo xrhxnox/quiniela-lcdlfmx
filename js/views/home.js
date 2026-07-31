@@ -140,7 +140,9 @@ async function renderVotingWeek(container, week, profile) {
           h(
             "div",
             { class: "muted", style: "font-size:0.72rem;margin-top:4px" },
-            nomineeNames.length ? "Nominó a: " + nomineeNames.join(", ") : "Sin nominar"
+            nomineeNames.length
+              ? [h("div", {}, "Nominó a:"), ...nomineeNames.map((n) => h("div", {}, n))]
+              : "Sin nominar"
           ),
         ]),
       ]);
@@ -149,7 +151,7 @@ async function renderVotingWeek(container, week, profile) {
   const toggleNominationsBtn = h(
     "button",
     {
-      class: "btn secondary small",
+      class: "btn secondary",
       onclick: () => {
         const isHidden = nominationsWrap.style.display === "none";
         nominationsWrap.style.display = isHidden ? "block" : "none";
