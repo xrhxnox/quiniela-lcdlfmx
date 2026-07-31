@@ -6,6 +6,8 @@ import {
   getEliminationsForWeek,
   getMyPrediction,
   submitPrediction,
+  getParticipants,
+  getNominationVotesForWeek,
 } from "../data.js";
 import { h, esc, initials, fmtDate, clearAndAppend } from "../utils.js";
 
@@ -68,10 +70,12 @@ function countdownNode(closesAt, onClosed) {
 }
 
 async function renderVotingWeek(container, week, profile) {
-  const [nominations, immunities, myPred] = await Promise.all([
+  const [nominations, immunities, myPred, allParticipants, nominationVotes] = await Promise.all([
     getNominationsForWeek(week.id),
     getImmunitiesForWeek(week.id),
     getMyPrediction(week.id, profile.id),
+    getParticipants(),
+    getNominationVotesForWeek(week.id),
   ]);
 
   let selected = myPred ? myPred.participant_id : null;
@@ -116,6 +120,44 @@ async function renderVotingWeek(container, week, profile) {
   });
 
   const cardsWrap = h("div", { class: "grid" }, cards);
+
+  // --- Ver Nominaciones (quién nominó a quién) ---
+  const participantById = {};
+  allParticipants.forEach((p) => (participantById[p.id] = p));
+  const votesByNominator = {};
+  nominationVotes.forEach((v) => {
+    if (!votesByNominator[v.nominator_id]) votesByNominator[v.nominator_id] = [];
+    votesByNominator[v.nominator_id].push(v.nominee_id);
+  });
+  const nominationCards = allParticipants
+    .filter((p) => p.active)
+    .map((p) => {
+      const nomineeNames = (votesByNominator[p.id] || []).map((id) => participantById[id]?.name).filter(Boolean);
+      return h("div", { class: "nominee-card", style: "cursor:default" }, [
+        photoOrInitials(p),
+        h("div", { class: "info" }, [
+          h("div", { class: "name" }, p.name),
+          h(
+            "div",
+            { class: "muted", style: "font-size:0.72rem;margin-top:4px" },
+            nomineeNames.length ? "Nominó a: " + nomineeNames.join(", ") : "Sin nominar"
+          ),
+        ]),
+      ]);
+    });
+  const nominationsWrap = h("div", { style: "display:none;margin-top:16px" }, [h("div", { class: "grid" }, nominationCards)]);
+  const toggleNominationsBtn = h(
+    "button",
+    {
+      class: "btn secondary small",
+      onclick: () => {
+        const isHidden = nominationsWrap.style.display === "none";
+        nominationsWrap.style.display = isHidden ? "block" : "none";
+        toggleNominationsBtn.textContent = isHidden ? "Ocultar Nominaciones" : "Ver Nominaciones";
+      },
+    },
+    "Ver Nominaciones"
+  );
 
   const leaders = immunities.filter((i) => i.is_leader);
   const immunes = immunities.filter((i) => !i.is_leader);
@@ -194,7 +236,8 @@ async function renderVotingWeek(container, week, profile) {
         leaderBlock,
         immuneBlock,
         h("p", { class: "muted", style: "font-size:0.82rem" }, "Elige entre los nominados quién crees que será eliminado. Si le atinas, sumas 1 punto."),
-        h("div", { style: "margin-top:10px" }, [officialVoteButton()]),
+        h("div", { style: "margin-top:10px;display:flex;gap:10px;flex-wrap:wrap" }, [officialVoteButton(), toggleNominationsBtn]),
+        nominationsWrap,
       ]),
       nominations.length === 0
         ? h("div", { class: "empty-state" }, "Aún no hay nominados publicados para esta semana.")

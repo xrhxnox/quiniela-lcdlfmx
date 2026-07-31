@@ -12,6 +12,9 @@ import {
   setNomination,
   setNominationSaved,
   removeNomination,
+  getNominationVotesForWeek,
+  addNominationVote,
+  removeNominationVote,
   getImmunitiesForWeek,
   addImmunity,
   removeImmunity,
@@ -200,12 +203,15 @@ async function renderParticipantsAdmin(sub) {
 // SEMANAS
 // ============================================================
 async function renderWeekDetail(container, week, allParticipants) {
-  const [nominations, immunities] = await Promise.all([
+  const [nominations, immunities, nominationVotes] = await Promise.all([
     getNominationsForWeek(week.id),
     getImmunitiesForWeek(week.id),
+    getNominationVotesForWeek(week.id),
   ]);
   const nominatedIds = new Set(nominations.map((n) => n.participant_id));
   const immuneIds = new Set(immunities.map((i) => i.participant_id));
+  const participantById = {};
+  allParticipants.forEach((p) => (participantById[p.id] = p));
 
   const refresh = async () => {
     const fresh = await getWeeks();
@@ -339,6 +345,58 @@ async function renderWeekDetail(container, week, allParticipants) {
     },
     "Marcar como inmune"
   );
+
+  // --- Quién nominó a quién ---
+  const votesByNominator = {};
+  nominationVotes.forEach((v) => {
+    if (!votesByNominator[v.nominator_id]) votesByNominator[v.nominator_id] = [];
+    votesByNominator[v.nominator_id].push(v.nominee_id);
+  });
+  const activeParticipants = allParticipants.filter((p) => p.active);
+  const voteRows = activeParticipants.map((nominator) => {
+    const nomineeIds = votesByNominator[nominator.id] || [];
+    const chips = nomineeIds.map((nomineeId) =>
+      h("span", { class: "chip-select" }, [
+        participantById[nomineeId]?.name || "—",
+        h(
+          "button",
+          {
+            onclick: async () => {
+              await removeNominationVote(week.id, nominator.id, nomineeId);
+              await refresh();
+            },
+          },
+          h("i", { class: "fa-solid fa-xmark" })
+        ),
+      ])
+    );
+    const select = h(
+      "select",
+      { style: "max-width:200px" },
+      [h("option", { value: "" }, "Elige a quién nominó…")].concat(
+        activeParticipants
+          .filter((p) => p.id !== nominator.id && !nomineeIds.includes(p.id))
+          .map((p) => h("option", { value: p.id }, p.name))
+      )
+    );
+    const addVoteBtn = h(
+      "button",
+      {
+        class: "btn small secondary",
+        onclick: async () => {
+          if (!select.value) return;
+          await addNominationVote(week.id, nominator.id, Number(select.value));
+          await refresh();
+        },
+      },
+      "Agregar"
+    );
+    return h("div", { class: "list-item" }, [
+      h("div", { class: "row-flex" }, [h("strong", {}, nominator.name)]),
+      h("div", {}, chips.length ? chips : [h("span", { class: "muted" }, "No ha nominado a nadie todavía")]),
+      h("div", { class: "row-flex", style: "margin-top:6px" }, [select, addVoteBtn]),
+    ]);
+  });
 
   // --- Estado / acciones ---
   const openVotingBtn = h(
@@ -477,6 +535,13 @@ async function renderWeekDetail(container, week, allParticipants) {
       h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Inmune (separado del líder)")),
       h("div", {}, immuneChips.length ? immuneChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [immuneSelect, addImmuneBtn]),
+      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "¿Quién nominó a quién?")),
+      h(
+        "p",
+        { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+        "Para cada habitante activo, registra a quién nominó (puede ser a más de uno). Esto se ve en Votar con el botón \"Ver Nominaciones\"."
+      ),
+      h("div", {}, voteRows.length ? voteRows : [h("span", { class: "muted" }, "No hay habitantes activos.")]),
       h("div", { style: "margin-top:16px" }, actionBlock),
       h("div", { style: "margin-top:10px" }, [deleteWeekBtn]),
     ])

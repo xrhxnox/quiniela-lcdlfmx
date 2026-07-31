@@ -251,6 +251,14 @@ create table if not exists public.nominations (
 );
 alter table public.nominations add column if not exists saved boolean not null default false;
 
+-- ---------- QUIÉN NOMINÓ A QUIÉN (detalle por habitante, no solo el total) ----------
+create table if not exists public.nomination_votes (
+  week_id bigint not null references public.weeks(id) on delete cascade,
+  nominator_id bigint not null references public.participants(id) on delete cascade,
+  nominee_id bigint not null references public.participants(id) on delete cascade,
+  primary key (week_id, nominator_id, nominee_id)
+);
+
 -- ---------- ELIMINADOS confirmados de la semana ----------
 create table if not exists public.eliminations (
   week_id bigint not null references public.weeks(id) on delete cascade,
@@ -291,6 +299,7 @@ alter table public.participants enable row level security;
 alter table public.weeks enable row level security;
 alter table public.immunities enable row level security;
 alter table public.nominations enable row level security;
+alter table public.nomination_votes enable row level security;
 alter table public.eliminations enable row level security;
 alter table public.predictions enable row level security;
 
@@ -329,6 +338,13 @@ drop policy if exists "nominations_select_all" on public.nominations;
 create policy "nominations_select_all" on public.nominations for select using (true);
 drop policy if exists "nominations_write_admin" on public.nominations;
 create policy "nominations_write_admin" on public.nominations for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- nomination_votes: lectura pública, escritura solo admin
+drop policy if exists "nomination_votes_select_all" on public.nomination_votes;
+create policy "nomination_votes_select_all" on public.nomination_votes for select using (true);
+drop policy if exists "nomination_votes_write_admin" on public.nomination_votes;
+create policy "nomination_votes_write_admin" on public.nomination_votes for all
   using (public.is_admin()) with check (public.is_admin());
 
 -- eliminations: lectura pública, escritura solo admin

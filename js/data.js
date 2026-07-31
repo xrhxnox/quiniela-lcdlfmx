@@ -169,6 +169,30 @@ export async function removeNomination(weekId, participantId) {
   );
 }
 
+// ---------- Quién nominó a quién ----------
+export async function getNominationVotesForWeek(weekId) {
+  return unwrap(
+    await supabase.from("nomination_votes").select("week_id, nominator_id, nominee_id").eq("week_id", weekId)
+  );
+}
+
+export async function addNominationVote(weekId, nominatorId, nomineeId) {
+  return unwrap(
+    await supabase.from("nomination_votes").insert({ week_id: weekId, nominator_id: nominatorId, nominee_id: nomineeId }).select()
+  );
+}
+
+export async function removeNominationVote(weekId, nominatorId, nomineeId) {
+  return unwrap(
+    await supabase
+      .from("nomination_votes")
+      .delete()
+      .eq("week_id", weekId)
+      .eq("nominator_id", nominatorId)
+      .eq("nominee_id", nomineeId)
+  );
+}
+
 // ---------- Immunities ----------
 export async function getImmunitiesForWeek(weekId) {
   return unwrap(
