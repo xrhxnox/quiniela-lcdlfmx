@@ -238,12 +238,15 @@ async function renderVotingWeek(container, week, profile) {
         leaderBlock,
         immuneBlock,
         h("p", { class: "muted", style: "font-size:0.82rem" }, "Elige entre los nominados quién crees que será eliminado. Si le atinas, sumas 1 punto."),
-        h("div", { style: "margin-top:10px;display:flex;gap:10px;flex-wrap:wrap" }, [officialVoteButton(), toggleNominationsBtn]),
-        nominationsWrap,
       ]),
       nominations.length === 0
         ? h("div", { class: "empty-state" }, "Aún no hay nominados publicados para esta semana.")
-        : h("div", {}, [cardsWrap, h("div", { style: "margin-top:16px;display:flex;gap:10px;align-items:center" }, [submitBtn, statusMsg, errMsg])]),
+        : h("div", {}, [
+            cardsWrap,
+            h("div", { style: "margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:6px" }, [submitBtn, statusMsg, errMsg]),
+            h("div", { style: "margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [officialVoteButton(), toggleNominationsBtn]),
+            nominationsWrap,
+          ]),
     ])
   );
 }
