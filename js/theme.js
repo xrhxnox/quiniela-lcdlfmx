@@ -1,7 +1,7 @@
 export const ACCENTS = {
   rojo: { label: "Rojo", accent: "#ff1f3d", dim: "#8a0e1c", text: "#ffffff" },
   celeste: { label: "Celeste", accent: "#00aaff", dim: "#0a4d73", text: "#1a1a1a" },
-  amarillo: { label: "Amarillo", accent: "#ffd60a", dim: "#8a6d10", text: "#1a1a1a" },
+  amarillo: { label: "Amarillo", accent: "#e3a600", dim: "#664b00", text: "#1a1a1a" },
   rosa: { label: "Rosa", accent: "#ffbfde", dim: "#f0a8ce", text: "#1a1a1a" },
   verde: { label: "Verde", accent: "#16d967", dim: "#0f7a3d", text: "#1a1a1a" },
   morado: { label: "Morado", accent: "#a742f5", dim: "#5b21b6", text: "#ffffff" },
