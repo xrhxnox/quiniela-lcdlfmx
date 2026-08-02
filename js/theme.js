@@ -20,9 +20,11 @@ export function getAccentKey() {
 export function applyAccent(key) {
   const theme = ACCENTS[key] || ACCENTS.rojo;
   const root = document.documentElement;
-  root.style.setProperty("--accent", theme.accent);
-  root.style.setProperty("--accent-dim", theme.dim);
-  root.style.setProperty("--accent-text", theme.text);
+  // "Blanco" es casi invisible sobre fondo claro, así que en tema claro se muestra negro en su lugar.
+  const useBlackInLight = key === "blanco" && getThemeMode() === "light";
+  root.style.setProperty("--accent", useBlackInLight ? "#000000" : theme.accent);
+  root.style.setProperty("--accent-dim", useBlackInLight ? "#3a3a3a" : theme.dim);
+  root.style.setProperty("--accent-text", useBlackInLight ? "#ffffff" : theme.text);
   localStorage.setItem(STORAGE_KEY, key);
 }
 
@@ -48,6 +50,7 @@ export function applyThemeMode(mode) {
   const value = mode === "light" ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", value);
   localStorage.setItem(THEME_MODE_KEY, value);
+  applyAccent(getAccentKey());
 }
 
 export function initThemeMode() {
