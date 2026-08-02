@@ -50,14 +50,14 @@ function countdownNode(closesAt, onClosed) {
     el.innerHTML = "";
     const remaining = closesAtMs - Date.now();
     if (remaining <= 0) {
-      el.append(h("i", { class: "fa-solid fa-lock" }), " Votación cerrada");
+      el.append(h("i", { class: "fa-solid fa-lock", style: "color:var(--accent)" }), " Votación cerrada");
       if (!fired) {
         fired = true;
         onClosed?.();
       }
       return false;
     }
-    el.append(h("i", { class: "fa-solid fa-hourglass-half" }), " Cierra en: ", h("strong", { style: "color:var(--accent)" }, formatCountdown(remaining)));
+    el.append(h("i", { class: "fa-solid fa-hourglass-half", style: "color:var(--accent)" }), " Cierra en: ", h("strong", { style: "color:var(--accent)" }, formatCountdown(remaining)));
     return true;
   };
   const tick = () => {
@@ -167,7 +167,7 @@ async function renderVotingWeek(container, week, profile) {
   const leaderBlock =
     leaders.length > 0
       ? h("p", { class: "muted", style: "font-size:0.82rem" }, [
-          h("i", { class: "fa-solid fa-crown" }),
+          h("i", { class: "fa-solid fa-crown", style: "color:var(--accent)" }),
           " Líder de la semana: ",
           h("strong", {}, leaders.map((i) => i.participants.name).join(", ")),
         ])
@@ -176,7 +176,7 @@ async function renderVotingWeek(container, week, profile) {
   const immuneBlock =
     immunes.length > 0
       ? h("p", { class: "muted", style: "font-size:0.82rem" }, [
-          h("i", { class: "fa-solid fa-shield-halved" }),
+          h("i", { class: "fa-solid fa-shield-halved", style: "color:var(--accent)" }),
           " Inmune: ",
           h("strong", {}, immunes.map((i) => i.participants.name).join(", ")),
         ])
@@ -224,7 +224,7 @@ async function renderVotingWeek(container, week, profile) {
       h("div", { class: "section-title" }, week.label || `Semana ${week.week_number}`),
       h("div", { class: "card" }, [
         h("p", {}, [
-          h("i", { class: "fa-solid fa-calendar-days" }),
+          h("i", { class: "fa-solid fa-calendar-days", style: "color:var(--accent)" }),
           " Eliminación: ",
           h("strong", {}, week.elimination_date ? fmtDate(week.elimination_date) : "por confirmar"),
           ...(week.voting_closes_at

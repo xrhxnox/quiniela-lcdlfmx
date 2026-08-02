@@ -23,12 +23,12 @@ import { ROOM_OPTIONS, LEGACY_ROOM_OPTIONS } from "../rooms.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
 const PICK_TYPE_ICONS = {
-  favorite: { icon: "fa-star", color: "var(--text)" },
-  hated: { icon: "fa-skull-crossbones", color: "var(--text)" },
-  surprise: { icon: "fa-bomb", color: "var(--text)" },
-  disappointment: { icon: "fa-heart-crack", color: "var(--text)" },
-  random: { icon: "fa-shuffle", color: "var(--text)" },
-  winner: { icon: "fa-crown", color: "var(--text)" },
+  favorite: { icon: "fa-star", color: "var(--accent)" },
+  hated: { icon: "fa-skull-crossbones", color: "var(--accent)" },
+  surprise: { icon: "fa-bomb", color: "var(--accent)" },
+  disappointment: { icon: "fa-heart-crack", color: "var(--accent)" },
+  random: { icon: "fa-shuffle", color: "var(--accent)" },
+  winner: { icon: "fa-crown", color: "var(--accent)" },
 };
 
 function pickTypeIcon(type) {
