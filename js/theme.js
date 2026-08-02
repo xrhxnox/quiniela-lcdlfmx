@@ -7,7 +7,7 @@ export const ACCENTS = {
   morado: { label: "Morado", accent: "#a742f5", dim: "#5b21b6", text: "#ffffff" },
   naranja: { label: "Naranja", accent: "#ff7a1a", dim: "#9a3412", text: "#1a1a1a" },
   turquesa: { label: "Turquesa", accent: "#00d9c0", dim: "#0f766e", text: "#1a1a1a" },
-  blanco: { label: "Blanco", accent: "#ffffff", dim: "#c4c4c4", text: "#1a1a1a" },
+  blanco: { label: "Blanco", accent: "#e8e8e8", dim: "#c4c4c4", text: "#1a1a1a" },
 };
 
 const STORAGE_KEY = "lcdlfmx_accent";
