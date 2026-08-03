@@ -462,6 +462,25 @@ drop policy if exists "oraculo_settings_write_admin" on public.oraculo_settings;
 create policy "oraculo_settings_write_admin" on public.oraculo_settings for all
   using (public.is_admin()) with check (public.is_admin());
 
+-- Marca a los jugadores a quienes se les puso el orden estándar (alfabético)
+-- porque no guardaron su propia predicción antes de que se cerrara El Oráculo.
+-- Se borra sola si el jugador guarda su propio orden más adelante.
+create table if not exists public.oraculo_auto_filled (
+  player_id uuid primary key references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.oraculo_auto_filled enable row level security;
+
+drop policy if exists "oraculo_auto_filled_select" on public.oraculo_auto_filled;
+create policy "oraculo_auto_filled_select" on public.oraculo_auto_filled for select using (true);
+
+drop policy if exists "oraculo_auto_filled_insert_admin" on public.oraculo_auto_filled;
+create policy "oraculo_auto_filled_insert_admin" on public.oraculo_auto_filled for insert with check (public.is_admin());
+
+drop policy if exists "oraculo_auto_filled_delete" on public.oraculo_auto_filled;
+create policy "oraculo_auto_filled_delete" on public.oraculo_auto_filled for delete
+  using (player_id = auth.uid() or public.is_admin());
+
 -- se ve la propia siempre; la de los demás solo si El Oráculo está bloqueado
 drop policy if exists "eop_select" on public.elimination_order_predictions;
 create policy "eop_select" on public.elimination_order_predictions for select using (

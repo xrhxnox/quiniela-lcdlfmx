@@ -503,7 +503,9 @@ export async function saveEliminationOrder(playerId, orderedParticipantIds) {
     position: i + 1,
     participant_id,
   }));
-  return unwrap(await supabase.from("elimination_order_predictions").insert(rows).select());
+  const result = unwrap(await supabase.from("elimination_order_predictions").insert(rows).select());
+  await supabase.from("oraculo_auto_filled").delete().eq("player_id", playerId);
+  return result;
 }
 
 export async function getAllEliminationOrders() {
@@ -532,5 +534,39 @@ export async function setOraculoLocked(locked) {
 
 export async function resetOraculo() {
   await supabase.from("elimination_order_predictions").delete().neq("player_id", "00000000-0000-0000-0000-000000000000");
+  await supabase.from("oraculo_auto_filled").delete().neq("player_id", "00000000-0000-0000-0000-000000000000");
   return setOraculoLocked(false);
+}
+
+// Le pone el orden "estándar" (alfabético por nombre) a quienes no hayan
+// guardado ninguna predicción todavía, para que no se queden sin puntaje, y
+// los marca en oraculo_auto_filled para poder avisarlo en la vista.
+export async function fillMissingOraculoPredictionsAlphabetically() {
+  const [profiles, participants, predictionRows] = await Promise.all([
+    getAllProfiles(),
+    getParticipants(),
+    supabase.from("elimination_order_predictions").select("player_id"),
+  ]);
+  if (predictionRows.error) throw predictionRows.error;
+
+  const assignedPlayerIds = new Set(predictionRows.data.map((r) => r.player_id));
+  const missingPlayers = profiles.filter((p) => !assignedPlayerIds.has(p.id));
+  if (missingPlayers.length === 0) return [];
+
+  const eligible = participants.filter((p) => !p.is_infiltrado).sort((a, b) => a.name.localeCompare(b.name));
+  const rows = [];
+  missingPlayers.forEach((player) => {
+    eligible.forEach((participant, i) => {
+      rows.push({ player_id: player.id, position: i + 1, participant_id: participant.id });
+    });
+  });
+  const inserted = unwrap(await supabase.from("elimination_order_predictions").insert(rows).select());
+  await supabase.from("oraculo_auto_filled").upsert(missingPlayers.map((p) => ({ player_id: p.id })));
+  return inserted;
+}
+
+export async function getOraculoAutoFilledPlayerIds() {
+  const { data, error } = await supabase.from("oraculo_auto_filled").select("player_id");
+  if (error) throw error;
+  return new Set(data.map((r) => r.player_id));
 }

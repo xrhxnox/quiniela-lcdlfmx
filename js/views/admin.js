@@ -36,6 +36,7 @@ import {
   isOraculoLocked,
   setOraculoLocked,
   resetOraculo,
+  fillMissingOraculoPredictionsAlphabetically,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 import { ROOM_OPTIONS } from "../rooms.js";
@@ -937,6 +938,15 @@ async function renderDynamicsAdmin(sub) {
     {
       class: "btn small",
       onclick: async () => {
+        if (!oraculoLocked) {
+          if (
+            !confirm(
+              "Al cerrar El Oráculo, a quien no haya guardado ninguna predicción se le pondrá el orden estándar (alfabético) automáticamente. ¿Continuar?"
+            )
+          )
+            return;
+          await fillMissingOraculoPredictionsAlphabetically();
+        }
         await setOraculoLocked(!oraculoLocked);
         await renderDynamicsAdmin(sub);
       },

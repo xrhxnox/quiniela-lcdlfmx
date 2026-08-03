@@ -6,6 +6,7 @@ import {
   getAllEliminationOrders,
   getEliminationOrderScores,
   getAllEliminationsWithWeeks,
+  getOraculoAutoFilledPlayerIds,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
@@ -195,7 +196,7 @@ function orderThumb(participant, status, position) {
   ]);
 }
 
-function renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, totalParticipants) {
+function renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, totalParticipants, autoFilledIds) {
   // Los infiltrados no participan en El Oráculo (no pueden ganar la temporada):
   // no se muestran en el listado de nadie ni cuentan para el puntaje.
   const eligibleOrders = allOrders.filter((row) => !row.participants?.is_infiltrado);
@@ -239,6 +240,12 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
           ]),
           h("span", { class: "badge green" }, `${scoreMap[playerId] || 0} pts`),
         ]),
+        autoFilledIds?.has(playerId)
+          ? h("p", { class: "muted", style: "font-size:0.72rem;margin:0 0 8px" }, [
+              h("i", { class: "fa-solid fa-shuffle" }),
+              " No realizó El Oráculo. Elegido en orden alfabético.",
+            ])
+          : null,
         h("div", { style: "display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px" }, items),
       ]);
     });
@@ -271,11 +278,12 @@ export async function renderOrdenSalida(container, profile) {
     return;
   }
 
-  const [allOrders, scores, eliminationsWithWeeks, participants] = await Promise.all([
+  const [allOrders, scores, eliminationsWithWeeks, participants, autoFilledIds] = await Promise.all([
     getAllEliminationOrders(),
     getEliminationOrderScores(),
     getAllEliminationsWithWeeks(),
     getParticipants(),
+    getOraculoAutoFilledPlayerIds(),
   ]);
-  renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, participants.length);
+  renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, participants.length, autoFilledIds);
 }
