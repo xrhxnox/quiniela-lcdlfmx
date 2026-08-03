@@ -49,7 +49,7 @@ export async function renderParticipantes(container) {
         h("div", { class: "info" }, [
           h("div", { class: "name" }, p.name),
           p.room ? h("div", { class: "room" }, "Cuarto: " + p.room) : null,
-          h("div", { style: "margin-top:6px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
+          h("div", { style: "margin-top:6px;margin-bottom:4px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
             p.is_winner
               ? h("span", { class: "badge gold status-badge" }, "GANADOR")
               : p.active
