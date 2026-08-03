@@ -285,5 +285,6 @@ export async function renderOrdenSalida(container, profile) {
     getParticipants(),
     getOraculoAutoFilledPlayerIds(),
   ]);
-  renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, participants.length, autoFilledIds);
+  const totalParticipants = participants.filter((p) => !p.is_infiltrado).length;
+  renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, totalParticipants, autoFilledIds);
 }

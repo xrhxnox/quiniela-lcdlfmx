@@ -525,7 +525,7 @@ where p.is_winner = true;
 -- predecir su lugar de salida (esa posición queda pendiente para siempre).
 create or replace view public.elimination_order_score as
 with total_participants as (
-  select count(*)::int as n from public.participants
+  select count(*)::int as n from public.participants where is_infiltrado = false
 ),
 actual_blocks as (
   select e.participant_id, dense_rank() over (order by w.week_number asc) as block_no
