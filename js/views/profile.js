@@ -527,7 +527,7 @@ function buildCompareCard(target, leaderboard) {
   );
 
   return h("div", { class: "card" }, [
-    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-people-arrows" }), " ", h("strong", {}, "Comparar con otro jugador")]),
+    h("p", { style: "margin-top:0" }, [h("i", { class: "fa-solid fa-people-arrows", style: "color:var(--accent)" }), " ", h("strong", {}, "Comparar con otro jugador")]),
     h("div", { class: "row-flex" }, [select, compareBtn, errMsg]),
     resultBox,
   ]);
