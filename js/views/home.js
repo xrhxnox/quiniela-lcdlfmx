@@ -342,7 +342,17 @@ async function renderVotingWeek(container, week, profile) {
 }
 
 async function renderClosedWeek(container, week, profile) {
-  const eliminations = await getEliminationsForWeek(week.id);
+  const [eliminations, myPred] = await Promise.all([
+    getEliminationsForWeek(week.id),
+    getMyPrediction(week.id, profile.id),
+  ]);
+  const eliminatedIds = eliminations.map((e) => e.participant_id);
+  const hit = myPred && eliminatedIds.includes(myPred.participant_id);
+  const resultBadge = !myPred
+    ? h("span", { class: "badge gold" }, "No votaste")
+    : hit
+    ? h("span", { class: "badge green" }, "¡Le atinaste! +1 punto")
+    : h("span", { class: "badge red" }, "No le atinaste esta vez");
 
   const resultCards = eliminations.map((e) =>
     h("div", { class: "nominee-card eliminated-result" }, [
@@ -362,6 +372,7 @@ async function renderClosedWeek(container, week, profile) {
         eliminations.length
           ? h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit, minmax(150px, 150px));justify-content:center" }, resultCards)
           : null,
+        eliminations.length ? h("div", { style: "margin-top:12px" }, [resultBadge]) : null,
         h("div", { style: "margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [historyBtn]),
       ]),
       historyWrap,
