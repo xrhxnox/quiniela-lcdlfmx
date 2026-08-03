@@ -8,6 +8,7 @@ import {
   submitPrediction,
   getParticipants,
   getNominationVotesForWeek,
+  getWeeks,
 } from "../data.js";
 import { h, esc, initials, fmtDate, clearAndAppend } from "../utils.js";
 
@@ -23,6 +24,88 @@ function officialVoteButton() {
     },
     [h("i", { class: "fa-solid fa-arrow-up-right-from-square" }), "Vota en la página oficial"]
   );
+}
+
+async function buildHistoryCards() {
+  const weeks = await getWeeks();
+  if (weeks.length === 0) return [h("div", { class: "empty-state" }, "Todavía no hay semanas registradas.")];
+
+  const perWeek = await Promise.all(
+    weeks.map(async (week) => {
+      const [nominations, immunities, eliminations] = await Promise.all([
+        getNominationsForWeek(week.id),
+        getImmunitiesForWeek(week.id),
+        getEliminationsForWeek(week.id),
+      ]);
+      return { week, nominations, immunities, eliminations };
+    })
+  );
+
+  return perWeek.map(({ week, nominations, immunities, eliminations }) => {
+    const leaders = immunities.filter((i) => i.is_leader).map((i) => i.participants.name);
+    const immunes = immunities.filter((i) => !i.is_leader).map((i) => i.participants.name);
+    const eliminatedNames = eliminations.map((e) => e.participants.name);
+
+    const nomineeChips = nominations.map((n) =>
+      h(
+        "span",
+        { class: `badge ${n.saved ? "green" : "gray"}`, style: "margin:2px 4px 2px 0;display:inline-block" },
+        `${n.participants.name} (${n.points}pts)${n.saved ? " · Salvado" : ""}`
+      )
+    );
+
+    return h("div", { class: "card" }, [
+      h("p", { style: "margin-top:0" }, h("strong", {}, week.label || `Semana ${week.week_number}`)),
+      leaders.length
+        ? h("p", { class: "muted", style: "font-size:0.78rem;margin:4px 0" }, [
+            h("i", { class: "fa-solid fa-crown", style: "color:var(--accent)" }),
+            " Líder: ",
+            leaders.join(", "),
+          ])
+        : null,
+      immunes.length
+        ? h("p", { class: "muted", style: "font-size:0.78rem;margin:4px 0" }, [
+            h("i", { class: "fa-solid fa-shield-halved", style: "color:var(--accent)" }),
+            " Inmune: ",
+            immunes.join(", "),
+          ])
+        : null,
+      h("div", { style: "margin:6px 0" }, [
+        h("span", { class: "muted", style: "font-size:0.78rem" }, nomineeChips.length ? "Nominados: " : "Sin nominados registrados."),
+        ...nomineeChips,
+      ]),
+      h("p", { style: "margin:4px 0 0" }, [
+        h("span", { class: `badge ${eliminatedNames.length ? "red" : "gray"}` }, eliminatedNames.length ? "Eliminado/a" : "Sin confirmar"),
+        eliminatedNames.length ? [" ", h("strong", {}, eliminatedNames.join(", "))] : null,
+      ]),
+    ]);
+  });
+}
+
+function buildHistoryToggle() {
+  const wrap = h("div", { style: "display:none;margin-top:16px" });
+  let loaded = false;
+  const btn = h(
+    "button",
+    {
+      class: "btn secondary",
+      onclick: async () => {
+        const isHidden = wrap.style.display === "none";
+        if (isHidden && !loaded) {
+          clearAndAppend(wrap, h("div", { class: "loading" }, "Cargando…"));
+          wrap.style.display = "block";
+          const cards = await buildHistoryCards();
+          clearAndAppend(wrap, h("div", {}, cards));
+          loaded = true;
+        } else {
+          wrap.style.display = isHidden ? "block" : "none";
+        }
+        btn.textContent = wrap.style.display === "none" ? "Ver Historial" : "Ocultar Historial";
+      },
+    },
+    "Ver Historial"
+  );
+  return { btn, wrap };
 }
 
 function photoOrInitials(p) {
@@ -218,6 +301,8 @@ async function renderVotingWeek(container, week, profile) {
       })
     : null;
 
+  const { btn: historyBtn, wrap: historyWrap } = buildHistoryToggle();
+
   clearAndAppend(
     container,
     h("div", {}, [
@@ -245,9 +330,13 @@ async function renderVotingWeek(container, week, profile) {
         : h("div", {}, [
             cardsWrap,
             h("div", { style: "margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:6px" }, [submitBtn, statusMsg, errMsg]),
-            h("div", { style: "margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [toggleNominationsBtn]),
+            h("div", { style: "margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [toggleNominationsBtn, historyBtn]),
             nominationsWrap,
           ]),
+      nominations.length === 0
+        ? h("div", { style: "margin-top:16px;display:flex;justify-content:center" }, [historyBtn])
+        : null,
+      historyWrap,
     ])
   );
 }
@@ -266,6 +355,8 @@ async function renderClosedWeek(container, week, profile) {
       h("div", { class: "info" }, [h("div", { class: "name" }, e.participants.name), h("div", { class: "room" }, "Eliminado/a")]),
     ])
   );
+
+  const { btn: historyBtn, wrap: historyWrap } = buildHistoryToggle();
 
   clearAndAppend(
     container,
@@ -286,8 +377,9 @@ async function renderClosedWeek(container, week, profile) {
                 : h("span", { class: "badge red" }, "No le atinaste esta vez"),
             ])
           : h("p", { class: "muted", style: "margin-top:12px" }, "No registraste un pick esta semana."),
-        h("div", { style: "margin-top:14px" }, [officialVoteButton()]),
+        h("div", { style: "margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [officialVoteButton(), historyBtn]),
       ]),
+      historyWrap,
       h("p", { class: "muted" }, "El líder de la semana se publica el lunes, los nominados el miércoles y la salvación el viernes. ¡Vuelve pronto!"),
     ])
   );
@@ -305,12 +397,16 @@ export async function renderHome(container, profile) {
     await renderClosedWeek(container, closedWeek, profile);
     return;
   }
+  const { btn: historyBtn, wrap: historyWrap } = buildHistoryToggle();
   clearAndAppend(
     container,
-    h("div", { class: "empty-state" }, [
-      h("img", { src: "assets/logo.png", class: "brand-logo", style: "max-width:220px;margin:0 auto 36px" }),
-      h("p", {}, "Todavía no hay semanas abiertas. El líder de la semana se anuncia los lunes y los nominados se publican los miércoles."),
-      h("div", { style: "margin-top:14px" }, [officialVoteButton()]),
+    h("div", {}, [
+      h("div", { class: "empty-state" }, [
+        h("img", { src: "assets/logo.png", class: "brand-logo", style: "max-width:220px;margin:0 auto 36px" }),
+        h("p", {}, "Todavía no hay semanas abiertas. El líder de la semana se anuncia los lunes y los nominados se publican los miércoles."),
+        h("div", { style: "margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [officialVoteButton(), historyBtn]),
+      ]),
+      historyWrap,
     ])
   );
 }
