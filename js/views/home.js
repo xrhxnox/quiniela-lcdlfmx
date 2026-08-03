@@ -377,7 +377,7 @@ async function renderClosedWeek(container, week, profile) {
                 : h("span", { class: "badge red" }, "No le atinaste esta vez"),
             ])
           : h("p", { class: "muted", style: "margin-top:12px" }, "No registraste un pick esta semana."),
-        h("div", { style: "margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [officialVoteButton(), historyBtn]),
+        h("div", { style: "margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [historyBtn]),
       ]),
       historyWrap,
       h("p", { class: "muted" }, "El líder de la semana se publica el lunes, los nominados el miércoles y la salvación el viernes. ¡Vuelve pronto!"),
@@ -404,7 +404,7 @@ export async function renderHome(container, profile) {
       h("div", { class: "empty-state" }, [
         h("img", { src: "assets/logo.png", class: "brand-logo", style: "max-width:220px;margin:0 auto 36px" }),
         h("p", {}, "Todavía no hay semanas abiertas. El líder de la semana se anuncia los lunes y los nominados se publican los miércoles."),
-        h("div", { style: "margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [officialVoteButton(), historyBtn]),
+        h("div", { style: "margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [historyBtn]),
       ]),
       historyWrap,
     ])
