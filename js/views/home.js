@@ -76,7 +76,7 @@ async function buildHistoryCards() {
       ]),
       h("p", { style: "margin:4px 0 0" }, [
         h("span", { class: `badge ${eliminatedNames.length ? "red" : "gray"}` }, eliminatedNames.length ? "Eliminado/a" : "Sin confirmar"),
-        eliminatedNames.length ? [" ", h("strong", {}, eliminatedNames.join(", "))] : null,
+        ...(eliminatedNames.length ? [" ", h("strong", {}, eliminatedNames.join(", "))] : []),
       ]),
     ]);
   });
