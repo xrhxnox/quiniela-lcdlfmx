@@ -183,8 +183,9 @@ function buildBlocks(eliminationsWithWeeks, totalParticipants) {
 
 function orderThumb(participant, status, position) {
   const borderColor = status === "hit" ? "var(--green)" : status === "miss" ? "var(--red)" : "var(--line)";
+  const tint = status === "hit" ? "rgba(47,174,90,0.5)" : status === "miss" ? "rgba(227,6,19,0.5)" : null;
   const photo = participant?.photo_url
-    ? `background-image:url('${esc(participant.photo_url)}');background-size:cover;background-position:center;`
+    ? `background-image:${tint ? `linear-gradient(${tint},${tint}),` : ""}url('${esc(participant.photo_url)}');background-size:cover;background-position:center;`
     : `background:var(--photo-bg);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:var(--text-dim);`;
   return h("div", { style: "display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0" }, [
     h(
