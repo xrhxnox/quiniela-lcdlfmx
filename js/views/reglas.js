@@ -66,7 +66,7 @@ export async function renderReglas(container) {
           h("li", {}, "Los nominados se muestran con los puntos con los que fueron nominados."),
           h("li", {}, [
             "Si un nominado gana la salvación, sigue apareciendo en la lista con la etiqueta ",
-            h("span", { class: "badge green" }, "Salvado"),
+            h("span", { class: "badge", style: "background:#3b82f626;color:#3b82f6;border:1px solid #3b82f6" }, "Salvado"),
             ", pero ya nadie puede votar por él.",
           ]),
         ]),

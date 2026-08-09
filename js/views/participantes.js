@@ -6,6 +6,7 @@ import {
   getSavedCounts,
   getVotingWeek,
   getImmunitiesForWeek,
+  getNominationsForWeek,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
@@ -19,9 +20,13 @@ export async function renderParticipantes(container) {
     getSavedCounts(),
     getVotingWeek(),
   ]);
-  const currentImmunities = votingWeek ? await getImmunitiesForWeek(votingWeek.id) : [];
+  const [currentImmunities, currentNominations] = votingWeek
+    ? await Promise.all([getImmunitiesForWeek(votingWeek.id), getNominationsForWeek(votingWeek.id)])
+    : [[], []];
   const currentLeaderIds = new Set(currentImmunities.filter((i) => i.is_leader).map((i) => i.participant_id));
   const currentImmuneIds = new Set(currentImmunities.filter((i) => !i.is_leader).map((i) => i.participant_id));
+  const currentNominationMap = {};
+  currentNominations.forEach((n) => (currentNominationMap[n.participant_id] = n));
 
   if (participants.length === 0) {
     clearAndAppend(container, h("div", { class: "empty-state" }, "El admin todavía no ha agregado participantes."));
@@ -65,6 +70,11 @@ export async function renderParticipantes(container) {
                   { class: "badge status-badge", style: "background:#ff7a1a26;color:#ff7a1a;border:1px solid #ff7a1a" },
                   [h("i", { class: "fa-solid fa-shield-halved" }), " Inmune"]
                 )
+              : null,
+            currentNominationMap[p.id]
+              ? currentNominationMap[p.id].saved
+                ? h("span", { class: "badge status-badge", style: "background:#3b82f626;color:#3b82f6;border:1px solid #3b82f6" }, "Salvado")
+                : h("span", { class: "badge gold status-badge" }, "Nominado")
               : null,
           ]),
           h("div", { class: "points" }, `Líder ${leaderCounts[p.id] || 0} veces`),

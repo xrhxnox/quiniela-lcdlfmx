@@ -59,7 +59,7 @@ function participantPickCard(label, participant, type, counts, currentNomination
   let weekBadge = null;
   if (participant.active && currentNomination) {
     weekBadge = currentNomination.saved
-      ? h("span", { class: "badge green status-badge" }, "Salvado")
+      ? h("span", { class: "badge status-badge", style: "background:#3b82f626;color:#3b82f6;border:1px solid #3b82f6" }, "Salvado")
       : h("span", { class: "badge gold status-badge" }, "Nominado");
   }
 

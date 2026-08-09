@@ -224,7 +224,7 @@ async function renderWeekDetail(container, week, allParticipants) {
   const nomineeChips = nominations.map((n) =>
     h("span", { class: `chip-select${n.saved ? " saved" : ""}` }, [
       `${n.participants.name} (${n.points}pts)`,
-      n.saved ? h("span", { class: "badge green", style: "margin:0 2px" }, "Salvado") : null,
+      n.saved ? h("span", { class: "badge", style: "margin:0 2px;background:#3b82f626;color:#3b82f6;border:1px solid #3b82f6" }, "Salvado") : null,
       h(
         "button",
         {
