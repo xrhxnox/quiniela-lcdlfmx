@@ -386,6 +386,23 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   gap: 14px;
 }
 
+.vote-dot {
+  position: absolute;
+}
+.vote-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: inherit;
+  z-index: -1;
+  animation: vote-dot-pulse 1.6s ease-out infinite;
+}
+@keyframes vote-dot-pulse {
+  0% { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
 .nominee-card {
   background: var(--bg-card);
   border: 2px solid var(--line);

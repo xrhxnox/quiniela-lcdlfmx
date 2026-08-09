@@ -57,8 +57,9 @@ export async function renderJugadores(container) {
     const voteDotTitle = !votingWeek ? "Aún no hay votación abierta" : votedIds.has(r.player_id) ? "Ya votó esta semana" : "Todavía no vota esta semana";
     return h("div", { class: "card player-card", style: "text-align:center;position:relative" }, [
       h("span", {
+        class: "vote-dot",
         title: voteDotTitle,
-        style: `position:absolute;top:10px;right:10px;width:14px;height:14px;border-radius:50%;background:${voteDotColor};border:2px solid var(--bg-card);`,
+        style: `top:10px;right:10px;width:14px;height:14px;border-radius:50%;background:${voteDotColor};border:2px solid var(--bg-card);`,
       }),
       playerAvatar(profile, 84),
       h("div", { style: "margin-top:10px;font-weight:700" }, r.display_name),
