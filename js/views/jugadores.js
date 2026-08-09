@@ -17,6 +17,21 @@ function playerAvatar(profile, size) {
   );
 }
 
+function legendDot(color, label) {
+  return h("div", { style: "display:inline-flex;align-items:center;gap:6px" }, [
+    h("span", { style: `display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;` }),
+    h("span", {}, label),
+  ]);
+}
+
+function voteLegend() {
+  return h(
+    "div",
+    { class: "muted", style: "font-size:0.78rem;display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin:-6px 0 16px" },
+    [legendDot("var(--green)", "Ya votó"), legendDot("var(--red)", "No ha votado"), legendDot("#e8c05a", "Votación aún no abierta")]
+  );
+}
+
 function pickLine(icon, participant) {
   return h("div", { class: "muted", style: "font-size:0.72rem;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:5px" }, [
     h("i", { class: `fa-solid ${icon}` }),
@@ -79,6 +94,6 @@ export async function renderJugadores(container) {
 
   clearAndAppend(
     container,
-    h("div", {}, [h("div", { class: "section-title" }, "Jugadores"), h("div", { class: "grid" }, cards)])
+    h("div", {}, [h("div", { class: "section-title" }, "Jugadores"), voteLegend(), h("div", { class: "grid" }, cards)])
   );
 }
