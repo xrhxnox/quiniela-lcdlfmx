@@ -27,7 +27,7 @@ function legendDot(color, label) {
 function voteLegend() {
   return h(
     "div",
-    { class: "muted", style: "font-size:0.78rem;display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin:-6px 0 16px" },
+    { class: "muted", style: "font-size:0.78rem;display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin:20px 0 0" },
     [legendDot("var(--green)", "Ya votó"), legendDot("var(--red)", "No ha votado"), legendDot("#e8c05a", "Votación aún no abierta")]
   );
 }
@@ -94,6 +94,6 @@ export async function renderJugadores(container) {
 
   clearAndAppend(
     container,
-    h("div", {}, [h("div", { class: "section-title" }, "Jugadores"), voteLegend(), h("div", { class: "grid" }, cards)])
+    h("div", {}, [h("div", { class: "section-title" }, "Jugadores"), h("div", { class: "grid" }, cards), voteLegend()])
   );
 }
