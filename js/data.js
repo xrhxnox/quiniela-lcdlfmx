@@ -269,6 +269,12 @@ export async function getPredictionsForWeek(weekId) {
   );
 }
 
+export async function getVotedPlayerIds(weekId) {
+  const { data, error } = await supabase.rpc("get_voted_player_ids", { p_week_id: weekId });
+  if (error) throw error;
+  return new Set(data.map((r) => r.player_id));
+}
+
 // ---------- Leaderboard ----------
 export async function getLeaderboard() {
   return unwrap(await supabase.from("leaderboard").select("*"));

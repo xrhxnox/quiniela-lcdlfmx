@@ -365,6 +365,20 @@ create policy "predictions_select" on public.predictions for select using (
   or exists (select 1 from public.weeks w where w.id = week_id and w.status = 'closed')
 );
 
+-- Expone SOLO quién ya votó en una semana (sin revelar por quién), para
+-- poder mostrar un indicador de "ya votó" incluso mientras la votación
+-- sigue abierta, sin filtrar el pick de nadie.
+create or replace function public.get_voted_player_ids(p_week_id bigint)
+returns table(player_id uuid)
+language sql
+security definer set search_path = public
+stable
+as $$
+  select player_id from public.predictions where week_id = p_week_id;
+$$;
+
+grant execute on function public.get_voted_player_ids(bigint) to authenticated;
+
 -- insertar/editar tu propio pick, solo mientras la semana está en votación
 -- Y (si el admin definió voting_closes_at) solo antes de esa hora exacta,
 -- así el corte es automático y no depende de que el admin cierre a tiempo.
