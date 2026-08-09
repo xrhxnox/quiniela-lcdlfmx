@@ -392,15 +392,15 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 .vote-dot::after {
   content: "";
   position: absolute;
-  inset: -4px;
+  inset: -2px;
   border-radius: 50%;
   background: inherit;
-  z-index: -1;
+  pointer-events: none;
   animation: vote-dot-pulse 1.6s ease-out infinite;
 }
 @keyframes vote-dot-pulse {
-  0% { transform: scale(0.6); opacity: 0.7; }
-  100% { transform: scale(2.4); opacity: 0; }
+  0% { transform: scale(0.6); opacity: 0.6; }
+  100% { transform: scale(1.5); opacity: 0; }
 }
 
 .nominee-card {
