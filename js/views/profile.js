@@ -79,7 +79,13 @@ function participantPickCard(label, participant, type, counts, currentNomination
         participant.is_infiltrado
           ? h("span", { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
           : null,
-        currentLeaderIds?.has(participant.id) ? h("span", { class: "badge gold status-badge" }, [h("i", { class: "fa-solid fa-crown" }), " Líder"]) : null,
+        currentLeaderIds?.has(participant.id)
+          ? h(
+              "span",
+              { class: "badge status-badge", style: "background:#c0c4cc26;color:#c0c4cc;border:1px solid #c0c4cc" },
+              [h("i", { class: "fa-solid fa-crown" }), " Líder"]
+            )
+          : null,
         currentImmuneIds?.has(participant.id)
           ? h(
               "span",
