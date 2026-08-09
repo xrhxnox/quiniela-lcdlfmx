@@ -389,7 +389,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 .vote-dot {
   position: absolute;
 }
-.vote-dot::after {
+.pulse-dot {
+  position: relative;
+  display: inline-block;
+}
+.vote-dot::after,
+.pulse-dot::after {
   content: "";
   position: absolute;
   inset: -2px;

@@ -1,4 +1,5 @@
 import { getSession, getMyProfile, logout, onAuthStateChange } from "./auth.js";
+import { getVotingWeek, getMyPrediction } from "./data.js";
 import { renderLogin } from "./views/login.js";
 import { renderHome } from "./views/home.js";
 import { renderRanking } from "./views/ranking.js";
@@ -65,8 +66,13 @@ function renderNav() {
   });
   appHeaderWrap.style.display = "block";
   userChip.innerHTML = "";
+  const voteDot = h("span", {
+    class: "pulse-dot",
+    title: "Comprobando tu voto…",
+    style: "width:9px;height:9px;border-radius:50%;background:var(--line);",
+  });
   userChip.appendChild(
-    h("span", { class: "username-badge" }, [h("i", { class: "fa-solid fa-user" }), currentProfile.display_name])
+    h("span", { class: "username-badge" }, [h("i", { class: "fa-solid fa-user" }), currentProfile.display_name, voteDot])
   );
   userChip.appendChild(
     h(
@@ -82,6 +88,21 @@ function renderNav() {
       [h("i", { class: "fa-solid fa-right-from-bracket" }), " Salir"]
     )
   );
+  updateMyVoteDot(voteDot);
+}
+
+async function updateMyVoteDot(dot) {
+  try {
+    const votingWeek = await getVotingWeek();
+    const myPred = votingWeek ? await getMyPrediction(votingWeek.id, currentProfile.id) : null;
+    const color = !votingWeek ? "#e8c05a" : myPred ? "var(--green)" : "var(--red)";
+    const title = !votingWeek ? "Aún no hay votación abierta" : myPred ? "Ya votaste esta semana" : "Todavía no has votado esta semana";
+    if (!dot.isConnected) return;
+    dot.style.background = color;
+    dot.title = title;
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 async function renderRoute() {
