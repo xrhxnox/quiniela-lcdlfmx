@@ -215,10 +215,7 @@ export async function removeImmunity(weekId, participantId) {
 // ---------- Eliminations ----------
 export async function getEliminationsForWeek(weekId) {
   return unwrap(
-    await supabase
-      .from("eliminations")
-      .select("week_id, participant_id, reverted_by_exile, gift_all, participants(*)")
-      .eq("week_id", weekId)
+    await supabase.from("eliminations").select("week_id, participant_id, participants(*)").eq("week_id", weekId)
   );
 }
 
@@ -226,20 +223,8 @@ export async function getAllEliminationsWithWeeks() {
   return unwrap(
     await supabase
       .from("eliminations")
-      .select("week_id, participant_id, reverted_by_exile, gift_all, participants(*), weeks(*)")
+      .select("week_id, participant_id, participants(*), weeks(*)")
       .order("week_id", { ascending: false })
-  );
-}
-
-// Marca cómo cuenta esta eliminación para El Oráculo (el pick semanal no cambia).
-export async function setEliminationOraculoMode(weekId, participantId, { reverted_by_exile, gift_all }) {
-  return unwrap(
-    await supabase
-      .from("eliminations")
-      .update({ reverted_by_exile, gift_all })
-      .eq("week_id", weekId)
-      .eq("participant_id", participantId)
-      .select()
   );
 }
 

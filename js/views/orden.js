@@ -201,12 +201,7 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
   // Los infiltrados no participan en El Oráculo (no pueden ganar la temporada):
   // no se muestran en el listado de nadie ni cuentan para el puntaje.
   const eligibleOrders = allOrders.filter((row) => !row.participants?.is_infiltrado);
-  // Las salidas revertidas por exilio no ocupan lugar (liberan su posición), y
-  // las marcadas como "regalo" no se comparan contra el orden de nadie.
-  const eligibleEliminations = eliminationsWithWeeks.filter(
-    (e) => !e.participants?.is_infiltrado && !e.reverted_by_exile && !e.gift_all
-  );
-  const giftedExits = eliminationsWithWeeks.filter((e) => e.gift_all && !e.participants?.is_infiltrado);
+  const eligibleEliminations = eliminationsWithWeeks.filter((e) => !e.participants?.is_infiltrado);
   const blocks = buildBlocks(eligibleEliminations, totalParticipants);
   const blockFor = (position) => blocks.find((b) => position >= b.start && position <= b.end) || null;
   const minResolvedPosition = totalParticipants - eligibleEliminations.length + 1;
@@ -253,22 +248,6 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
             ])
           : null,
         h("div", { style: "display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px" }, items),
-        giftedExits.length
-          ? h("div", { style: "margin-top:8px;border-top:1px solid var(--line);padding-top:8px" }, [
-              h(
-                "p",
-                { class: "muted", style: "font-size:0.72rem;margin:0 0 6px" },
-                giftedExits.length === 1
-                  ? "Salió de la casa después de volver del exilio. Nadie pudo preverlo, así que suma +1 a todos:"
-                  : "Salieron de la casa después de volver del exilio. Nadie pudo preverlo, así que suman +1 a todos:"
-              ),
-              h(
-                "div",
-                { style: "display:flex;gap:10px;overflow-x:auto;padding:2px" },
-                giftedExits.map((e) => orderThumb(e.participants, "hit", "+1"))
-              ),
-            ])
-          : null,
       ]);
     });
 
