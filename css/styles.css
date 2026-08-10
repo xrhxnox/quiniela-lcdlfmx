@@ -39,6 +39,7 @@
 [data-theme="light"] nav.tabs a:hover { background: rgba(0,0,0,0.05); }
 [data-theme="light"] table.data tbody tr:hover { background: rgba(0,0,0,0.03); }
 [data-theme="light"] .badge.gray { background: rgba(0,0,0,0.05); }
+[data-theme="light"] .badge.black { background: rgba(0,0,0,0.12); color: #1a1a1a; border-color: #1a1a1a; }
 [data-theme="light"] .swatch { border-color: rgba(0,0,0,0.15); }
 [data-theme="light"] .swatch.active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0,0,0,0.5); }
 [data-theme="light"] .card,
@@ -297,6 +298,7 @@ main#app.fade-in { animation: fadeInUp 0.3s ease; }
 .badge.red { background: rgba(227,6,19,0.15); color: #ff5b63; border: 1px solid var(--red); }
 .badge.green { background: rgba(47,174,90,0.15); color: var(--green); border: 1px solid var(--green); }
 .badge.gray { background: rgba(255,255,255,0.06); color: var(--text-dim); border: 1px solid var(--line); }
+.badge.black { background: rgba(0,0,0,0.35); color: #c9c9c9; border: 1px solid #5a5a5a; }
 .status-badge { min-width: 110px; display: inline-block; text-align: center; }
 
 /* ---------- Login ---------- */

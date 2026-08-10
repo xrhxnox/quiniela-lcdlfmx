@@ -63,9 +63,7 @@ export async function renderParticipantes(container) {
             p.is_infiltrado
               ? h("span", { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
               : null,
-            p.is_exiliado
-              ? h("span", { class: "badge status-badge", style: "background:#0d0d0d;color:#e8e8e8;border:1px solid #6b6b6b" }, "EXILIADO/A")
-              : null,
+            p.is_exiliado ? h("span", { class: "badge black status-badge" }, "EXILIADO/A") : null,
             currentLeaderIds.has(p.id)
               ? h(
                   "span",
