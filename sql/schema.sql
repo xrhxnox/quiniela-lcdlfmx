@@ -614,11 +614,12 @@ all_hits as (
   select player_id from elimination_hits
 ),
 hit_counts as (
-  select player_id, count(*)::int as c from all_hits group by player_id
+  select player_id, count(*) as c from all_hits group by player_id
 )
+-- points se mantiene como bigint para no romper la vista existente ni leaderboard
 select
   pwp.player_id,
-  coalesce(hc.c, 0) + (select n from gift_count) as points
+  (coalesce(hc.c, 0) + (select n from gift_count))::bigint as points
 from players_with_predictions pwp
 left join hit_counts hc on hc.player_id = pwp.player_id;
 
