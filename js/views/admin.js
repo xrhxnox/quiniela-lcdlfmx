@@ -19,6 +19,8 @@ import {
   addImmunity,
   removeImmunity,
   confirmEliminations,
+  getEliminationsForWeek,
+  setEliminationOraculoMode,
   getAllProfiles,
   setProfileRole,
   updateProfileDisplayName,
@@ -216,10 +218,11 @@ async function renderParticipantsAdmin(sub) {
 // SEMANAS
 // ============================================================
 async function renderWeekDetail(container, week, allParticipants) {
-  const [nominations, immunities, nominationVotes] = await Promise.all([
+  const [nominations, immunities, nominationVotes, weekEliminations] = await Promise.all([
     getNominationsForWeek(week.id),
     getImmunitiesForWeek(week.id),
     getNominationVotesForWeek(week.id),
+    getEliminationsForWeek(week.id),
   ]);
   const nominatedIds = new Set(nominations.map((n) => n.participant_id));
   const immuneIds = new Set(immunities.map((i) => i.participant_id));
@@ -477,6 +480,45 @@ async function renderWeekDetail(container, week, allParticipants) {
   }
   if (week.status === "closed") {
     actionBlock.push(h("p", { class: "badge red" }, "Semana cerrada"));
+
+    // --- Cómo cuenta cada eliminación para El Oráculo (Exilio) ---
+    if (weekEliminations.length > 0) {
+      const modeRows = weekEliminations.map((e) => {
+        const mode = e.reverted_by_exile ? "reverted" : e.gift_all ? "gift" : "normal";
+        const setMode = async (m) => {
+          await setEliminationOraculoMode(week.id, e.participant_id, {
+            reverted_by_exile: m === "reverted",
+            gift_all: m === "gift",
+          });
+          await refresh();
+        };
+        const optBtn = (m, label) =>
+          h("button", { class: `btn small${mode === m ? "" : " secondary"}`, onclick: () => setMode(m) }, label);
+        return h("div", { class: "list-item" }, [
+          h("div", { class: "row-flex" }, [
+            h("strong", {}, e.participants.name),
+            mode === "reverted" ? h("span", { class: "badge black" }, "regresó del exilio") : null,
+            mode === "gift" ? h("span", { class: "badge green" }, "+1 a todos") : null,
+          ]),
+          h("div", { class: "row-flex", style: "margin-top:6px" }, [
+            optBtn("normal", "Salida normal"),
+            optBtn("reverted", "Regresó del exilio"),
+            optBtn("gift", "Regalar punto a todos"),
+          ]),
+        ]);
+      });
+      actionBlock.push(
+        h("div", { style: "margin-top:14px" }, [
+          h("p", { style: "margin:0 0 4px" }, h("strong", {}, "El Oráculo — cómo cuenta esta eliminación")),
+          h(
+            "p",
+            { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+            "Solo afecta a El Oráculo; el pick semanal cuenta igual en los tres casos. \"Regresó del exilio\" libera su posición porque su salida no fue definitiva. \"Regalar punto a todos\" se usa cuando alguien que volvió sale de verdad: nadie pudo preverlo, así que suma +1 a todos."
+          ),
+          h("div", {}, modeRows),
+        ])
+      );
+    }
   }
 
   clearAndAppend(
