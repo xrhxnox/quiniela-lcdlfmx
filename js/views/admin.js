@@ -159,6 +159,17 @@ async function renderParticipantsAdmin(sub) {
       },
       p.is_infiltrado ? "Quitar infiltrado" : "Marcar infiltrado"
     );
+    const exiliadoBtn = h(
+      "button",
+      {
+        class: "btn small secondary",
+        onclick: async () => {
+          await updateParticipant(p.id, { is_exiliado: !p.is_exiliado });
+          await renderParticipantsAdmin(sub);
+        },
+      },
+      p.is_exiliado ? "Quitar exilio" : "Marcar exiliado"
+    );
     const delBtn = h(
       "button",
       {
@@ -185,8 +196,11 @@ async function renderParticipantsAdmin(sub) {
         p.is_infiltrado
           ? h("span", { class: "badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "infiltrado")
           : null,
+        p.is_exiliado
+          ? h("span", { class: "badge", style: "background:#0d0d0d;color:#e8e8e8;border:1px solid #6b6b6b" }, "exiliado")
+          : null,
       ]),
-      h("div", { class: "row-flex" }, [saveBtn, toggleBtn, infiltradoBtn, delBtn]),
+      h("div", { class: "row-flex" }, [saveBtn, toggleBtn, infiltradoBtn, exiliadoBtn, delBtn]),
       itemErr,
     ]);
   });

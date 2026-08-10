@@ -79,6 +79,9 @@ function participantPickCard(label, participant, type, counts, currentNomination
         participant.is_infiltrado
           ? h("span", { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
           : null,
+        participant.is_exiliado
+          ? h("span", { class: "badge status-badge", style: "background:#0d0d0d;color:#e8e8e8;border:1px solid #6b6b6b" }, "EXILIADO/A")
+          : null,
         currentLeaderIds?.has(participant.id)
           ? h(
               "span",

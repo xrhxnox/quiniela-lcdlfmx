@@ -427,6 +427,11 @@ create unique index if not exists participants_one_winner on public.participants
 -- puede ganar la temporada, así que se excluye del Sorteo (Dinámica 1).
 alter table public.participants add column if not exists is_infiltrado boolean not null default false;
 
+-- Habitante en "Exilio": es un estado aparte del de eliminado, así que se
+-- muestra junto con el estado normal (un eliminado puede estar exiliado).
+-- No afecta puntajes ni ninguna dinámica, es solo informativo.
+alter table public.participants add column if not exists is_exiliado boolean not null default false;
+
 create table if not exists public.secret_assignments (
   player_id uuid primary key references public.profiles(id) on delete cascade,
   participant_id bigint not null references public.participants(id) on delete cascade,
