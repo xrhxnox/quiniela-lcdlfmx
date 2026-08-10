@@ -16,7 +16,7 @@ export async function renderEliminados(container) {
       : h("div", { class: "avatar-sm" }, initials(r.participants.name));
     return h("tr", {}, [
       h("td", {}, r.weeks.label || `Semana ${r.weeks.week_number}`),
-      h("td", {}, h("div", { class: "row-flex" }, [avatar, h("span", {}, r.participants.name)])),
+      h("td", {}, h("div", { class: "row-flex", style: "justify-content:center" }, [avatar, h("span", {}, r.participants.name)])),
       h("td", {}, r.weeks.elimination_date ? fmtDate(r.weeks.elimination_date) : "—"),
     ]);
   });
