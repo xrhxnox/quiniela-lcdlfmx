@@ -207,6 +207,15 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
     (e) => !e.participants?.is_infiltrado && !e.reverted_by_exile && !e.gift_all
   );
   const giftedExits = eliminationsWithWeeks.filter((e) => e.gift_all && !e.participants?.is_infiltrado);
+  // Cada salida "regalo" se dibuja en su lugar cronológico dentro de la fila:
+  // después de las salidas reales que ocurrieron antes que ella. No tiene
+  // número de posición, así que se marca con "✕".
+  const giftInserts = giftedExits
+    .map((g) => ({
+      participants: g.participants,
+      afterCount: eligibleEliminations.filter((e) => e.weeks.week_number < g.weeks.week_number).length,
+    }))
+    .sort((a, b) => a.afterCount - b.afterCount);
   const blocks = buildBlocks(eligibleEliminations, totalParticipants);
   const blockFor = (position) => blocks.find((b) => position >= b.start && position <= b.end) || null;
   const minResolvedPosition = totalParticipants - eligibleEliminations.length + 1;
@@ -226,7 +235,13 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
     .map(([playerId, { player, rows }]) => {
       rows.sort((a, b) => b.position - a.position);
       const isMe = playerId === profile.id;
-      const items = rows.map((row) => {
+      const items = [];
+      rows.forEach((row, idx) => {
+        // Antes de esta posición van las salidas "regalo" que ocurrieron en ese punto
+        giftInserts
+          .filter((g) => g.afterCount === idx)
+          .forEach((g) => items.push(orderThumb(g.participants, "hit", "✕")));
+
         let status;
         if (row.position === 1) {
           status = !winnerExists ? "pending" : row.participants?.is_winner ? "hit" : "miss";
@@ -236,8 +251,12 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
         } else {
           status = "pending";
         }
-        return orderThumb(row.participants, status, row.position);
+        items.push(orderThumb(row.participants, status, row.position));
       });
+      // Regalos que caen después de la última posición mostrada
+      giftInserts
+        .filter((g) => g.afterCount >= rows.length)
+        .forEach((g) => items.push(orderThumb(g.participants, "hit", "✕")));
       return h("div", { class: "card" }, [
         h("div", { style: "display:flex;justify-content:space-between;align-items:center;margin-bottom:10px" }, [
           h("div", {}, [
@@ -253,22 +272,6 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
             ])
           : null,
         h("div", { style: "display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px" }, items),
-        giftedExits.length
-          ? h("div", { style: "margin-top:8px;border-top:1px solid var(--line);padding-top:8px" }, [
-              h(
-                "p",
-                { class: "muted", style: "font-size:0.72rem;margin:0 0 6px" },
-                giftedExits.length === 1
-                  ? "Salió de la casa después de volver del exilio. Nadie pudo preverlo, así que suma +1 a todos:"
-                  : "Salieron de la casa después de volver del exilio. Nadie pudo preverlo, así que suman +1 a todos:"
-              ),
-              h(
-                "div",
-                { style: "display:flex;gap:10px;overflow-x:auto;padding:2px" },
-                giftedExits.map((e) => orderThumb(e.participants, "hit", "+1"))
-              ),
-            ])
-          : null,
       ]);
     });
 
@@ -278,9 +281,17 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
       h("div", { class: "section-title" }, "El Oráculo"),
       h("div", { class: "card" }, [
         h("p", { style: "margin-top:0;margin-bottom:0" }, [
-          h("i", { class: "fa-solid fa-lock" }),
+          h("i", { class: "fa-solid fa-lock", style: "color:var(--accent)" }),
           " La predicción de orden ya está cerrada. Aquí está lo que predijo cada quien y los puntos que llevan.",
         ]),
+        giftedExits.length
+          ? h("p", { class: "muted", style: "font-size:0.78rem;margin:10px 0 0" }, [
+              h("strong", { style: "color:var(--text)" }, "✕ "),
+              giftedExits.map((e) => e.participants.name).join(", "),
+              giftedExits.length === 1 ? " salió " : " salieron ",
+              "de la casa después de volver del exilio. Como nadie pudo preverlo, no ocupa lugar en el orden y suma +1 a todos.",
+            ])
+          : null,
       ]),
       playerCards.length
         ? h("div", {}, playerCards)
