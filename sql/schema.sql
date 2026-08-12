@@ -266,6 +266,16 @@ create table if not exists public.eliminations (
   primary key (week_id, participant_id)
 );
 
+-- Exilio: un eliminado puede volver a la casa. Estas dos marcas solo afectan a
+-- El Oráculo; el pick semanal sigue contando la eliminación normalmente, porque
+-- esa noche la persona sí salió.
+--   reverted_by_exile: la salida no fue definitiva (regresó), así que no ocupa
+--     lugar en el orden final y su posición se libera.
+--   gift_all: la salida definitiva de alguien que ya había vuelto. Como nadie
+--     pudo preverla, no se compara contra la predicción: le suma +1 a todos.
+alter table public.eliminations add column if not exists reverted_by_exile boolean not null default false;
+alter table public.eliminations add column if not exists gift_all boolean not null default false;
+
 -- ---------- PREDICCIONES (los picks de cada jugador) ----------
 create table if not exists public.predictions (
   week_id bigint not null references public.weeks(id) on delete cascade,
@@ -552,6 +562,18 @@ actual_blocks as (
   join public.weeks w on w.id = e.week_id
   join public.participants p on p.id = e.participant_id
   where p.is_infiltrado = false
+    and e.reverted_by_exile = false
+    and e.gift_all = false
+),
+-- Salidas marcadas como "regalo": +1 para todos, sin comparar contra su orden.
+gift_count as (
+  select count(*)::int as n
+  from public.eliminations e
+  join public.participants p on p.id = e.participant_id
+  where e.gift_all = true and p.is_infiltrado = false
+),
+players_with_predictions as (
+  select distinct player_id from public.elimination_order_predictions
 ),
 block_sizes as (
   select block_no, count(*) as block_size from actual_blocks group by block_no
@@ -590,10 +612,16 @@ all_hits as (
   select player_id from winner_hits
   union all
   select player_id from elimination_hits
+),
+hit_counts as (
+  select player_id, count(*) as c from all_hits group by player_id
 )
-select player_id, count(*) as points
-from all_hits
-group by player_id;
+-- points se mantiene como bigint para no romper la vista existente ni leaderboard
+select
+  pwp.player_id,
+  (coalesce(hc.c, 0) + (select n from gift_count))::bigint as points
+from players_with_predictions pwp
+left join hit_counts hc on hc.player_id = pwp.player_id;
 
 -- Puntaje total por jugador (aciertos de eliminación semanal + bono habitante al azar + orden de salida)
 create or replace view public.leaderboard as
