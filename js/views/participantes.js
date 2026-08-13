@@ -56,19 +56,25 @@ export async function renderParticipantes(container) {
           p.room ? h("div", { class: "room" }, "Cuarto: " + p.room) : null,
           h("div", { style: "margin-top:6px;margin-bottom:4px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
             p.is_winner
-              ? h("span", { class: "badge gold status-badge" }, "GANADOR")
+              ? h("span", { class: "badge gold status-badge" }, [h("i", { class: "fa-solid fa-trophy" }), " GANADOR"])
               : p.active
-              ? h("span", { class: "badge green status-badge" }, "En la casa")
-              : h("span", { class: "badge red status-badge" }, "Eliminado/a"),
+              ? h("span", { class: "badge green status-badge" }, [h("i", { class: "fa-solid fa-house" }), " En la casa"])
+              : h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-circle-xmark" }), " Eliminado/a"]),
             p.is_infiltrado
-              ? h("span", { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "INFILTRADO")
+              ? h(
+                  "span",
+                  { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" },
+                  [h("i", { class: "fa-solid fa-glasses" }), " INFILTRADO"]
+                )
               : null,
-            p.is_exiliado ? h("span", { class: "badge black status-badge" }, "EXILIADO/A") : null,
+            p.is_exiliado
+              ? h("span", { class: "badge black status-badge" }, [h("i", { class: "fa-solid fa-skull" }), " EXILIADO/A"])
+              : null,
             currentLeaderIds.has(p.id)
               ? h(
                   "span",
                   { class: "badge status-badge", style: "background:#c0c4cc26;color:#c0c4cc;border:1px solid #c0c4cc" },
-                  [h("i", { class: "fa-solid fa-crown" }), " Líder"]
+                  [h("i", { class: "fa-solid fa-award" }), " Líder"]
                 )
               : null,
             currentImmuneIds.has(p.id)
