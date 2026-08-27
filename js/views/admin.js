@@ -365,7 +365,9 @@ async function renderWeekDetail(container, week, allParticipants) {
   // --- La Salvación ---
   // El líder tiene la salvación y salva a un nominado, pero en la dinámica otro
   // habitante puede robársela para salvarse él o salvar a alguien más. Por eso
-  // son dos datos distintos: quién terminó con ella y a quién salvó.
+  // son dos datos distintos: quién terminó con ella y a quién salvó. Robarla
+  // solo le quita la salvación al líder, no su inmunidad, así que esto nunca
+  // toca immunities.
   const saveSalvation = async (fields) => {
     await updateWeek(week.id, fields);
     await refresh();
@@ -655,7 +657,7 @@ async function renderWeekDetail(container, week, allParticipants) {
       h(
         "p",
         { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
-        "El líder salva a un nominado, salvo que alguien más le robe la salvación. Primero registra quién terminó con ella (el líder si nadie la robó) y luego a quién salvó — puede haberse salvado a sí mismo."
+        "El líder salva a un nominado, salvo que alguien más le robe la salvación. Primero registra quién terminó con ella (el líder si nadie la robó) y luego a quién salvó — puede haberse salvado a sí mismo. Que se la roben no le quita la inmunidad al líder: eso se sigue marcando arriba, aparte."
       ),
       h("div", { class: "row-flex" }, [
         salvationSelect,

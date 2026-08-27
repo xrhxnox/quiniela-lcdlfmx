@@ -236,7 +236,8 @@ alter table public.weeks add column if not exists voting_closes_at timestamptz;
 -- guarda solo quién terminó con ella (salvation_participant_id) y cómo la
 -- obtuvo (salvation_mode: 'conservo' = nadie se la robó al líder, 'robo' = sí).
 -- A quién salvó NO se duplica acá: eso sigue siendo el flag "saved" de
--- nominations, que es el que alimenta el contador "Salvado N veces".
+-- nominations, que es el que alimenta el contador "Salvado N veces". Robarle la
+-- salvación al líder no le quita la inmunidad, así que immunities no se toca.
 alter table public.weeks add column if not exists salvation_participant_id bigint references public.participants(id) on delete set null;
 alter table public.weeks add column if not exists salvation_mode text;
 do $$
