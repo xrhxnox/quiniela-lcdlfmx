@@ -362,6 +362,67 @@ async function renderWeekDetail(container, week, allParticipants) {
     "Marcar como inmune"
   );
 
+  // --- La Salvación ---
+  // El líder tiene la salvación y salva a un nominado, pero en la dinámica otro
+  // habitante puede robársela para salvarse él o salvar a alguien más. Por eso
+  // son dos datos distintos: quién terminó con ella y a quién salvó.
+  const saveSalvation = async (fields) => {
+    await updateWeek(week.id, fields);
+    await refresh();
+  };
+  const salvationSelect = h(
+    "select",
+    {
+      style: "max-width:220px",
+      onchange: async (e) => {
+        const pid = e.target.value ? Number(e.target.value) : null;
+        // Al elegir a alguien sin modo previo se asume "la conservó el líder";
+        // al dejarlo vacío se limpia el modo para no dejar el dato a medias.
+        await saveSalvation({
+          salvation_participant_id: pid,
+          salvation_mode: pid ? week.salvation_mode || "conservo" : null,
+        });
+      },
+    },
+    [h("option", { value: "" }, "Nadie / sin registro")].concat(
+      allParticipants.map((p) => h("option", { value: p.id }, p.name))
+    )
+  );
+  salvationSelect.value = week.salvation_participant_id ?? "";
+  const salvationModeBtn = (mode, label) =>
+    h(
+      "button",
+      {
+        class: `btn small${week.salvation_mode === mode ? "" : " secondary"}`,
+        disabled: week.salvation_participant_id ? undefined : "",
+        onclick: () => saveSalvation({ salvation_mode: mode }),
+      },
+      label
+    );
+
+  // A quién salvó. No es una columna nueva: enciende el mismo flag "saved" de
+  // nominations que ya usa el botón del escudo y alimenta "Salvado N veces".
+  // Solo puede haber un salvado por semana, así que se comporta como radio.
+  const savedNomination = nominations.find((n) => n.saved);
+  const salvationSavedSelect = h(
+    "select",
+    {
+      style: "max-width:220px",
+      onchange: async (e) => {
+        const pid = e.target.value ? Number(e.target.value) : null;
+        for (const n of nominations) {
+          if (n.saved && n.participant_id !== pid) await setNominationSaved(week.id, n.participant_id, false);
+        }
+        if (pid) await setNominationSaved(week.id, pid, true);
+        await refresh();
+      },
+    },
+    [h("option", { value: "" }, "Nadie todavía")].concat(
+      nominations.map((n) => h("option", { value: n.participant_id }, n.participants.name))
+    )
+  );
+  salvationSavedSelect.value = savedNomination?.participant_id ?? "";
+
   // --- Quién nominó a quién ---
   const votesByNominator = {};
   nominationVotes.forEach((v) => {
@@ -590,6 +651,23 @@ async function renderWeekDetail(container, week, allParticipants) {
       h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Inmune (separado del líder)")),
       h("div", {}, immuneChips.length ? immuneChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [immuneSelect, addImmuneBtn]),
+      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "La Salvación")),
+      h(
+        "p",
+        { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+        "El líder salva a un nominado, salvo que alguien más le robe la salvación. Primero registra quién terminó con ella (el líder si nadie la robó) y luego a quién salvó — puede haberse salvado a sí mismo."
+      ),
+      h("div", { class: "row-flex" }, [
+        salvationSelect,
+        salvationModeBtn("conservo", "La conservó el líder"),
+        salvationModeBtn("robo", "Se la robaron"),
+      ]),
+      h("div", { class: "row-flex", style: "margin-top:8px" }, [
+        h("span", { class: "muted", style: "font-size:0.82rem" }, "Salvó a:"),
+        nominations.length
+          ? salvationSavedSelect
+          : h("span", { class: "muted", style: "font-size:0.82rem" }, "Agrega nominados primero."),
+      ]),
       h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "¿Quién nominó a quién?")),
       h(
         "p",

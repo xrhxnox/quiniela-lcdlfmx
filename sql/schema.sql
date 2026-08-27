@@ -231,6 +231,24 @@ create table if not exists public.weeks (
 -- cambie su pick antes de que se confirme la eliminación).
 alter table public.weeks add column if not exists voting_closes_at timestamptz;
 
+-- La Salvación de la semana. El líder la tiene y salva a un nominado, pero otro
+-- habitante puede robársela para salvarse él o salvar a alguien más. Aquí se
+-- guarda solo quién terminó con ella (salvation_participant_id) y cómo la
+-- obtuvo (salvation_mode: 'conservo' = nadie se la robó al líder, 'robo' = sí).
+-- A quién salvó NO se duplica acá: eso sigue siendo el flag "saved" de
+-- nominations, que es el que alimenta el contador "Salvado N veces".
+alter table public.weeks add column if not exists salvation_participant_id bigint references public.participants(id) on delete set null;
+alter table public.weeks add column if not exists salvation_mode text;
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'weeks_salvation_mode_check'
+  ) then
+    alter table public.weeks add constraint weeks_salvation_mode_check
+      check (salvation_mode is null or salvation_mode in ('conservo','robo'));
+  end if;
+end $$;
+
 -- week_number es numeric (no int) para permitir semanas intermedias: una salida
 -- imprevista a media semana entra como 4.5 y queda en su lugar cronológico sin
 -- tener que renumerar las demás. En bases creadas cuando todavía era int hay que
