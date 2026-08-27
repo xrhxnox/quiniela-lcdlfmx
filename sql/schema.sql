@@ -217,7 +217,7 @@ grant execute on function public.update_my_profile(text, bigint, boolean, text, 
 -- ---------- SEMANAS ----------
 create table if not exists public.weeks (
   id bigint generated always as identity primary key,
-  week_number int not null unique,
+  week_number numeric not null unique,
   label text,
   nomination_date date,
   elimination_date date,
@@ -230,6 +230,23 @@ create table if not exists public.weeks (
 -- la semana manualmente (evita que alguien vea el resultado en vivo y
 -- cambie su pick antes de que se confirme la eliminación).
 alter table public.weeks add column if not exists voting_closes_at timestamptz;
+
+-- week_number es numeric (no int) para permitir semanas intermedias: una salida
+-- imprevista a media semana entra como 4.5 y queda en su lugar cronológico sin
+-- tener que renumerar las demás. En bases creadas cuando todavía era int hay que
+-- soltar las vistas que dependen de la columna para poder cambiar el tipo; se
+-- recrean más abajo con "create or replace view".
+do $$
+begin
+  if (
+    select data_type from information_schema.columns
+    where table_schema = 'public' and table_name = 'weeks' and column_name = 'week_number'
+  ) = 'integer' then
+    drop view if exists public.leaderboard;
+    drop view if exists public.elimination_order_score;
+    alter table public.weeks alter column week_number type numeric;
+  end if;
+end $$;
 
 -- ---------- INMUNES de la semana ----------
 -- is_leader distingue al líder de la semana (inmunidad "de oficio") de un

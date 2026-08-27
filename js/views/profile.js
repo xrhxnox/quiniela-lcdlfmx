@@ -24,7 +24,7 @@ import { h, esc, initials, clearAndAppend } from "../utils.js";
 
 const PICK_TYPE_ICONS = {
   favorite: { icon: "fa-star", color: "var(--accent)" },
-  hated: { icon: "fa-skull-crossbones", color: "var(--accent)" },
+  hated: { icon: "fa-trash-can", color: "var(--accent)" },
   surprise: { icon: "fa-bomb", color: "var(--accent)" },
   disappointment: { icon: "fa-heart-crack", color: "var(--accent)" },
   random: { icon: "fa-shuffle", color: "var(--accent)" },
