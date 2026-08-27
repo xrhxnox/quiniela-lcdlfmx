@@ -75,7 +75,7 @@ function participantPickCard(label, participant, type, counts, currentNomination
           ? h("span", { class: "badge gold status-badge" }, [h("i", { class: "fa-solid fa-trophy" }), " GANADOR"])
           : participant.active
           ? h("span", { class: "badge green status-badge" }, [h("i", { class: "fa-solid fa-house" }), " En la casa"])
-          : h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-circle-xmark" }), " Eliminado/a"]),
+          : h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-skull" }), " Eliminado/a"]),
         participant.is_infiltrado
           ? h(
               "span",
@@ -89,7 +89,7 @@ function participantPickCard(label, participant, type, counts, currentNomination
         currentLeaderIds?.has(participant.id)
           ? h(
               "span",
-              { class: "badge status-badge", style: "background:#c0c4cc26;color:#c0c4cc;border:1px solid #c0c4cc" },
+              { class: "badge status-badge", style: "background:#ff7a1a26;color:#ff7a1a;border:1px solid #ff7a1a" },
               [h("i", { class: "fa-solid fa-award" }), " Líder"]
             )
           : null,
