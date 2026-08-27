@@ -68,7 +68,7 @@ export async function renderParticipantes(container) {
                 )
               : null,
             p.is_exiliado
-              ? h("span", { class: "badge black status-badge" }, [h("i", { class: "fa-solid fa-skull" }), " EXILIADO/A"])
+              ? h("span", { class: "badge black status-badge" }, [h("i", { class: "fa-solid fa-bug" }), " EXILIADO/A"])
               : null,
             currentLeaderIds.has(p.id)
               ? h(

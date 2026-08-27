@@ -84,7 +84,7 @@ function participantPickCard(label, participant, type, counts, currentNomination
             )
           : null,
         participant.is_exiliado
-          ? h("span", { class: "badge black status-badge" }, [h("i", { class: "fa-solid fa-skull" }), " EXILIADO/A"])
+          ? h("span", { class: "badge black status-badge" }, [h("i", { class: "fa-solid fa-bug" }), " EXILIADO/A"])
           : null,
         currentLeaderIds?.has(participant.id)
           ? h(
