@@ -5,6 +5,7 @@ import { renderHome } from "./views/home.js";
 import { renderRanking } from "./views/ranking.js";
 import { renderEliminados } from "./views/eliminados.js";
 import { renderParticipantes } from "./views/participantes.js";
+import { renderHabitante } from "./views/habitante.js";
 import { renderAdmin } from "./views/admin.js";
 import { renderProfile, renderPublicProfile, renderEditProfile } from "./views/profile.js";
 import { renderReglas } from "./views/reglas.js";
@@ -57,7 +58,10 @@ function renderNav() {
   tabsEl.innerHTML = "";
   const hash = location.hash || "#/";
   ROUTES.filter((r) => !r.adminOnly || currentProfile?.role === "admin").forEach((r) => {
-    const isActive = hash === r.path || (r.path === "#/perfil" && hash.startsWith("#/perfil/"));
+    const isActive =
+      hash === r.path ||
+      (r.path === "#/perfil" && hash.startsWith("#/perfil/")) ||
+      (r.path === "#/participantes" && hash.startsWith("#/habitante/"));
     const a = h("a", { href: r.path, class: isActive ? "active" : "" }, [
       h("i", { class: `fa-solid ${r.icon}` }),
       h("span", {}, r.label),
@@ -108,6 +112,20 @@ async function updateMyVoteDot(dot) {
 async function renderRoute() {
   const hash = location.hash || "#/";
   renderNav();
+
+  if (hash.startsWith("#/habitante/")) {
+    const participantId = decodeURIComponent(hash.slice("#/habitante/".length));
+    try {
+      await renderHabitante(app, participantId);
+    } catch (e) {
+      console.error(e);
+      clearAndAppend(app, h("div", { class: "empty-state" }, "Ocurrió un error cargando este habitante."));
+    }
+    app.classList.remove("fade-in");
+    void app.offsetWidth;
+    app.classList.add("fade-in");
+    return;
+  }
 
   if (hash.startsWith("#/perfil/")) {
     const username = decodeURIComponent(hash.slice("#/perfil/".length));

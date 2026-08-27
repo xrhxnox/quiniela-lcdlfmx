@@ -83,6 +83,29 @@ export async function getSavedCounts() {
   return map;
 }
 
+// ---------- Historial de un habitante ----------
+// Todo lo que le pasó semana por semana. Devuelve filas crudas con ids; la
+// vista resuelve los nombres contra la lista de participantes que ya carga,
+// para no depender de los nombres de las llaves foráneas al hacer el embed
+// (nomination_votes apunta dos veces a participants y PostgREST necesitaría
+// una pista distinta para cada lado).
+export async function getParticipantHistory(participantId) {
+  const [nominations, immunities, eliminations, votesCast, votesReceived] = await Promise.all([
+    supabase.from("nominations").select("week_id, points, saved").eq("participant_id", participantId),
+    supabase.from("immunities").select("week_id, is_leader").eq("participant_id", participantId),
+    supabase.from("eliminations").select("week_id, reverted_by_exile, gift_all").eq("participant_id", participantId),
+    supabase.from("nomination_votes").select("week_id, nominee_id").eq("nominator_id", participantId),
+    supabase.from("nomination_votes").select("week_id, nominator_id").eq("nominee_id", participantId),
+  ]);
+  return {
+    nominations: unwrap(nominations),
+    immunities: unwrap(immunities),
+    eliminations: unwrap(eliminations),
+    votesCast: unwrap(votesCast),
+    votesReceived: unwrap(votesReceived),
+  };
+}
+
 // ---------- Weeks ----------
 export async function getWeeks() {
   return unwrap(await supabase.from("weeks").select("*").order("week_number", { ascending: false }));

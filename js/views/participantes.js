@@ -49,7 +49,16 @@ export async function renderParticipantes(container) {
       const photo = p.photo_url
         ? h("div", { class: "photo", style: `background-image:url('${esc(p.photo_url)}')` })
         : h("div", { class: "photo" }, initials(p.name));
-      return h("div", { class: "nominee-card", style: "cursor:default" }, [
+      return h(
+        "div",
+        {
+          class: "nominee-card",
+          title: `Ver la ficha de ${p.name}`,
+          onclick: () => {
+            location.hash = `#/habitante/${p.id}`;
+          },
+        },
+        [
         photo,
         h("div", { class: "info" }, [
           h("div", { class: "name" }, p.name),
