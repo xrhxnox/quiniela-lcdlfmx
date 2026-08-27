@@ -27,8 +27,9 @@ function officialVoteButton() {
 }
 
 async function buildHistoryCards() {
-  const weeks = await getWeeks();
+  const [weeks, allParticipants] = await Promise.all([getWeeks(), getParticipants()]);
   if (weeks.length === 0) return [h("div", { class: "empty-state" }, "Todavía no hay semanas registradas.")];
+  const participantById = new Map(allParticipants.map((p) => [p.id, p]));
 
   const perWeek = await Promise.all(
     weeks.map(async (week) => {
@@ -54,6 +55,10 @@ async function buildHistoryCards() {
       )
     );
 
+    // La Salvación: quién terminó con ella y cómo. A quién salvó ya sale en los
+    // chips de nominados con la marca "Salvado".
+    const salvationHolder = participantById.get(week.salvation_participant_id);
+
     return h("div", { class: "card" }, [
       h("p", { style: "margin-top:0" }, h("strong", {}, week.label || `Semana ${week.week_number}`)),
       leaders.length
@@ -68,6 +73,14 @@ async function buildHistoryCards() {
             h("i", { class: "fa-solid fa-shield-halved", style: "color:var(--accent)" }),
             " Inmune: ",
             immunes.join(", "),
+          ])
+        : null,
+      salvationHolder
+        ? h("p", { class: "muted", style: "font-size:0.78rem;margin:4px 0" }, [
+            h("i", { class: "fa-solid fa-hand-holding-heart", style: "color:var(--accent)" }),
+            " Salvación: ",
+            salvationHolder.name,
+            week.salvation_mode === "robo" ? " (se la robó)" : " (la conservó)",
           ])
         : null,
       h("div", { style: "margin:6px 0" }, [

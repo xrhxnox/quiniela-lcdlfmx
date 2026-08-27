@@ -250,7 +250,9 @@ export async function getExilesForWeek(weekId) {
 // mano desde la pestaña de Habitantes.
 export async function addExile(weekId, participantId) {
   const row = unwrap(await supabase.from("exiles").insert({ week_id: weekId, participant_id: participantId }).select());
-  await supabase.from("participants").update({ is_exiliado: true }).eq("id", participantId);
+  // Va con unwrap a propósito: si esta escritura falla (RLS, id inválido) tiene
+  // que reventar y verse, no quedarse callada dejando el flag desincronizado.
+  unwrap(await supabase.from("participants").update({ is_exiliado: true }).eq("id", participantId).select());
   return row;
 }
 

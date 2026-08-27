@@ -17,6 +17,7 @@ const badge = (text, icon, style, cls = "badge status-badge") =>
 const ORANGE = "background:#ff7a1a26;color:#ff7a1a;border:1px solid #ff7a1a";
 const BLUE = "background:#3b82f626;color:#3b82f6;border:1px solid #3b82f6";
 const PURPLE = "background:#a742f526;color:#a742f5;border:1px solid #a742f5";
+const TEAL = "background:#14b8a626;color:#14b8a6;border:1px solid #14b8a6";
 
 // Estado global de hoy (lo que ya mostraba la tarjeta en la reja).
 function currentStatusBadges(p) {
@@ -32,7 +33,8 @@ function currentStatusBadges(p) {
 // Estado en UNA semana concreta. Puede devolver más de una insignia (por
 // ejemplo nominado y luego salvado), y solo cae en "En la casa" si no pasó
 // nada más esa semana.
-function weekStatusBadges(weekId, hist) {
+function weekStatusBadges(week, hist, participantId) {
+  const weekId = week.id;
   const out = [];
   const elim = hist.eliminations.find((e) => e.week_id === weekId);
   const imm = hist.immunities.find((i) => i.week_id === weekId);
@@ -54,6 +56,15 @@ function weekStatusBadges(weekId, hist) {
       )
     );
     if (nom.saved) out.push(badge("Salvado", "fa-hand-holding-heart", BLUE));
+  }
+  // La Salvación: solo se marca en la ficha de quien terminó con ella. A quién
+  // salvó ya se ve arriba con la insignia "Salvado".
+  if (week.salvation_participant_id === participantId) {
+    out.push(
+      week.salvation_mode === "robo"
+        ? badge("Robó la salvación", "fa-hand-sparkles", TEAL)
+        : badge("Conservó la salvación", "fa-hand-holding-heart", TEAL)
+    );
   }
   if (exile) out.push(badge("Al exilio", "fa-bug", null, "badge black status-badge"));
   if (elim) {
@@ -187,7 +198,7 @@ export async function renderHabitante(container, participantId) {
       w.elimination_date
         ? h("div", { class: "muted", style: "font-size:0.75rem;margin-top:2px" }, fmtDate(w.elimination_date))
         : null,
-      h("div", { style: "display:flex;flex-wrap:wrap;gap:6px;margin-top:8px" }, weekStatusBadges(w.id, hist)),
+      h("div", { style: "display:flex;flex-wrap:wrap;gap:6px;margin-top:8px" }, weekStatusBadges(w, hist, p.id)),
       votesRow("Nominó a", cast),
       votesRow("Lo/la nominaron", received),
     ]);
