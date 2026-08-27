@@ -20,6 +20,9 @@ import {
   removeImmunity,
   confirmEliminations,
   getEliminationsForWeek,
+  getExilesForWeek,
+  addExile,
+  removeExile,
   setEliminationOraculoMode,
   getAllProfiles,
   setProfileRole,
@@ -218,11 +221,12 @@ async function renderParticipantsAdmin(sub) {
 // SEMANAS
 // ============================================================
 async function renderWeekDetail(container, week, allParticipants) {
-  const [nominations, immunities, nominationVotes, weekEliminations] = await Promise.all([
+  const [nominations, immunities, nominationVotes, weekEliminations, weekExiles] = await Promise.all([
     getNominationsForWeek(week.id),
     getImmunitiesForWeek(week.id),
     getNominationVotesForWeek(week.id),
     getEliminationsForWeek(week.id),
+    getExilesForWeek(week.id),
   ]);
   const nominatedIds = new Set(nominations.map((n) => n.participant_id));
   const immuneIds = new Set(immunities.map((i) => i.participant_id));
@@ -424,6 +428,45 @@ async function renderWeekDetail(container, week, allParticipants) {
     )
   );
   salvationSavedSelect.value = savedNomination?.participant_id ?? "";
+
+  // --- Enviados al exilio ---
+  // Ir al exilio no es salir del juego, por eso es su propia lista y no toca
+  // eliminations ni el estado "active" del habitante.
+  const exiledIds = new Set(weekExiles.map((e) => e.participant_id));
+  const exileChips = weekExiles.map((e) =>
+    h("span", { class: "chip-select" }, [
+      e.participants.name,
+      h(
+        "button",
+        {
+          onclick: async () => {
+            await removeExile(week.id, e.participant_id);
+            await refresh();
+          },
+        },
+        h("i", { class: "fa-solid fa-xmark" })
+      ),
+    ])
+  );
+  const exileSelect = h(
+    "select",
+    {},
+    [h("option", { value: "" }, "Elige participante…")].concat(
+      allParticipants.filter((p) => !exiledIds.has(p.id)).map((p) => h("option", { value: p.id }, p.name))
+    )
+  );
+  const addExileBtn = h(
+    "button",
+    {
+      class: "btn small",
+      onclick: async () => {
+        if (!exileSelect.value) return;
+        await addExile(week.id, Number(exileSelect.value));
+        await refresh();
+      },
+    },
+    "Mandar al exilio"
+  );
 
   // --- Quién nominó a quién ---
   const votesByNominator = {};
@@ -670,6 +713,14 @@ async function renderWeekDetail(container, week, allParticipants) {
           ? salvationSavedSelect
           : h("span", { class: "muted", style: "font-size:0.82rem" }, "Agrega nominados primero."),
       ]),
+      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Enviados al exilio")),
+      h(
+        "p",
+        { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+        "Quiénes fueron mandados al exilio esta semana. No es una eliminación: siguen en el juego y pueden volver a la casa. Mandarlos aquí los marca como exiliados en Habitantes; si regresan, quítales la marca desde esa pestaña."
+      ),
+      h("div", {}, exileChips.length ? exileChips : [h("span", { class: "muted" }, "Nadie todavía")]),
+      h("div", { class: "row-flex", style: "margin-top:8px" }, [exileSelect, addExileBtn]),
       h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "¿Quién nominó a quién?")),
       h(
         "p",

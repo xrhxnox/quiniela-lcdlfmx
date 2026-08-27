@@ -25,7 +25,7 @@ function currentStatusBadges(p) {
   else if (p.active) out.push(badge("En la casa", "fa-house", null, "badge green status-badge"));
   else out.push(badge("Eliminado/a", "fa-skull", null, "badge red status-badge"));
   if (p.is_infiltrado) out.push(badge("Infiltrado", "fa-glasses", PURPLE));
-  if (p.is_exiliado) out.push(badge("Exiliado/a", "fa-bug", ORANGE, "badge black status-badge"));
+  if (p.is_exiliado) out.push(badge("Exiliado/a", "fa-bug", null, "badge black status-badge"));
   return out;
 }
 
@@ -37,6 +37,7 @@ function weekStatusBadges(weekId, hist) {
   const elim = hist.eliminations.find((e) => e.week_id === weekId);
   const imm = hist.immunities.find((i) => i.week_id === weekId);
   const nom = hist.nominations.find((n) => n.week_id === weekId);
+  const exile = hist.exiles.find((x) => x.week_id === weekId);
 
   if (imm?.is_leader) out.push(badge("Líder", "fa-award", ORANGE));
   else if (imm) out.push(badge("Inmune", "fa-shield-halved", ORANGE));
@@ -54,6 +55,7 @@ function weekStatusBadges(weekId, hist) {
     );
     if (nom.saved) out.push(badge("Salvado", "fa-hand-holding-heart", BLUE));
   }
+  if (exile) out.push(badge("Al exilio", "fa-bug", null, "badge black status-badge"));
   if (elim) {
     // Una salida revertida por exilio no fue definitiva: se marca distinto para
     // que no parezca que la temporada se le acabó ahí.

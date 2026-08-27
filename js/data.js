@@ -90,10 +90,11 @@ export async function getSavedCounts() {
 // (nomination_votes apunta dos veces a participants y PostgREST necesitaría
 // una pista distinta para cada lado).
 export async function getParticipantHistory(participantId) {
-  const [nominations, immunities, eliminations, votesCast, votesReceived] = await Promise.all([
+  const [nominations, immunities, eliminations, exiles, votesCast, votesReceived] = await Promise.all([
     supabase.from("nominations").select("week_id, points, saved").eq("participant_id", participantId),
     supabase.from("immunities").select("week_id, is_leader").eq("participant_id", participantId),
     supabase.from("eliminations").select("week_id, reverted_by_exile, gift_all").eq("participant_id", participantId),
+    supabase.from("exiles").select("week_id").eq("participant_id", participantId),
     supabase.from("nomination_votes").select("week_id, nominee_id").eq("nominator_id", participantId),
     supabase.from("nomination_votes").select("week_id, nominator_id").eq("nominee_id", participantId),
   ]);
@@ -101,6 +102,7 @@ export async function getParticipantHistory(participantId) {
     nominations: unwrap(nominations),
     immunities: unwrap(immunities),
     eliminations: unwrap(eliminations),
+    exiles: unwrap(exiles),
     votesCast: unwrap(votesCast),
     votesReceived: unwrap(votesReceived),
   };
@@ -233,6 +235,27 @@ export async function removeImmunity(weekId, participantId) {
   return unwrap(
     await supabase.from("immunities").delete().eq("week_id", weekId).eq("participant_id", participantId)
   );
+}
+
+// ---------- Exilio (por semana) ----------
+export async function getExilesForWeek(weekId) {
+  return unwrap(
+    await supabase.from("exiles").select("week_id, participant_id, participants(*)").eq("week_id", weekId)
+  );
+}
+
+// Mandar a alguien al exilio también prende su flag global is_exiliado, que es
+// el que pinta la insignia en Habitantes. Quitarlo de la lista NO lo apaga: ya
+// pasó por el exilio y puede haber vuelto a la casa; ese estado se maneja a
+// mano desde la pestaña de Habitantes.
+export async function addExile(weekId, participantId) {
+  const row = unwrap(await supabase.from("exiles").insert({ week_id: weekId, participant_id: participantId }).select());
+  await supabase.from("participants").update({ is_exiliado: true }).eq("id", participantId);
+  return row;
+}
+
+export async function removeExile(weekId, participantId) {
+  return unwrap(await supabase.from("exiles").delete().eq("week_id", weekId).eq("participant_id", participantId));
 }
 
 // ---------- Eliminations ----------

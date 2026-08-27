@@ -312,6 +312,17 @@ create table if not exists public.eliminations (
 alter table public.eliminations add column if not exists reverted_by_exile boolean not null default false;
 alter table public.eliminations add column if not exists gift_all boolean not null default false;
 
+-- ---------- ENVIADOS AL EXILIO en la semana ----------
+-- Quiénes fueron mandados al exilio esa semana. Es aparte de eliminations: al
+-- exilio se va sin salir del juego, y de ahí se puede volver a la casa. El flag
+-- participants.is_exiliado sigue siendo el estado de hoy; esta tabla es el
+-- historial semana por semana.
+create table if not exists public.exiles (
+  week_id bigint not null references public.weeks(id) on delete cascade,
+  participant_id bigint not null references public.participants(id) on delete cascade,
+  primary key (week_id, participant_id)
+);
+
 -- ---------- PREDICCIONES (los picks de cada jugador) ----------
 create table if not exists public.predictions (
   week_id bigint not null references public.weeks(id) on delete cascade,
@@ -346,6 +357,7 @@ alter table public.weeks enable row level security;
 alter table public.immunities enable row level security;
 alter table public.nominations enable row level security;
 alter table public.nomination_votes enable row level security;
+alter table public.exiles enable row level security;
 alter table public.eliminations enable row level security;
 alter table public.predictions enable row level security;
 
@@ -398,6 +410,13 @@ drop policy if exists "eliminations_select_all" on public.eliminations;
 create policy "eliminations_select_all" on public.eliminations for select using (true);
 drop policy if exists "eliminations_write_admin" on public.eliminations;
 create policy "eliminations_write_admin" on public.eliminations for all
+  using (public.is_admin()) with check (public.is_admin());
+
+-- exiles: lectura pública, escritura solo admin
+drop policy if exists "exiles_select_all" on public.exiles;
+create policy "exiles_select_all" on public.exiles for select using (true);
+drop policy if exists "exiles_write_admin" on public.exiles;
+create policy "exiles_write_admin" on public.exiles for all
   using (public.is_admin()) with check (public.is_admin());
 
 -- predictions:
