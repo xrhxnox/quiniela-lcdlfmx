@@ -41,7 +41,17 @@ function weekStatusBadges(weekId, hist) {
   if (imm?.is_leader) out.push(badge("Líder", "fa-award", ORANGE));
   else if (imm) out.push(badge("Inmune", "fa-shield-halved", ORANGE));
   if (nom) {
-    out.push(badge("Nominado", "fa-triangle-exclamation", null, "badge gold status-badge"));
+    // Los puntos que le dieron esa semana. Si no hay (0), se omiten en vez de
+    // mostrar un "0 puntos" que solo significa que no se capturaron.
+    const pts = Number(nom.points) || 0;
+    out.push(
+      badge(
+        pts > 0 ? `Nominado · ${pts} punto${pts === 1 ? "" : "s"}` : "Nominado",
+        "fa-triangle-exclamation",
+        null,
+        "badge gold status-badge"
+      )
+    );
     if (nom.saved) out.push(badge("Salvado", "fa-hand-holding-heart", BLUE));
   }
   if (elim) {
