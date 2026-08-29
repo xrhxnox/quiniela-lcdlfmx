@@ -269,6 +269,21 @@ async function renderVotingWeek(container, week, profile) {
         ])
       : null;
 
+  // La Salvación de la semana: quién terminó con ella, si se la robaron al
+  // líder, y a quién salvó. El salvado ya trae su marca en la reja de abajo,
+  // pero aquí se nombra para que la historia se lea completa de un vistazo.
+  const salvationHolder = allParticipants.find((x) => x.id === week.salvation_participant_id);
+  const savedName = nominations.find((n) => n.saved)?.participants?.name;
+  const salvationBlock = salvationHolder
+    ? h("p", { class: "muted", style: "font-size:0.82rem" }, [
+        h("i", { class: "fa-solid fa-hand-holding-heart", style: "color:var(--accent)" }),
+        " Salvación: ",
+        h("strong", {}, salvationHolder.name),
+        week.salvation_mode === "robo" ? " se la robó al líder" : " la conservó",
+        ...(savedName ? [" y salvó a ", h("strong", {}, savedName)] : []),
+      ])
+    : null;
+
   const immuneBlock =
     immunes.length > 0
       ? h("p", { class: "muted", style: "font-size:0.82rem" }, [
@@ -335,6 +350,7 @@ async function renderVotingWeek(container, week, profile) {
         countdown,
         leaderBlock,
         immuneBlock,
+        salvationBlock,
         h("p", { class: "muted", style: "font-size:0.82rem" }, "Elige entre los nominados quién crees que será eliminado. Si le atinas, sumas 1 punto."),
         h("div", { style: "margin-top:10px" }, [officialVoteButton()]),
       ]),
