@@ -62,7 +62,7 @@ function weekStatusBadges(week, hist, participantId) {
   if (week.salvation_participant_id === participantId) {
     out.push(
       week.salvation_mode === "robo"
-        ? badge("Robó la salvación", "fa-hand-sparkles", TEAL)
+        ? badge("Robó la salvación", "fa-sack-dollar", TEAL)
         : badge("Conservó la salvación", "fa-hand-holding-heart", TEAL)
     );
   }

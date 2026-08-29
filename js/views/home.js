@@ -77,7 +77,10 @@ async function buildHistoryCards() {
         : null,
       salvationHolder
         ? h("p", { class: "muted", style: "font-size:0.78rem;margin:4px 0" }, [
-            h("i", { class: "fa-solid fa-hand-holding-heart", style: "color:var(--accent)" }),
+            h("i", {
+              class: `fa-solid ${week.salvation_mode === "robo" ? "fa-sack-dollar" : "fa-hand-holding-heart"}`,
+              style: "color:var(--accent)",
+            }),
             " Salvación: ",
             salvationHolder.name,
             week.salvation_mode === "robo" ? " (se la robó)" : " (la conservó)",
@@ -276,7 +279,10 @@ async function renderVotingWeek(container, week, profile) {
   const savedName = nominations.find((n) => n.saved)?.participants?.name;
   const salvationBlock = salvationHolder
     ? h("p", { class: "muted", style: "font-size:0.82rem" }, [
-        h("i", { class: "fa-solid fa-hand-holding-heart", style: "color:var(--accent)" }),
+        h("i", {
+          class: `fa-solid ${week.salvation_mode === "robo" ? "fa-sack-dollar" : "fa-hand-holding-heart"}`,
+          style: "color:var(--accent)",
+        }),
         " Salvación: ",
         h("strong", {}, salvationHolder.name),
         week.salvation_mode === "robo" ? " se la robó al líder" : " la conservó",
