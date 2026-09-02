@@ -30,6 +30,11 @@ const faviconEl = document.getElementById("favicon");
 // Logo de la barra y del favicon, según el show activo.
 function updateBranding() {
   const show = getShow();
+  const other = getShowKey() === "casa" ? SHOWS.granja : SHOWS.casa;
+  // data-show repinta la app entera desde el CSS; --show-other colorea el
+  // botón de cambio con el color del show al que lleva.
+  document.documentElement.setAttribute("data-show", show.key);
+  document.documentElement.style.setProperty("--show-other", other.color);
   if (brandLogoEl) {
     brandLogoEl.src = show.logo;
     brandLogoEl.alt = show.label;

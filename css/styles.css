@@ -21,6 +21,40 @@
   font-size: 16px;
 }
 
+/* ---------- Identidad por show ----------
+   --show es el color del programa en el que estás, aparte de --accent, que es
+   el color personal de cada jugador. Se marca con data-show en el <html>, así
+   que basta cambiar ese atributo para repintar toda la app. La Granja además
+   entibia los fondos: es un cambio pequeño en cada superficie pero constante
+   en pantalla, y eso es lo que hace que se note sin tener que leer nada. */
+:root { --show: #e30613; }
+
+:root[data-show="granja"] {
+  --show: #7fb069;
+  --bg: #1a1a16;
+  --bg-elev: #23231c;
+  --bg-card: #2a2a22;
+  --line: #3f3f33;
+}
+
+:root[data-show="granja"][data-theme="light"] {
+  --bg: #f3f4ee;
+  --bg-elev: #ffffff;
+  --bg-card: #ffffff;
+  --line: #dcdcd2;
+}
+
+/* La línea bajo el encabezado es la señal más grande y constante en pantalla:
+   roja en La Casa, verde en La Granja. */
+header.topbar { border-bottom-color: var(--show) !important; }
+
+/* El botón de cambio se pinta del color del show al que lleva, para que se lea
+   como "allá vas" y no como un botón más de la barra. */
+header.topbar .show-switch .btn {
+  border-color: var(--show-other);
+  color: var(--show-other);
+}
+
 :root[data-theme="light"] {
   --bg: #f4f4f5;
   --bg-elev: #ffffff;
