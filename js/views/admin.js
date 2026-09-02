@@ -86,7 +86,7 @@ async function renderParticipantsAdmin(sub) {
   const participants = await getParticipants();
 
   const nameInput = h("input", { type: "text", placeholder: "Nombre" });
-  const roomInput = roomSelect("");
+  const roomInput = isGranja() ? null : roomSelect("");
   const fileInput = h("input", { type: "file", accept: "image/*" });
   const addErr = h("div", { class: "error-msg" });
   const addBtn = h(
@@ -103,23 +103,27 @@ async function renderParticipantsAdmin(sub) {
         try {
           let photo_url = null;
           if (fileInput.files[0]) photo_url = await uploadParticipantPhoto(fileInput.files[0]);
-          await createParticipant({ name: nameInput.value.trim(), room: roomInput.value || null, photo_url });
+          await createParticipant({
+            name: nameInput.value.trim(),
+            room: roomInput ? roomInput.value || null : null,
+            photo_url,
+          });
           await renderParticipantsAdmin(sub);
         } catch (e) {
           addErr.textContent = "No se pudo guardar. " + (e.message || "");
         } finally {
           addBtn.disabled = false;
-          addBtn.textContent = "Agregar habitante";
+          addBtn.textContent = `Agregar ${getShow().memberSingular}`;
         }
       },
     },
-    "Agregar habitante"
+    `Agregar ${getShow().memberSingular}`
   );
 
   const addForm = h("div", { class: "card" }, [
     h("div", { class: "field-row" }, [
       h("div", {}, [h("label", {}, "Nombre"), nameInput]),
-      h("div", {}, [h("label", {}, "Cuarto"), roomInput]),
+      roomInput ? h("div", {}, [h("label", {}, "Cuarto"), roomInput]) : null,
       h("div", {}, [h("label", {}, "Foto"), fileInput]),
     ]),
     addBtn,
@@ -140,7 +144,9 @@ async function renderParticipantsAdmin(sub) {
           saveBtn.disabled = true;
           saveBtn.textContent = "Guardando…";
           try {
-            const fields = { name: nameField.value.trim(), room: roomField.value || null };
+            // roomField no existe en La Granja, que no tiene cuartos.
+            const fields = { name: nameField.value.trim() };
+            if (roomField) fields.room = roomField.value || null;
             if (photoField.files[0]) fields.photo_url = await uploadParticipantPhoto(photoField.files[0]);
             await updateParticipant(p.id, fields);
             await renderParticipantsAdmin(sub);
