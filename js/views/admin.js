@@ -125,7 +125,7 @@ async function renderParticipantsAdmin(sub) {
 
   const items = participants.map((p) => {
     const nameField = h("input", { type: "text", value: p.name, style: "max-width:160px" });
-    const roomField = roomSelect(p.room);
+    const roomField = isGranja() ? null : roomSelect(p.room);
     const photoField = h("input", { type: "file", accept: "image/*", style: "max-width:160px" });
     const itemErr = h("div", { class: "error-msg" });
     const saveBtn = h(
@@ -194,6 +194,17 @@ async function renderParticipantsAdmin(sub) {
       },
       p.is_abandono ? "Quitar abandono" : "Marcar abandono"
     );
+    const peonBtn = h(
+      "button",
+      {
+        class: "btn small secondary",
+        onclick: async () => {
+          await updateParticipant(p.id, { is_peon: !p.is_peon });
+          await renderParticipantsAdmin(sub);
+        },
+      },
+      p.is_peon ? "Quitar peón" : "Marcar peón"
+    );
     const delBtn = h(
       "button",
       {
@@ -222,6 +233,7 @@ async function renderParticipantsAdmin(sub) {
           : null,
         !isGranja() && p.is_exiliado ? h("span", { class: "badge black" }, "exiliado") : null,
         p.is_abandono ? h("span", { class: "badge red" }, "abandono") : null,
+        isGranja() && p.is_peon ? h("span", { class: "badge", style: "background:#b0896826;color:#c99f7d;border:1px solid #b08968" }, "peón") : null,
       ]),
       h("div", { class: "row-flex" }, [
         saveBtn,
@@ -229,6 +241,7 @@ async function renderParticipantsAdmin(sub) {
         isGranja() ? null : infiltradoBtn,
         isGranja() ? null : exiliadoBtn,
         abandonoBtn,
+        isGranja() ? peonBtn : null,
         delBtn,
       ]),
       itemErr,
@@ -1086,7 +1099,18 @@ async function renderLegacyAdmin(sub) {
           },
           "Guardar"
         );
-        const delBtn = h(
+        const peonBtn = h(
+      "button",
+      {
+        class: "btn small secondary",
+        onclick: async () => {
+          await updateParticipant(p.id, { is_peon: !p.is_peon });
+          await renderParticipantsAdmin(sub);
+        },
+      },
+      p.is_peon ? "Quitar peón" : "Marcar peón"
+    );
+    const delBtn = h(
           "button",
           {
             class: "btn small danger",

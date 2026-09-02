@@ -72,12 +72,15 @@ function participantPickCard(label, participant, type, counts, currentNomination
       pickTypeIcon(type),
       h("div", { class: "muted", style: "font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em" }, label),
       h("div", { class: "name" }, participant.name),
-      participant.room ? h("div", { class: "room" }, participant.room) : null,
+      !isGranja() && participant.room ? h("div", { class: "room" }, participant.room) : null,
       h("div", { style: "margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
         participant.is_winner
           ? h("span", { class: "badge gold status-badge" }, [h("i", { class: "fa-solid fa-trophy" }), " GANADOR"])
           : participant.active
-          ? h("span", { class: "badge green status-badge" }, [h("i", { class: "fa-solid fa-house" }), " En la casa"])
+          ? h("span", { class: "badge green status-badge" }, [
+              h("i", { class: `fa-solid ${getShow().icon}` }),
+              ` En ${getShow().homeLabel}`,
+            ])
           : participant.is_abandono
           ? h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-door-open" }), " Abandono"])
           : h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-skull" }), " Eliminado/a"]),
@@ -87,6 +90,12 @@ function participantPickCard(label, participant, type, counts, currentNomination
               { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" },
               [h("i", { class: "fa-solid fa-glasses" }), " INFILTRADO"]
             )
+          : null,
+        isGranja() && participant.is_peon
+          ? h("span", { class: "badge status-badge", style: "background:#b0896826;color:#c99f7d;border:1px solid #b08968" }, [
+              h("i", { class: "fa-solid fa-person-digging" }),
+              " Peón",
+            ])
           : null,
         !isGranja() && participant.is_exiliado
           ? h("span", { class: "badge black status-badge" }, [h("i", { class: "fa-solid fa-bug" }), " EXILIADO/A"])
@@ -202,6 +211,8 @@ const ROOM_BADGE_STYLES = {
   Ibiza: { color: "#2596be", icon: "fa-droplet" },
   Tulum: { color: "#2fae5a", icon: "fa-seedling" },
   Malibú: { color: "#e0574c", icon: "fa-heart" },
+  Hienas: { color: "#c084fc", icon: "fa-paw" },
+  Pijamas: { color: "#38bdf8", icon: "fa-moon" },
 };
 
 function legacyPickCard(label, fav, type) {
@@ -851,7 +862,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [surpriseSelect]),
     h("label", {}, "Decepción"),
     h("div", { style: "margin-bottom:14px" }, [disappointmentSelect]),
-    ...(isGranja() ? [] : [h("label", {}, "Cuarto favorito"), h("div", { style: "margin-bottom:14px" }, [roomSelect])]),
+    ...(isGranja() ? [] : [h("label", {}, "Team Temporada 4"), h("div", { style: "margin-bottom:14px" }, [roomSelect])]),
     h("label", {}, "Favorito de Temporada 1"),
     h("div", { style: "margin-bottom:14px" }, [t1Select]),
     h("label", {}, "Funado de Temporada 1"),

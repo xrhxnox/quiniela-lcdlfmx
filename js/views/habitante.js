@@ -21,14 +21,16 @@ const BLUE = "background:#3b82f626;color:#3b82f6;border:1px solid #3b82f6";
 const PURPLE = "background:#a742f526;color:#a742f5;border:1px solid #a742f5";
 const TEAL = "background:#14b8a626;color:#14b8a6;border:1px solid #14b8a6";
 const CRIMSON = "background:#e1174726;color:#f0537a;border:1px solid #e11747";
+const BROWN = "background:#b0896826;color:#c99f7d;border:1px solid #b08968";
 
 // Estado global de hoy (lo que ya mostraba la tarjeta en la reja).
 function currentStatusBadges(p) {
   const out = [];
   if (p.is_winner) out.push(badge("Ganador", "fa-trophy", null, "badge gold status-badge"));
-  else if (p.active) out.push(badge("En la casa", "fa-house", null, "badge green status-badge"));
+  else if (p.active) out.push(badge(`En ${getShow().homeLabel}`, getShow().icon, null, "badge green status-badge"));
   else if (p.is_abandono) out.push(badge("Abandono", "fa-door-open", null, "badge red status-badge"));
   else out.push(badge("Eliminado/a", "fa-skull", null, "badge red status-badge"));
+  if (isGranja() && p.is_peon) out.push(badge("Peón", "fa-person-digging", BROWN));
   if (!isGranja() && p.is_infiltrado) out.push(badge("Infiltrado", "fa-glasses", PURPLE));
   if (!isGranja() && p.is_exiliado) out.push(badge("Exiliado/a", "fa-bug", null, "badge black status-badge"));
   return out;
@@ -53,7 +55,8 @@ function granjaBadges(weekId, dyn, id) {
   const bet = dyn.betrayals.find((b) => b.week_id === weekId);
   if (bet) {
     if (bet.traitor_id === id) out.push(badge("Traicionó", "fa-user-secret", CRIMSON));
-    if (bet.in_participant_id === id) out.push(badge("Entró por traición", "fa-arrow-right-to-bracket", CRIMSON));
+    // El que la traición mete a riesgo es, literalmente, el traicionado.
+    if (bet.in_participant_id === id) out.push(badge("Traicionado", "fa-arrow-right-to-bracket", CRIMSON));
     if (bet.out_participant_id === id) out.push(badge("Salvado por traición", "fa-arrow-right-from-bracket", TEAL));
   }
 
@@ -187,7 +190,7 @@ export async function renderHabitante(container, participantId) {
       photo,
       h("div", { style: "flex:1;min-width:180px" }, [
         h("div", { style: "font-family:var(--font-display);font-size:1.5rem;font-weight:700" }, p.name),
-        p.room ? h("div", { class: "muted", style: "font-size:0.82rem" }, "Cuarto: " + p.room) : null,
+        !isGranja() && p.room ? h("div", { class: "muted", style: "font-size:0.82rem" }, "Cuarto: " + p.room) : null,
         h(
           "div",
           { style: "display:flex;flex-wrap:wrap;gap:6px;margin-top:8px" },

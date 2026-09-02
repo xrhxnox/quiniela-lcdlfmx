@@ -63,12 +63,15 @@ export async function renderParticipantes(container) {
         photo,
         h("div", { class: "info" }, [
           h("div", { class: "name" }, p.name),
-          p.room ? h("div", { class: "room" }, "Cuarto: " + p.room) : null,
+          !isGranja() && p.room ? h("div", { class: "room" }, "Cuarto: " + p.room) : null,
           h("div", { style: "margin-top:6px;margin-bottom:4px;display:flex;flex-direction:column;align-items:center;gap:4px" }, [
             p.is_winner
               ? h("span", { class: "badge gold status-badge" }, [h("i", { class: "fa-solid fa-trophy" }), " GANADOR"])
               : p.active
-              ? h("span", { class: "badge green status-badge" }, [h("i", { class: "fa-solid fa-house" }), " En la casa"])
+              ? h("span", { class: "badge green status-badge" }, [
+                  h("i", { class: `fa-solid ${getShow().icon}` }),
+                  ` En ${getShow().homeLabel}`,
+                ])
               : p.is_abandono
               ? h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-door-open" }), " Abandono"])
               : h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-skull" }), " Eliminado/a"]),
@@ -78,6 +81,12 @@ export async function renderParticipantes(container) {
                   { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" },
                   [h("i", { class: "fa-solid fa-glasses" }), " INFILTRADO"]
                 )
+              : null,
+            isGranja() && p.is_peon
+              ? h("span", { class: "badge status-badge", style: "background:#b0896826;color:#c99f7d;border:1px solid #b08968" }, [
+                  h("i", { class: "fa-solid fa-person-digging" }),
+                  " Peón",
+                ])
               : null,
             !isGranja() && p.is_exiliado
               ? h("span", { class: "badge black status-badge" }, [h("i", { class: "fa-solid fa-bug" }), " EXILIADO/A"])
@@ -142,7 +151,7 @@ export async function renderParticipantes(container) {
     );
   }
 
-  renderFilterBar();
+  if (!isGranja()) renderFilterBar();
   renderGrid();
 
   clearAndAppend(

@@ -1,4 +1,4 @@
-export const ROOM_OPTIONS = ["Sin Cuarto", "Ibiza", "Tulum", "Malibú"];
+export const ROOM_OPTIONS = ["Sin Cuarto", "Ibiza", "Tulum", "Malibú", "Hienas", "Pijamas"];
 
 export const LEGACY_ROOM_OPTIONS = {
   1: ["Cielo", "Infierno", "Solo Wendy Guevara"],
