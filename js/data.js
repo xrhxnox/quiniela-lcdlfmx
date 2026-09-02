@@ -136,10 +136,9 @@ export async function updateMyGranjaPicks({
 // Duelo, traición y El Legado solo existen en La Granja, así que las tablas se
 // nombran directo (sin pasar por tbl()) y estas funciones solo deben llamarse
 // cuando el show activo es ese.
-// Peones de una semana. Como el exilio en La Casa, agregar a alguien también
-// prende su bandera global is_peon (la que pinta la insignia). Quitarlo de la
-// lista NO la apaga: fue peón esa semana aunque hoy ya no lo sea, y el estado
-// de hoy se maneja desde la pestaña de Granjeros.
+// Peones de una semana. Funciona como estar nominado: vive solo en la semana
+// y no deja ninguna marca en el granjero. La insignia de "peón actual" sale de
+// la semana en votación, igual que la de "Nominado".
 export async function getPeonesForWeek(weekId) {
   return unwrap(
     await supabase
@@ -150,11 +149,9 @@ export async function getPeonesForWeek(weekId) {
 }
 
 export async function addPeon(weekId, participantId) {
-  const row = unwrap(
+  return unwrap(
     await supabase.from("granja_peones").insert({ week_id: weekId, participant_id: participantId }).select()
   );
-  unwrap(await supabase.from("granja_participants").update({ is_peon: true }).eq("id", participantId).select());
-  return row;
 }
 
 export async function removePeon(weekId, participantId) {

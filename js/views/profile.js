@@ -15,6 +15,7 @@ import {
   getSavedCounts,
   getVotingWeek,
   getNominationsForWeek,
+  getPeonesForWeek,
   getImmunitiesForWeek,
   getMySecretAssignment,
   getMyEliminationOrder,
@@ -40,7 +41,7 @@ function pickTypeIcon(type) {
   return h("div", { class: "pick-type-icon", style: `color:${style.color}` }, h("i", { class: `fa-solid ${style.icon}` }));
 }
 
-function participantPickCard(label, participant, type, counts, currentNomination, currentLeaderIds, currentImmuneIds) {
+function participantPickCard(label, participant, type, counts, currentNomination, currentLeaderIds, currentImmuneIds, currentPeonIds) {
   if (!participant) {
     return h("div", { class: "nominee-card", style: "cursor:default" }, [
       h("div", { class: "photo" }, h("i", { class: `fa-solid ${PICK_TYPE_ICONS[type]?.icon || "fa-user"}` })),
@@ -91,7 +92,7 @@ function participantPickCard(label, participant, type, counts, currentNomination
               [h("i", { class: "fa-solid fa-glasses" }), " INFILTRADO"]
             )
           : null,
-        isGranja() && participant.is_peon
+        currentPeonIds?.has(participant.id)
           ? h("span", { class: "badge status-badge", style: "background:#b0896826;color:#c99f7d;border:1px solid #b08968" }, [
               h("i", { class: "fa-solid fa-person-digging" }),
               " Peón",
@@ -348,6 +349,8 @@ async function renderProfileInternal(container, username) {
   const currentImmunities = votingWeek ? await getImmunitiesForWeek(votingWeek.id) : [];
   const currentLeaderIds = new Set(currentImmunities.filter((i) => i.is_leader).map((i) => i.participant_id));
   const currentImmuneIds = new Set(currentImmunities.filter((i) => !i.is_leader).map((i) => i.participant_id));
+  const currentPeones = votingWeek && isGranja() ? await getPeonesForWeek(votingWeek.id) : [];
+  const currentPeonIds = new Set(currentPeones.map((x) => x.participant_id));
 
   const eliminatedSet = new Set(eliminations.map((e) => `${e.week_id}:${e.participant_id}`));
   // Cada show tiene sus propios picks: en La Casa son las columnas de siempre
@@ -429,12 +432,12 @@ async function renderProfileInternal(container, username) {
       h("span", { class: "live-dot", title: "En vivo" }),
     ]),
     h("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit, minmax(140px, 140px));justify-content:center" }, [
-      participantPickCard("Favorito", favorite, "favorite", counts, favorite ? currentNominationMap[favorite.id] : null, currentLeaderIds, currentImmuneIds),
-      participantPickCard("Funado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null, currentLeaderIds, currentImmuneIds),
-      participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null, currentLeaderIds, currentImmuneIds),
-      participantPickCard("Decepción", disappointment, "disappointment", counts, disappointment ? currentNominationMap[disappointment.id] : null, currentLeaderIds, currentImmuneIds),
-      participantPickCard("Mi Ganador", winnerHabitante, "winner", counts, winnerHabitante ? currentNominationMap[winnerHabitante.id] : null, currentLeaderIds, currentImmuneIds),
-      participantPickCard("Sorteado", secretHabitante, "random", counts, secretHabitante ? currentNominationMap[secretHabitante.id] : null, currentLeaderIds, currentImmuneIds),
+      participantPickCard("Favorito", favorite, "favorite", counts, favorite ? currentNominationMap[favorite.id] : null, currentLeaderIds, currentImmuneIds, currentPeonIds),
+      participantPickCard("Funado", hated, "hated", counts, hated ? currentNominationMap[hated.id] : null, currentLeaderIds, currentImmuneIds, currentPeonIds),
+      participantPickCard("Sorpresa", surprise, "surprise", counts, surprise ? currentNominationMap[surprise.id] : null, currentLeaderIds, currentImmuneIds, currentPeonIds),
+      participantPickCard("Decepción", disappointment, "disappointment", counts, disappointment ? currentNominationMap[disappointment.id] : null, currentLeaderIds, currentImmuneIds, currentPeonIds),
+      participantPickCard("Mi Ganador", winnerHabitante, "winner", counts, winnerHabitante ? currentNominationMap[winnerHabitante.id] : null, currentLeaderIds, currentImmuneIds, currentPeonIds),
+      participantPickCard("Sorteado", secretHabitante, "random", counts, secretHabitante ? currentNominationMap[secretHabitante.id] : null, currentLeaderIds, currentImmuneIds, currentPeonIds),
     ]),
     winnerHabitante
       ? h(

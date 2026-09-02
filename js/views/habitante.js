@@ -30,7 +30,6 @@ function currentStatusBadges(p) {
   else if (p.active) out.push(badge(`En ${getShow().homeLabel}`, getShow().icon, null, "badge green status-badge"));
   else if (p.is_abandono) out.push(badge("Abandono", "fa-door-open", null, "badge red status-badge"));
   else out.push(badge("Eliminado/a", "fa-skull", null, "badge red status-badge"));
-  if (isGranja() && p.is_peon) out.push(badge("Peón", "fa-person-digging", BROWN));
   if (!isGranja() && p.is_infiltrado) out.push(badge("Infiltrado", "fa-glasses", PURPLE));
   if (!isGranja() && p.is_exiliado) out.push(badge("Exiliado/a", "fa-bug", null, "badge black status-badge"));
   return out;

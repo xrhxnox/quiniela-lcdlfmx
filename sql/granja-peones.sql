@@ -1,16 +1,9 @@
 -- =========================================================
 -- LA GRANJA VIP — Peones
 -- =========================================================
--- En La Granja los que pierden quedan como peones y hacen las labores. Es un
--- estado de hoy, no un historial, así que va como bandera en el granjero —
--- igual que is_abandono— y el admin la prende y apaga desde la pestaña de
--- Granjeros. No afecta puntajes ni ninguna dinámica: es informativo.
-alter table public.granja_participants add column if not exists is_peon boolean not null default false;
-
--- ---------- PEONES por semana ----------
--- El historial: quiénes fueron peones en cada semana. La bandera is_peon de
--- arriba sigue siendo el estado de hoy (la que pinta la insignia en Granjeros);
--- esta tabla guarda el registro semana por semana, como nominados o inmunes.
+-- Ser peón funciona igual que estar nominado: vive en la semana y no deja
+-- ninguna marca en el granjero. La insignia de "peón" que se ve en la reja y
+-- en el perfil sale de la semana en votación, igual que la de "Nominado".
 create table if not exists public.granja_peones (
   week_id bigint not null references public.granja_weeks(id) on delete cascade,
   participant_id bigint not null references public.granja_participants(id) on delete cascade,
@@ -25,3 +18,7 @@ create policy "granja_peones_select_all" on public.granja_peones for select usin
 drop policy if exists "granja_peones_write_admin" on public.granja_peones;
 create policy "granja_peones_write_admin" on public.granja_peones for all
   using (public.is_admin()) with check (public.is_admin());
+
+-- La primera versión guardaba el peón como bandera en el granjero. Ya no se
+-- usa: sobra y sería una segunda fuente de verdad que se desincroniza.
+alter table public.granja_participants drop column if exists is_peon;

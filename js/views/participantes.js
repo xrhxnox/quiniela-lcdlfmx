@@ -7,6 +7,7 @@ import {
   getVotingWeek,
   getImmunitiesForWeek,
   getNominationsForWeek,
+  getPeonesForWeek,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 import { getShow, isGranja } from "../shows.js";
@@ -21,9 +22,14 @@ export async function renderParticipantes(container) {
     getSavedCounts(),
     getVotingWeek(),
   ]);
-  const [currentImmunities, currentNominations] = votingWeek
-    ? await Promise.all([getImmunitiesForWeek(votingWeek.id), getNominationsForWeek(votingWeek.id)])
-    : [[], []];
+  const [currentImmunities, currentNominations, currentPeones] = votingWeek
+    ? await Promise.all([
+        getImmunitiesForWeek(votingWeek.id),
+        getNominationsForWeek(votingWeek.id),
+        isGranja() ? getPeonesForWeek(votingWeek.id) : Promise.resolve([]),
+      ])
+    : [[], [], []];
+  const currentPeonIds = new Set(currentPeones.map((x) => x.participant_id));
   const currentLeaderIds = new Set(currentImmunities.filter((i) => i.is_leader).map((i) => i.participant_id));
   const currentImmuneIds = new Set(currentImmunities.filter((i) => !i.is_leader).map((i) => i.participant_id));
   const currentNominationMap = {};
@@ -82,7 +88,7 @@ export async function renderParticipantes(container) {
                   [h("i", { class: "fa-solid fa-glasses" }), " INFILTRADO"]
                 )
               : null,
-            isGranja() && p.is_peon
+            currentPeonIds.has(p.id)
               ? h("span", { class: "badge status-badge", style: "background:#b0896826;color:#c99f7d;border:1px solid #b08968" }, [
                   h("i", { class: "fa-solid fa-person-digging" }),
                   " Peón",
