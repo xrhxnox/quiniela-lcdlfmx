@@ -6,8 +6,10 @@ import {
   getImmunityCounts,
   getSpecialImmunityCounts,
   getSavedCounts,
+  getAllGranjaDynamics,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend, fmtDate } from "../utils.js";
+import { getShow, isGranja } from "../shows.js";
 
 // Insignias de estado, con los mismos colores e iconos que la reja de Habitantes
 // para que se lean igual en las dos pantallas.
@@ -18,6 +20,7 @@ const ORANGE = "background:#ff7a1a26;color:#ff7a1a;border:1px solid #ff7a1a";
 const BLUE = "background:#3b82f626;color:#3b82f6;border:1px solid #3b82f6";
 const PURPLE = "background:#a742f526;color:#a742f5;border:1px solid #a742f5";
 const TEAL = "background:#14b8a626;color:#14b8a6;border:1px solid #14b8a6";
+const CRIMSON = "background:#e1174726;color:#f0537a;border:1px solid #e11747";
 
 // Estado global de hoy (lo que ya mostraba la tarjeta en la reja).
 function currentStatusBadges(p) {
@@ -26,15 +29,45 @@ function currentStatusBadges(p) {
   else if (p.active) out.push(badge("En la casa", "fa-house", null, "badge green status-badge"));
   else if (p.is_abandono) out.push(badge("Abandono", "fa-door-open", null, "badge red status-badge"));
   else out.push(badge("Eliminado/a", "fa-skull", null, "badge red status-badge"));
-  if (p.is_infiltrado) out.push(badge("Infiltrado", "fa-glasses", PURPLE));
-  if (p.is_exiliado) out.push(badge("Exiliado/a", "fa-bug", null, "badge black status-badge"));
+  if (!isGranja() && p.is_infiltrado) out.push(badge("Infiltrado", "fa-glasses", PURPLE));
+  if (!isGranja() && p.is_exiliado) out.push(badge("Exiliado/a", "fa-bug", null, "badge black status-badge"));
   return out;
 }
 
 // Estado en UNA semana concreta. Puede devolver más de una insignia (por
 // ejemplo nominado y luego salvado), y solo cae en "En la casa" si no pasó
 // nada más esa semana.
-function weekStatusBadges(week, hist, participantId, participant) {
+// Duelo, traición y El Legado de esa semana, vistos desde este granjero.
+// dyn viene vacío en La Casa, donde estas dinámicas no existen.
+function granjaBadges(weekId, dyn, id) {
+  const out = [];
+  if (!dyn) return out;
+
+  const duel = dyn.duels.find((d) => d.week_id === weekId);
+  if (duel && (duel.participant_a_id === id || duel.participant_b_id === id)) {
+    if (duel.loser_id === id) out.push(badge("Perdió el duelo", "fa-hand-fist", CRIMSON));
+    else if (duel.loser_id) out.push(badge("Ganó el duelo", "fa-hand-fist", TEAL));
+    else out.push(badge("Fue al duelo", "fa-hand-fist", CRIMSON));
+  }
+
+  const bet = dyn.betrayals.find((b) => b.week_id === weekId);
+  if (bet) {
+    if (bet.traitor_id === id) out.push(badge("Traicionó", "fa-user-secret", CRIMSON));
+    if (bet.in_participant_id === id) out.push(badge("Entró por traición", "fa-arrow-right-to-bracket", CRIMSON));
+    if (bet.out_participant_id === id) out.push(badge("Salvado por traición", "fa-arrow-right-from-bracket", TEAL));
+  }
+
+  // El legado se registra en la semana en que salió quien lo dejó, pero al
+  // nominado le pega en la siguiente: por eso se nombra la semana en el texto.
+  const legFrom = dyn.legacies.find((l) => l.week_id === weekId && l.from_participant_id === id);
+  if (legFrom) out.push(badge("Dejó El Legado", "fa-ghost", CRIMSON));
+  const legTo = dyn.legacies.find((l) => l.week_id === weekId && l.to_participant_id === id);
+  if (legTo) out.push(badge("Nominado por El Legado", "fa-ghost", CRIMSON));
+
+  return out;
+}
+
+function weekStatusBadges(week, hist, participantId, participant, dyn) {
   const weekId = week.id;
   const out = [];
   const elim = hist.eliminations.find((e) => e.week_id === weekId);
@@ -42,7 +75,7 @@ function weekStatusBadges(week, hist, participantId, participant) {
   const nom = hist.nominations.find((n) => n.week_id === weekId);
   const exile = hist.exiles.find((x) => x.week_id === weekId);
 
-  if (imm?.is_leader) out.push(badge("Líder", "fa-award", ORANGE));
+  if (imm?.is_leader) out.push(badge(getShow().leaderLabel, "fa-award", ORANGE));
   else if (imm) out.push(badge("Inmune", "fa-shield-halved", ORANGE));
   if (nom) {
     // Los puntos que le dieron esa semana. Si no hay (0), se omiten en vez de
@@ -67,7 +100,7 @@ function weekStatusBadges(week, hist, participantId, participant) {
         : badge("Conservó la salvación", "fa-hand-holding-heart", TEAL)
     );
   }
-  if (exile) out.push(badge("Al exilio", "fa-bug", null, "badge black status-badge"));
+  if (!isGranja() && exile) out.push(badge("Al exilio", "fa-bug", null, "badge black status-badge"));
   if (elim) {
     // Una salida revertida por exilio no fue definitiva: se marca distinto para
     // que no parezca que la temporada se le acabó ahí.
@@ -79,7 +112,8 @@ function weekStatusBadges(week, hist, participantId, participant) {
         : badge("Eliminado/a", "fa-skull", null, "badge red status-badge")
     );
   }
-  if (out.length === 0) out.push(badge("En la casa", "fa-house", null, "badge green status-badge"));
+  out.push(...granjaBadges(weekId, dyn, participantId));
+  if (out.length === 0) out.push(badge(`En ${getShow().homeLabel}`, getShow().icon, null, "badge green status-badge"));
   return out;
 }
 
@@ -114,7 +148,7 @@ function personChip(participant) {
 export async function renderHabitante(container, participantId) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
 
-  const [participants, weeks, hist, nomCounts, leaderCounts, immuneCounts, savedCounts] = await Promise.all([
+  const [participants, weeks, hist, nomCounts, leaderCounts, immuneCounts, savedCounts, dyn] = await Promise.all([
     getParticipants(),
     getWeeks(),
     getParticipantHistory(participantId),
@@ -122,6 +156,7 @@ export async function renderHabitante(container, participantId) {
     getImmunityCounts(),
     getSpecialImmunityCounts(),
     getSavedCounts(),
+    isGranja() ? getAllGranjaDynamics() : Promise.resolve(null),
   ]);
 
   const byId = new Map(participants.map((p) => [p.id, p]));
@@ -161,7 +196,7 @@ export async function renderHabitante(container, participantId) {
         h(
           "div",
           { class: "muted", style: "font-size:0.78rem;margin-top:10px;line-height:1.7" },
-          `Líder ${leaderCounts[p.id] || 0} veces · Inmune ${immuneCounts[p.id] || 0} veces · ` +
+          `${getShow().leaderLabel} ${leaderCounts[p.id] || 0} veces · Inmune ${immuneCounts[p.id] || 0} veces · ` +
             `Salvado ${savedCounts[p.id] || 0} veces · Nominado ${nomCounts[p.id] || 0} veces`
         ),
       ]),
@@ -201,7 +236,7 @@ export async function renderHabitante(container, participantId) {
       w.elimination_date
         ? h("div", { class: "muted", style: "font-size:0.75rem;margin-top:2px" }, fmtDate(w.elimination_date))
         : null,
-      h("div", { style: "display:flex;flex-wrap:wrap;gap:6px;margin-top:8px" }, weekStatusBadges(w, hist, p.id, p)),
+      h("div", { style: "display:flex;flex-wrap:wrap;gap:6px;margin-top:8px" }, weekStatusBadges(w, hist, p.id, p, dyn)),
       votesRow("Nominó a", cast),
       votesRow("Lo/la nominaron", received),
     ]);

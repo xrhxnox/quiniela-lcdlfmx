@@ -9,9 +9,64 @@ import {
   getParticipants,
   getNominationVotesForWeek,
   getWeeks,
+  getAllGranjaDynamics,
 } from "../data.js";
 import { h, esc, initials, fmtDate, clearAndAppend } from "../utils.js";
-import { getShow } from "../shows.js";
+import { getShow, isGranja } from "../shows.js";
+
+// Renglón con icono, del mismo estilo que los de Capataz e Inmune.
+function infoLine(icon, children, size = "0.82rem") {
+  return h("p", { class: "muted", style: `font-size:${size};margin:4px 0` }, [
+    h("i", { class: `fa-solid ${icon}`, style: "color:var(--accent)" }),
+    " ",
+    ...children,
+  ]);
+}
+
+// Duelo, traición y El Legado de una semana, ya resueltos a nombres.
+function granjaDynamicLines(weekId, dyn, nameOf, size) {
+  if (!dyn) return [];
+  const out = [];
+
+  const duel = dyn.duels.find((d) => d.week_id === weekId);
+  if (duel) {
+    const versus = `${nameOf(duel.participant_a_id)} vs ${nameOf(duel.participant_b_id)}`;
+    out.push(
+      infoLine("fa-hand-fist", [
+        " Duelo: ",
+        h("strong", {}, versus),
+        ...(duel.loser_id ? [" · perdió ", h("strong", {}, nameOf(duel.loser_id))] : []),
+      ], size)
+    );
+  }
+
+  const bet = dyn.betrayals.find((b) => b.week_id === weekId);
+  if (bet) {
+    out.push(
+      infoLine("fa-user-secret", [
+        " Traición: ",
+        ...(bet.traitor_id ? [h("strong", {}, nameOf(bet.traitor_id)), " sacó de riesgo a "] : ["salió de riesgo "]),
+        h("strong", {}, nameOf(bet.out_participant_id)),
+        " y metió a ",
+        h("strong", {}, nameOf(bet.in_participant_id)),
+      ], size)
+    );
+  }
+
+  const leg = dyn.legacies.find((l) => l.week_id === weekId);
+  if (leg) {
+    out.push(
+      infoLine("fa-ghost", [
+        " El Legado: ",
+        h("strong", {}, nameOf(leg.from_participant_id)),
+        " nominó a ",
+        h("strong", {}, nameOf(leg.to_participant_id)),
+      ], size)
+    );
+  }
+
+  return out;
+}
 
 function officialVoteButton() {
   return h(
@@ -28,7 +83,12 @@ function officialVoteButton() {
 }
 
 async function buildHistoryCards() {
-  const [weeks, allParticipants] = await Promise.all([getWeeks(), getParticipants()]);
+  const [weeks, allParticipants, dyn] = await Promise.all([
+    getWeeks(),
+    getParticipants(),
+    isGranja() ? getAllGranjaDynamics() : Promise.resolve(null),
+  ]);
+  const nameOfP = (id) => allParticipants.find((x) => x.id === id)?.name || "—";
   if (weeks.length === 0) return [h("div", { class: "empty-state" }, "Todavía no hay semanas registradas.")];
   const participantById = new Map(allParticipants.map((p) => [p.id, p]));
 
@@ -65,7 +125,7 @@ async function buildHistoryCards() {
       leaders.length
         ? h("p", { class: "muted", style: "font-size:0.78rem;margin:4px 0" }, [
             h("i", { class: "fa-solid fa-crown", style: "color:var(--accent)" }),
-            " Líder: ",
+            ` ${getShow().leaderLabel}: `,
             leaders.join(", "),
           ])
         : null,
@@ -87,6 +147,7 @@ async function buildHistoryCards() {
             week.salvation_mode === "robo" ? " (se la robó)" : " (la conservó)",
           ])
         : null,
+      ...granjaDynamicLines(week.id, dyn, nameOfP, "0.78rem"),
       h("div", { style: "margin:6px 0" }, [
         h("span", { class: "muted", style: "font-size:0.78rem" }, nomineeChips.length ? "Nominados: " : "Sin nominados registrados."),
         ...nomineeChips,
@@ -170,12 +231,13 @@ function countdownNode(closesAt, onClosed) {
 }
 
 async function renderVotingWeek(container, week, profile) {
-  const [nominations, immunities, myPred, allParticipants, nominationVotes] = await Promise.all([
+  const [nominations, immunities, myPred, allParticipants, nominationVotes, dyn] = await Promise.all([
     getNominationsForWeek(week.id),
     getImmunitiesForWeek(week.id),
     getMyPrediction(week.id, profile.id),
     getParticipants(),
     getNominationVotesForWeek(week.id),
+    isGranja() ? getAllGranjaDynamics() : Promise.resolve(null),
   ]);
 
   let selected = myPred ? myPred.participant_id : null;
@@ -268,7 +330,7 @@ async function renderVotingWeek(container, week, profile) {
     leaders.length > 0
       ? h("p", { class: "muted", style: "font-size:0.82rem" }, [
           h("i", { class: "fa-solid fa-crown", style: "color:var(--accent)" }),
-          " Líder de la semana: ",
+          ` ${getShow().leaderLabel} de la semana: `,
           h("strong", {}, leaders.map((i) => i.participants.name).join(", ")),
         ])
       : null;
@@ -286,7 +348,7 @@ async function renderVotingWeek(container, week, profile) {
         }),
         " Salvación: ",
         h("strong", {}, salvationHolder.name),
-        week.salvation_mode === "robo" ? " se la robó al líder" : " la conservó",
+        week.salvation_mode === "robo" ? ` se la robó al ${getShow().leaderLabel.toLowerCase()}` : " la conservó",
         ...(savedName ? [" y salvó a ", h("strong", {}, savedName)] : []),
       ])
     : null;
@@ -358,6 +420,7 @@ async function renderVotingWeek(container, week, profile) {
         leaderBlock,
         immuneBlock,
         salvationBlock,
+        ...granjaDynamicLines(week.id, dyn, (id) => allParticipants.find((x) => x.id === id)?.name || "—"),
         h("p", { class: "muted", style: "font-size:0.82rem" }, "Elige entre los nominados quién crees que será eliminado. Si le atinas, sumas 1 punto."),
         h("div", { style: "margin-top:10px" }, [officialVoteButton()]),
       ]),
@@ -412,7 +475,7 @@ async function renderClosedWeek(container, week, profile) {
         h("div", { style: "margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [historyBtn]),
       ]),
       historyWrap,
-      h("p", { class: "muted" }, "El líder de la semana se publica el lunes, los nominados el miércoles y la salvación el viernes. ¡Vuelve pronto!"),
+      h("p", { class: "muted" }, getShow().scheduleHint),
     ])
   );
 }
@@ -435,7 +498,7 @@ export async function renderHome(container, profile) {
     h("div", {}, [
       h("div", { class: "empty-state" }, [
         h("img", { src: getShow().logo, class: "brand-logo", style: "max-width:220px;margin:0 auto 36px" }),
-        h("p", {}, "Todavía no hay semanas abiertas. El líder de la semana se anuncia los lunes y los nominados se publican los miércoles."),
+        h("p", {}, getShow().emptyHint),
         h("div", { style: "margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [historyBtn]),
       ]),
       historyWrap,

@@ -24,6 +24,8 @@ export const SHOWS = {
     leaderLabel: "Líder",
     homeLabel: "la casa",
     seasonLabel: "Temporada 4",
+    scheduleHint: "El líder de la semana se publica el lunes, los nominados el miércoles y la salvación el viernes. ¡Vuelve pronto!",
+    emptyHint: "Todavía no hay semanas abiertas. El líder de la semana se anuncia los lunes y los nominados se publican los miércoles.",
   },
   granja: {
     key: "granja",
@@ -37,6 +39,8 @@ export const SHOWS = {
     leaderLabel: "Capataz",
     homeLabel: "la granja",
     seasonLabel: "La Granja VIP",
+    scheduleHint: "El capataz se anuncia el lunes, el duelo es el martes, la asamblea el miércoles y la salvación el jueves. ¡Vuelve pronto!",
+    emptyHint: "Todavía no hay semanas abiertas. El capataz se anuncia los lunes y la asamblea de nominación es los miércoles.",
   },
 };
 

@@ -92,6 +92,94 @@ export async function getCasaParticipants() {
   return unwrap(await supabase.from("participants").select("*").order("name"));
 }
 
+// ---------- Dinámicas propias de La Granja ----------
+// Duelo, traición y El Legado solo existen en La Granja, así que las tablas se
+// nombran directo (sin pasar por tbl()) y estas funciones solo deben llamarse
+// cuando el show activo es ese.
+export async function getGranjaWeekDynamics(weekId) {
+  const [duel, betrayal, legacy] = await Promise.all([
+    supabase.from("granja_duels").select("*").eq("week_id", weekId).maybeSingle(),
+    supabase.from("granja_betrayals").select("*").eq("week_id", weekId).maybeSingle(),
+    supabase.from("granja_legacies").select("*").eq("week_id", weekId).maybeSingle(),
+  ]);
+  if (duel.error) throw duel.error;
+  if (betrayal.error) throw betrayal.error;
+  if (legacy.error) throw legacy.error;
+  return { duel: duel.data, betrayal: betrayal.data, legacy: legacy.data };
+}
+
+// Todas las dinámicas de todas las semanas, para pintarlas en la ficha del
+// granjero y en el historial sin una consulta por semana.
+export async function getAllGranjaDynamics() {
+  const [duels, betrayals, legacies] = await Promise.all([
+    supabase.from("granja_duels").select("*"),
+    supabase.from("granja_betrayals").select("*"),
+    supabase.from("granja_legacies").select("*"),
+  ]);
+  return { duels: unwrap(duels), betrayals: unwrap(betrayals), legacies: unwrap(legacies) };
+}
+
+// El perdedor del duelo "sale nominado directamente", así que al guardarlo se
+// agrega solo a la lista de nominados de esa semana. Borrar el duelo no lo
+// quita: para eso está la ✕ de Nominados.
+export async function saveGranjaDuel(weekId, { participant_a_id, participant_b_id, loser_id }) {
+  const row = unwrap(
+    await supabase
+      .from("granja_duels")
+      .upsert({ week_id: weekId, participant_a_id, participant_b_id, loser_id })
+      .select()
+      .single()
+  );
+  if (loser_id) {
+    await supabase
+      .from("granja_nominations")
+      .upsert({ week_id: weekId, participant_id: loser_id }, { onConflict: "week_id,participant_id", ignoreDuplicates: true });
+  }
+  return row;
+}
+
+export async function removeGranjaDuel(weekId) {
+  return unwrap(await supabase.from("granja_duels").delete().eq("week_id", weekId));
+}
+
+// La traición intercambia de verdad: el de out sale de nominados y el de in
+// entra. Igual que el duelo, deshacer el registro no revierte las listas.
+export async function saveGranjaBetrayal(weekId, { traitor_id, out_participant_id, in_participant_id }) {
+  const row = unwrap(
+    await supabase
+      .from("granja_betrayals")
+      .upsert({ week_id: weekId, traitor_id, out_participant_id, in_participant_id })
+      .select()
+      .single()
+  );
+  await supabase.from("granja_nominations").delete().eq("week_id", weekId).eq("participant_id", out_participant_id);
+  await supabase
+    .from("granja_nominations")
+    .upsert({ week_id: weekId, participant_id: in_participant_id }, { onConflict: "week_id,participant_id", ignoreDuplicates: true });
+  return row;
+}
+
+export async function removeGranjaBetrayal(weekId) {
+  return unwrap(await supabase.from("granja_betrayals").delete().eq("week_id", weekId));
+}
+
+// El Legado se guarda en la semana en que el granjero SALIÓ, pero su efecto cae
+// en la siguiente, así que aquí no se toca ninguna lista de nominados: el admin
+// nomina a esa persona cuando arme la semana que sigue.
+export async function saveGranjaLegacy(weekId, { from_participant_id, to_participant_id }) {
+  return unwrap(
+    await supabase
+      .from("granja_legacies")
+      .upsert({ week_id: weekId, from_participant_id, to_participant_id })
+      .select()
+      .single()
+  );
+}
+
+export async function removeGranjaLegacy(weekId) {
+  return unwrap(await supabase.from("granja_legacies").delete().eq("week_id", weekId));
+}
+
 // ---------- Historial de un habitante ----------
 // Todo lo que le pasó semana por semana. Devuelve filas crudas con ids; la
 // vista resuelve los nombres contra la lista de participantes que ya carga,

@@ -21,6 +21,13 @@ import {
   confirmEliminations,
   getEliminationsForWeek,
   getExilesForWeek,
+  getGranjaWeekDynamics,
+  saveGranjaDuel,
+  removeGranjaDuel,
+  saveGranjaBetrayal,
+  removeGranjaBetrayal,
+  saveGranjaLegacy,
+  removeGranjaLegacy,
   addExile,
   removeExile,
   setEliminationOraculoMode,
@@ -45,6 +52,7 @@ import {
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 import { ROOM_OPTIONS } from "../rooms.js";
+import { getShow, isGranja } from "../shows.js";
 
 const STATUS_LABEL = { draft: "Borrador", voting_open: "Votación abierta", closed: "Cerrada" };
 const STATUS_BADGE = { draft: "gray", voting_open: "green", closed: "red" };
@@ -209,13 +217,20 @@ async function renderParticipantsAdmin(sub) {
         roomField,
         photoField,
         p.active ? h("span", { class: "badge green" }, "activo") : h("span", { class: "badge red" }, "eliminado"),
-        p.is_infiltrado
+        !isGranja() && p.is_infiltrado
           ? h("span", { class: "badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "infiltrado")
           : null,
-        p.is_exiliado ? h("span", { class: "badge black" }, "exiliado") : null,
+        !isGranja() && p.is_exiliado ? h("span", { class: "badge black" }, "exiliado") : null,
         p.is_abandono ? h("span", { class: "badge red" }, "abandono") : null,
       ]),
-      h("div", { class: "row-flex" }, [saveBtn, toggleBtn, infiltradoBtn, exiliadoBtn, abandonoBtn, delBtn]),
+      h("div", { class: "row-flex" }, [
+        saveBtn,
+        toggleBtn,
+        isGranja() ? null : infiltradoBtn,
+        isGranja() ? null : exiliadoBtn,
+        abandonoBtn,
+        delBtn,
+      ]),
       itemErr,
     ]);
   });
@@ -233,12 +248,13 @@ async function renderParticipantsAdmin(sub) {
 // SEMANAS
 // ============================================================
 async function renderWeekDetail(container, week, allParticipants) {
-  const [nominations, immunities, nominationVotes, weekEliminations, weekExiles] = await Promise.all([
+  const [nominations, immunities, nominationVotes, weekEliminations, weekExiles, dynamics] = await Promise.all([
     getNominationsForWeek(week.id),
     getImmunitiesForWeek(week.id),
     getNominationVotesForWeek(week.id),
     getEliminationsForWeek(week.id),
     getExilesForWeek(week.id),
+    isGranja() ? getGranjaWeekDynamics(week.id) : Promise.resolve({ duel: null, betrayal: null, legacy: null }),
   ]);
   const nominatedIds = new Set(nominations.map((n) => n.participant_id));
   const immuneIds = new Set(immunities.map((i) => i.participant_id));
@@ -338,7 +354,7 @@ async function renderWeekDetail(container, week, allParticipants) {
         await refresh();
       },
     },
-    "Marcar como líder"
+    `Marcar como ${getShow().leaderLabel.toLowerCase()}`
   );
 
   // --- Inmune (separado del líder) ---
@@ -480,6 +496,146 @@ async function renderWeekDetail(container, week, allParticipants) {
     "Mandar al exilio"
   );
 
+  // --- Duelo, traición y El Legado (solo La Granja) ---
+  // Son tres tarjetas con la misma forma: unos selects y un botón que guarda.
+  // Se arman aquí pero solo se pintan si el show activo es La Granja.
+  const pSelect = (selectedId, { incluirVacio = "Elige…", soloActivos = false } = {}) => {
+    const el = h(
+      "select",
+      { style: "max-width:190px" },
+      [h("option", { value: "" }, incluirVacio)].concat(
+        allParticipants.filter((p) => !soloActivos || p.active).map((p) => h("option", { value: p.id }, p.name))
+      )
+    );
+    el.value = selectedId ?? "";
+    return el;
+  };
+  const nameOf = (id) => participantById[id]?.name || "—";
+  const dynErr = h("div", { class: "error-msg" });
+  const saveDyn = async (fn) => {
+    dynErr.textContent = "";
+    try {
+      await fn();
+      await refresh();
+    } catch (e) {
+      dynErr.textContent = "No se pudo guardar. " + (e.message || "");
+    }
+  };
+
+  // Duelo: el perdedor tiene que ser uno de los dos que se enfrentaron.
+  const duel = dynamics.duel;
+  const duelA = pSelect(duel?.participant_a_id);
+  const duelB = pSelect(duel?.participant_b_id);
+  const duelLoser = pSelect(duel?.loser_id, { incluirVacio: "¿Quién perdió?" });
+  const duelSaveBtn = h(
+    "button",
+    {
+      class: "btn small",
+      onclick: () =>
+        saveDyn(async () => {
+          if (!duelA.value || !duelB.value) throw new Error("Elige a los dos del duelo.");
+          if (duelA.value === duelB.value) throw new Error("Tienen que ser dos granjeros distintos.");
+          if (duelLoser.value && ![duelA.value, duelB.value].includes(duelLoser.value))
+            throw new Error("El perdedor tiene que ser uno de los dos.");
+          await saveGranjaDuel(week.id, {
+            participant_a_id: Number(duelA.value),
+            participant_b_id: Number(duelB.value),
+            loser_id: duelLoser.value ? Number(duelLoser.value) : null,
+          });
+        }),
+    },
+    "Guardar duelo"
+  );
+  const duelClearBtn = h(
+    "button",
+    { class: "btn small secondary", onclick: () => saveDyn(() => removeGranjaDuel(week.id)) },
+    "Quitar duelo"
+  );
+
+  // Traición: sale un nominado, entra uno que no lo estaba.
+  const bet = dynamics.betrayal;
+  const betTraitor = pSelect(bet?.traitor_id ?? week.salvation_participant_id, { incluirVacio: "¿Quién traicionó?" });
+  const betOut = pSelect(bet?.out_participant_id, { incluirVacio: "Sale de riesgo…" });
+  const betIn = pSelect(bet?.in_participant_id, { incluirVacio: "Entra a riesgo…" });
+  const betSaveBtn = h(
+    "button",
+    {
+      class: "btn small",
+      onclick: () =>
+        saveDyn(async () => {
+          if (!betOut.value || !betIn.value) throw new Error("Elige a quién sale y a quién entra.");
+          if (betOut.value === betIn.value) throw new Error("Tienen que ser dos granjeros distintos.");
+          await saveGranjaBetrayal(week.id, {
+            traitor_id: betTraitor.value ? Number(betTraitor.value) : null,
+            out_participant_id: Number(betOut.value),
+            in_participant_id: Number(betIn.value),
+          });
+        }),
+    },
+    "Guardar traición"
+  );
+  const betClearBtn = h(
+    "button",
+    { class: "btn small secondary", onclick: () => saveDyn(() => removeGranjaBetrayal(week.id)) },
+    "Quitar traición"
+  );
+
+  // El Legado: lo deja el eliminado de ESTA semana y pega en la siguiente.
+  const leg = dynamics.legacy;
+  const legFrom = pSelect(leg?.from_participant_id ?? weekEliminations[0]?.participant_id, { incluirVacio: "¿Quién salió?" });
+  const legTo = pSelect(leg?.to_participant_id, { incluirVacio: "¿A quién nomina?" });
+  const legSaveBtn = h(
+    "button",
+    {
+      class: "btn small",
+      onclick: () =>
+        saveDyn(async () => {
+          if (!legFrom.value || !legTo.value) throw new Error("Elige quién deja el legado y a quién nomina.");
+          if (legFrom.value === legTo.value) throw new Error("No puede nominarse a sí mismo.");
+          await saveGranjaLegacy(week.id, {
+            from_participant_id: Number(legFrom.value),
+            to_participant_id: Number(legTo.value),
+          });
+        }),
+    },
+    "Guardar legado"
+  );
+  const legClearBtn = h(
+    "button",
+    { class: "btn small secondary", onclick: () => saveDyn(() => removeGranjaLegacy(week.id)) },
+    "Quitar legado"
+  );
+
+  const granjaDynamicsBlock = () => [
+    h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Duelo (martes)")),
+    h(
+      "p",
+      { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+      "Los dos que se enfrentaron y quién perdió. Al guardarlo, el perdedor se agrega solo a Nominados — quitar el duelo después ya no lo saca de ahí."
+    ),
+    h("div", { class: "row-flex" }, [duelA, duelB, duelLoser, duelSaveBtn, duel ? duelClearBtn : null]),
+    duel?.loser_id
+      ? h("p", { class: "muted", style: "font-size:0.82rem;margin:6px 0 0" }, `Perdió ${nameOf(duel.loser_id)}.`)
+      : null,
+
+    h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Traición (viernes)")),
+    h(
+      "p",
+      { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+      "Quien se quedó con la salvación intercambia a un nominado por uno que no lo está. Al guardarlo el cambio se aplica de verdad en Nominados: sale uno y entra el otro."
+    ),
+    h("div", { class: "row-flex" }, [betTraitor, betOut, betIn, betSaveBtn, bet ? betClearBtn : null]),
+
+    h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "El Legado")),
+    h(
+      "p",
+      { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+      "El voto que deja el eliminado de esta semana. Su efecto cae en la semana siguiente, así que aquí solo se registra: acuérdate de nominar a esa persona cuando armes la próxima."
+    ),
+    h("div", { class: "row-flex" }, [legFrom, legTo, legSaveBtn, leg ? legClearBtn : null]),
+    dynErr,
+  ];
+
   // --- Quién nominó a quién ---
   const votesByNominator = {};
   nominationVotes.forEach((v) => {
@@ -620,7 +776,9 @@ async function renderWeekDetail(container, week, allParticipants) {
           ]),
           h("div", { class: "row-flex", style: "margin-top:6px" }, [
             optBtn("normal", "Salida normal"),
-            optBtn("reverted", "Regresó del exilio"),
+            // El exilio es de La Casa: en La Granja nadie vuelve, así que esa
+            // opción no se ofrece. "Regalar punto a todos" sí sirve en ambos.
+            isGranja() ? null : optBtn("reverted", "Regresó del exilio"),
             optBtn("gift", "Regalar punto a todos"),
           ]),
         ]);
@@ -631,7 +789,9 @@ async function renderWeekDetail(container, week, allParticipants) {
           h(
             "p",
             { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
-            'Solo afecta a El Oráculo; el pick semanal cuenta igual en los tres casos. "Regresó del exilio" libera su posición porque su salida no fue definitiva. "Regalar punto a todos" se usa cuando alguien que volvió sale de verdad: nadie pudo preverlo, así que suma +1 a todos.'
+            isGranja()
+              ? 'Solo afecta a El Oráculo; el pick semanal cuenta igual en los dos casos. "Regalar punto a todos" se usa cuando la salida no se pudo prever de ninguna forma: en vez de compararla contra el orden de cada quien, suma +1 a todos.'
+              : 'Solo afecta a El Oráculo; el pick semanal cuenta igual en los tres casos. "Regresó del exilio" libera su posición porque su salida no fue definitiva. "Regalar punto a todos" se usa cuando alguien que volvió sale de verdad: nadie pudo preverlo, así que suma +1 a todos.'
           ),
           h("div", {}, modeRows),
         ])
@@ -702,21 +862,21 @@ async function renderWeekDetail(container, week, allParticipants) {
       h("p", { style: "margin:10px 0 4px" }, h("strong", {}, "Nominados")),
       h("div", {}, nomineeChips.length ? nomineeChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [nomineeSelect, pointsInput, addNomBtn]),
-      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Líder de la semana (inmunidad)")),
+      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, `${getShow().leaderLabel} de la semana (inmunidad)`)),
       h("div", {}, leaderChips.length ? leaderChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [leaderSelect, addLeaderBtn]),
-      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Inmune (separado del líder)")),
+      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, `Inmune (separado del ${getShow().leaderLabel.toLowerCase()})`)),
       h("div", {}, immuneChips.length ? immuneChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [immuneSelect, addImmuneBtn]),
       h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "La Salvación")),
       h(
         "p",
         { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
-        "El líder salva a un nominado, salvo que alguien más le robe la salvación. Primero registra quién terminó con ella (el líder si nadie la robó) y luego a quién salvó — puede haberse salvado a sí mismo. Que se la roben no le quita la inmunidad al líder: eso se sigue marcando arriba, aparte."
+        `El ${getShow().leaderLabel.toLowerCase()} salva a un nominado, salvo que alguien más le robe la salvación. Primero registra quién terminó con ella (el ${getShow().leaderLabel.toLowerCase()} si nadie la robó) y luego a quién salvó — puede haberse salvado a sí mismo. Que se la roben no le quita la inmunidad al ${getShow().leaderLabel.toLowerCase()}: eso se sigue marcando arriba, aparte.`
       ),
       h("div", { class: "row-flex" }, [
         salvationSelect,
-        salvationModeBtn("conservo", "La conservó el líder"),
+        salvationModeBtn("conservo", `La conservó el ${getShow().leaderLabel.toLowerCase()}`),
         salvationModeBtn("robo", "Se la robaron"),
       ]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [
@@ -725,14 +885,19 @@ async function renderWeekDetail(container, week, allParticipants) {
           ? salvationSavedSelect
           : h("span", { class: "muted", style: "font-size:0.82rem" }, "Agrega nominados primero."),
       ]),
-      h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Enviados al exilio")),
-      h(
-        "p",
-        { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
-        "Quiénes fueron mandados al exilio esta semana. No es una eliminación: siguen en el juego y pueden volver a la casa. Mandarlos aquí los marca como exiliados en Habitantes; si regresan, quítales la marca desde esa pestaña."
-      ),
-      h("div", {}, exileChips.length ? exileChips : [h("span", { class: "muted" }, "Nadie todavía")]),
-      h("div", { class: "row-flex", style: "margin-top:8px" }, [exileSelect, addExileBtn]),
+      ...(isGranja()
+        ? []
+        : [
+            h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Enviados al exilio")),
+            h(
+              "p",
+              { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+              "Quiénes fueron mandados al exilio esta semana. No es una eliminación: siguen en el juego y pueden volver a la casa. Mandarlos aquí los marca como exiliados en Habitantes; si regresan, quítales la marca desde esa pestaña."
+            ),
+            h("div", {}, exileChips.length ? exileChips : [h("span", { class: "muted" }, "Nadie todavía")]),
+            h("div", { class: "row-flex", style: "margin-top:8px" }, [exileSelect, addExileBtn]),
+          ]),
+      ...(isGranja() ? granjaDynamicsBlock() : []),
       h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "¿Quién nominó a quién?")),
       h(
         "p",

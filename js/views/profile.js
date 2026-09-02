@@ -21,6 +21,7 @@ import {
 } from "../data.js";
 import { ACCENTS, getAccentKey, applyAccent, getThemeMode, applyThemeMode } from "../theme.js";
 import { ROOM_OPTIONS, LEGACY_ROOM_OPTIONS } from "../rooms.js";
+import { getShow, isGranja } from "../shows.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 
 const PICK_TYPE_ICONS = {
@@ -79,21 +80,21 @@ function participantPickCard(label, participant, type, counts, currentNomination
           : participant.is_abandono
           ? h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-door-open" }), " Abandono"])
           : h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-skull" }), " Eliminado/a"]),
-        participant.is_infiltrado
+        !isGranja() && participant.is_infiltrado
           ? h(
               "span",
               { class: "badge status-badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" },
               [h("i", { class: "fa-solid fa-glasses" }), " INFILTRADO"]
             )
           : null,
-        participant.is_exiliado
+        !isGranja() && participant.is_exiliado
           ? h("span", { class: "badge black status-badge" }, [h("i", { class: "fa-solid fa-bug" }), " EXILIADO/A"])
           : null,
         currentLeaderIds?.has(participant.id)
           ? h(
               "span",
               { class: "badge status-badge", style: "background:#ff7a1a26;color:#ff7a1a;border:1px solid #ff7a1a" },
-              [h("i", { class: "fa-solid fa-award" }), " Líder"]
+              [h("i", { class: "fa-solid fa-award" }), " " + getShow().leaderLabel]
             )
           : null,
         currentImmuneIds?.has(participant.id)
@@ -105,7 +106,7 @@ function participantPickCard(label, participant, type, counts, currentNomination
           : null,
         weekBadge,
       ]),
-      h("div", { class: "points" }, `Líder ${timesLeader} veces`),
+      h("div", { class: "points" }, `${getShow().leaderLabel} ${timesLeader} veces`),
       h("div", { class: "points" }, `Inmune ${timesImmune} veces`),
       h("div", { class: "points" }, `Salvado ${timesSaved} veces`),
       h("div", { class: "points" }, `Nominado ${timesNominated} veces`),
