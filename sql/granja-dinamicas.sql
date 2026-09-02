@@ -66,3 +66,51 @@ begin
     );
   end loop;
 end $$;
+
+-- =========================================================
+-- PICKS DE PERFIL DE LA GRANJA
+-- =========================================================
+-- update_my_profile ya tiene 46 parámetros y es solo de La Casa, así que los
+-- picks de La Granja van en su propia función en vez de seguir alargándola.
+-- Cada bandera p_clear_* permite dejar un pick en "Sin elegir".
+create or replace function public.update_my_granja_picks(
+  p_favorite bigint default null,
+  p_clear_favorite boolean default false,
+  p_hated bigint default null,
+  p_clear_hated boolean default false,
+  p_surprise bigint default null,
+  p_clear_surprise boolean default false,
+  p_disappointment bigint default null,
+  p_clear_disappointment boolean default false
+)
+returns public.profiles
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  r public.profiles;
+begin
+  if auth.uid() is null then
+    raise exception 'No hay sesión';
+  end if;
+
+  update public.profiles set
+    granja_favorite_participant_id =
+      case when p_clear_favorite then null
+           else coalesce(p_favorite, granja_favorite_participant_id) end,
+    granja_hated_participant_id =
+      case when p_clear_hated then null
+           else coalesce(p_hated, granja_hated_participant_id) end,
+    granja_surprise_participant_id =
+      case when p_clear_surprise then null
+           else coalesce(p_surprise, granja_surprise_participant_id) end,
+    granja_disappointment_participant_id =
+      case when p_clear_disappointment then null
+           else coalesce(p_disappointment, granja_disappointment_participant_id) end
+  where id = auth.uid()
+  returning * into r;
+
+  return r;
+end $$;
+
+grant execute on function public.update_my_granja_picks(bigint, boolean, bigint, boolean, bigint, boolean, bigint, boolean) to authenticated;

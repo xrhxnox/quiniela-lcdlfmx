@@ -1014,7 +1014,7 @@ async function renderLegacyAdmin(sub) {
   const seasonSelect = h(
     "select",
     { style: "max-width:120px" },
-    [1, 2, 3].map((s) => h("option", { value: s }, `Temporada ${s}`))
+    getShow().legacySeasons.map((s) => h("option", { value: s }, `Temporada ${s}`))
   );
   const nameInput = h("input", { type: "text", placeholder: "Nombre" });
   const fileInput = h("input", { type: "file", accept: "image/*" });
@@ -1057,7 +1057,7 @@ async function renderLegacyAdmin(sub) {
     addErr,
   ]);
 
-  const groups = [1, 2, 3].map((season) => {
+  const groups = getShow().legacySeasons.map((season) => {
     const items = favorites
       .filter((f) => f.season === season)
       .map((f) => {

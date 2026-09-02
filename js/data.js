@@ -39,21 +39,21 @@ export async function uploadParticipantPhoto(file) {
 
 // ---------- Favoritos de temporadas anteriores (no son habitantes actuales) ----------
 export async function getLegacyFavorites({ season } = {}) {
-  let q = supabase.from("legacy_favorites").select("*").order("name");
+  let q = supabase.from(tbl("legacy_favorites")).select("*").order("name");
   if (season) q = q.eq("season", season);
   return unwrap(await q);
 }
 
 export async function createLegacyFavorite({ season, name, photo_url }) {
-  return unwrap(await supabase.from("legacy_favorites").insert({ season, name, photo_url }).select().single());
+  return unwrap(await supabase.from(tbl("legacy_favorites")).insert({ season, name, photo_url }).select().single());
 }
 
 export async function updateLegacyFavorite(id, fields) {
-  return unwrap(await supabase.from("legacy_favorites").update(fields).eq("id", id).select().single());
+  return unwrap(await supabase.from(tbl("legacy_favorites")).update(fields).eq("id", id).select().single());
 }
 
 export async function deleteLegacyFavorite(id) {
-  return unwrap(await supabase.from("legacy_favorites").delete().eq("id", id));
+  return unwrap(await supabase.from(tbl("legacy_favorites")).delete().eq("id", id));
 }
 
 export async function getNominationCounts() {
@@ -90,6 +90,40 @@ export async function getSavedCounts() {
 // un id de La Casa se resolvería contra un granjero distinto con el mismo id.
 export async function getCasaParticipants() {
   return unwrap(await supabase.from("participants").select("*").order("name"));
+}
+
+// Picks de perfil de La Granja. Van por su propia función porque
+// update_my_profile es de La Casa y ya carga 46 parámetros.
+export async function updateMyGranjaPicks({
+  favorite,
+  hated,
+  surprise,
+  disappointment,
+  favS1,
+  hatedS1,
+  surpriseS1,
+  disappointmentS1,
+}) {
+  const { data, error } = await supabase.rpc("update_my_granja_picks", {
+    p_favorite: favorite ?? null,
+    p_clear_favorite: favorite === null,
+    p_hated: hated ?? null,
+    p_clear_hated: hated === null,
+    p_surprise: surprise ?? null,
+    p_clear_surprise: surprise === null,
+    p_disappointment: disappointment ?? null,
+    p_clear_disappointment: disappointment === null,
+    p_fav_s1: favS1 ?? null,
+    p_clear_fav_s1: favS1 === null,
+    p_hated_s1: hatedS1 ?? null,
+    p_clear_hated_s1: hatedS1 === null,
+    p_surprise_s1: surpriseS1 ?? null,
+    p_clear_surprise_s1: surpriseS1 === null,
+    p_disappointment_s1: disappointmentS1 ?? null,
+    p_clear_disappointment_s1: disappointmentS1 === null,
+  });
+  if (error) throw error;
+  return data;
 }
 
 // ---------- Dinámicas propias de La Granja ----------

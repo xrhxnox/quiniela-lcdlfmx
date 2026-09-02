@@ -1,6 +1,7 @@
 import {
   getParticipants,
   getCasaParticipants,
+  updateMyGranjaPicks,
   getMyPredictionHistory,
   getAllEliminationsWithWeeks,
   updateMyProfile,
@@ -270,7 +271,11 @@ export async function renderPublicProfile(container, username) {
 export async function renderEditProfile(container, viewerProfile, onUpdate) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
 
-  const [casaParticipants, legacyFavorites] = await Promise.all([getCasaParticipants(), getLegacyFavorites()]);
+  // Los selects de picks muestran a la gente del show en el que estás.
+  const [pickParticipants, legacyFavorites] = await Promise.all([
+    isGranja() ? getParticipants() : getCasaParticipants(),
+    getLegacyFavorites(),
+  ]);
 
   const refresh = async (updatedProfile) => {
     const nextProfile = updatedProfile || viewerProfile;
@@ -282,7 +287,7 @@ export async function renderEditProfile(container, viewerProfile, onUpdate) {
     container,
     h("div", {}, [
       h("div", { class: "section-title" }, "Editar Perfil"),
-      buildEditCard(viewerProfile, casaParticipants, legacyFavorites, refresh),
+      buildEditCard(viewerProfile, pickParticipants, legacyFavorites, refresh),
     ])
   );
 }
@@ -334,26 +339,35 @@ async function renderProfileInternal(container, username) {
   const currentImmuneIds = new Set(currentImmunities.filter((i) => !i.is_leader).map((i) => i.participant_id));
 
   const eliminatedSet = new Set(eliminations.map((e) => `${e.week_id}:${e.participant_id}`));
+  // Cada show tiene sus propios picks: en La Casa son las columnas de siempre
+  // contra participants; en La Granja son las granja_* contra granja_participants.
+  // La cuenta es la misma, pero lo que se muestra cambia con el show.
+  const pickList = isGranja() ? participants : await getCasaParticipants();
+  const pick = (base) => target[(isGranja() ? "granja_" : "") + base] ?? null;
+  const findPick = (base) => pickList.find((p) => p.id === pick(base)) || null;
   const rankIndex = leaderboard.findIndex((r) => r.player_id === target.id);
   const points = rankIndex >= 0 ? leaderboard[rankIndex].points : 0;
-  // Los cuatro picks son de La Casa: se resuelven contra su propia lista.
-  const casaParticipants = await getCasaParticipants();
-  const favorite = casaParticipants.find((p) => p.id === target.favorite_participant_id) || null;
-  const hated = casaParticipants.find((p) => p.id === target.hated_participant_id) || null;
-  const favT1 = legacyFavorites.find((f) => f.id === target.fav_season1_id) || null;
-  const favT2 = legacyFavorites.find((f) => f.id === target.fav_season2_id) || null;
-  const favT3 = legacyFavorites.find((f) => f.id === target.fav_season3_id) || null;
-  const hatedT1 = legacyFavorites.find((f) => f.id === target.hated_season1_id) || null;
-  const hatedT2 = legacyFavorites.find((f) => f.id === target.hated_season2_id) || null;
-  const hatedT3 = legacyFavorites.find((f) => f.id === target.hated_season3_id) || null;
-  const surprise = casaParticipants.find((p) => p.id === target.surprise_participant_id) || null;
-  const disappointment = casaParticipants.find((p) => p.id === target.disappointment_participant_id) || null;
-  const surpriseT1 = legacyFavorites.find((f) => f.id === target.surprise_season1_id) || null;
-  const surpriseT2 = legacyFavorites.find((f) => f.id === target.surprise_season2_id) || null;
-  const surpriseT3 = legacyFavorites.find((f) => f.id === target.surprise_season3_id) || null;
-  const disappointmentT1 = legacyFavorites.find((f) => f.id === target.disappointment_season1_id) || null;
-  const disappointmentT2 = legacyFavorites.find((f) => f.id === target.disappointment_season2_id) || null;
-  const disappointmentT3 = legacyFavorites.find((f) => f.id === target.disappointment_season3_id) || null;
+  // Cada show tiene sus propios picks: en La Casa son las columnas de siempre
+  // contra participants; en La Granja son las granja_* contra granja_participants.
+  // La cuenta es la misma, pero lo que se muestra cambia con el show.
+  const favorite = findPick("favorite_participant_id");
+  const hated = findPick("hated_participant_id");
+  // legacyFavorites ya viene del show activo; las columnas del perfil también.
+  const lf = (base) => legacyFavorites.find((f) => f.id === pick(base)) || null;
+  const favT1 = lf("fav_season1_id");
+  const favT2 = lf("fav_season2_id");
+  const favT3 = lf("fav_season3_id");
+  const hatedT1 = lf("hated_season1_id");
+  const hatedT2 = lf("hated_season2_id");
+  const hatedT3 = lf("hated_season3_id");
+  const surprise = findPick("surprise_participant_id");
+  const disappointment = findPick("disappointment_participant_id");
+  const surpriseT1 = lf("surprise_season1_id");
+  const surpriseT2 = lf("surprise_season2_id");
+  const surpriseT3 = lf("surprise_season3_id");
+  const disappointmentT1 = lf("disappointment_season1_id");
+  const disappointmentT2 = lf("disappointment_season2_id");
+  const disappointmentT3 = lf("disappointment_season3_id");
   const secretHabitante = secretAssignment ? participants.find((p) => p.id === secretAssignment.participant_id) || null : null;
   const stats = computeStats(history, eliminatedSet);
   const winnerPick = eliminationOrder.find((r) => r.position === 1) || null;
@@ -378,8 +392,8 @@ async function renderProfileInternal(container, username) {
       h("div", { class: "muted" }, `@${target.username}`),
       target.bio ? h("div", { style: "margin-top:4px;font-style:italic" }, target.bio) : null,
       h("div", { style: "display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px" }, [
-        teamBadgeNode(target.favorite_room),
-        ...legacyRoomBadges,
+        isGranja() ? null : teamBadgeNode(target.favorite_room),
+        ...(isGranja() ? [] : legacyRoomBadges),
       ]),
       h("div", { class: "row-flex", style: "gap:18px;flex-wrap:wrap;justify-content:center;margin-top:16px" }, [
         statBlock(String(points), "puntos"),
@@ -399,7 +413,7 @@ async function renderProfileInternal(container, username) {
   // ---------- Favorito / odiado ----------
   const favHatedCard = h("div", { class: "card" }, [
     h("p", { style: "margin-top:0;text-align:center" }, [
-      h("strong", {}, "Temporada 4"),
+      h("strong", {}, getShow().seasonLabel),
       " ",
       h("span", { class: "live-dot", title: "En vivo" }),
     ]),
@@ -445,16 +459,21 @@ async function renderProfileInternal(container, username) {
     ]);
   }
 
-  const legacySeason1Card = legacySeasonCard(1, favT1, hatedT1, surpriseT1, disappointmentT1);
-  const legacySeason2Card = legacySeasonCard(2, favT2, hatedT2, surpriseT2, disappointmentT2);
-  const legacySeason3Card = legacySeasonCard(3, favT3, hatedT3, surpriseT3, disappointmentT3);
+  const legacyBySeason = {
+    1: [favT1, hatedT1, surpriseT1, disappointmentT1],
+    2: [favT2, hatedT2, surpriseT2, disappointmentT2],
+    3: [favT3, hatedT3, surpriseT3, disappointmentT3],
+  };
+  const legacyCards = getShow()
+    .legacySeasons.map((n) => legacySeasonCard(n, ...legacyBySeason[n]))
+    .filter(Boolean);
 
+  // Las tarjetas de temporadas pasadas son historia de La Casa; La Granja
+  // apenas empieza y no tiene ninguna.
   const cards = [
     headerCard,
     favHatedCard,
-    legacySeason1Card,
-    legacySeason2Card,
-    legacySeason3Card,
+    ...legacyCards,
     buildCompareCard(target, leaderboard),
   ];
 
@@ -612,10 +631,13 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     );
   }
 
-  const favSelect = pickSelect(profile.favorite_participant_id, participants);
-  const hatedSelect = pickSelect(profile.hated_participant_id, participants);
-  const surpriseSelect = pickSelect(profile.surprise_participant_id, participants);
-  const disappointmentSelect = pickSelect(profile.disappointment_participant_id, participants);
+  // En La Granja los picks viven en las columnas granja_*; en La Casa en las
+  // de siempre. Guardar en un show nunca pisa los picks del otro.
+  const pf = (base) => profile[(isGranja() ? "granja_" : "") + base];
+  const favSelect = pickSelect(pf("favorite_participant_id"), participants);
+  const hatedSelect = pickSelect(pf("hated_participant_id"), participants);
+  const surpriseSelect = pickSelect(pf("surprise_participant_id"), participants);
+  const disappointmentSelect = pickSelect(pf("disappointment_participant_id"), participants);
 
   const roomSelect = h(
     "select",
@@ -636,19 +658,19 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     );
   }
 
-  const t1Select = legacySelect(1, profile.fav_season1_id);
+  const t1Select = legacySelect(1, pf("fav_season1_id"));
   const t2Select = legacySelect(2, profile.fav_season2_id);
   const t3Select = legacySelect(3, profile.fav_season3_id);
 
-  const t1HatedSelect = legacySelect(1, profile.hated_season1_id);
+  const t1HatedSelect = legacySelect(1, pf("hated_season1_id"));
   const t2HatedSelect = legacySelect(2, profile.hated_season2_id);
   const t3HatedSelect = legacySelect(3, profile.hated_season3_id);
 
-  const t1SurpriseSelect = legacySelect(1, profile.surprise_season1_id);
+  const t1SurpriseSelect = legacySelect(1, pf("surprise_season1_id"));
   const t2SurpriseSelect = legacySelect(2, profile.surprise_season2_id);
   const t3SurpriseSelect = legacySelect(3, profile.surprise_season3_id);
 
-  const t1DisappointmentSelect = legacySelect(1, profile.disappointment_season1_id);
+  const t1DisappointmentSelect = legacySelect(1, pf("disappointment_season1_id"));
   const t2DisappointmentSelect = legacySelect(2, profile.disappointment_season2_id);
   const t3DisappointmentSelect = legacySelect(3, profile.disappointment_season3_id);
 
@@ -726,11 +748,25 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
           let avatar_url;
           if (file) avatar_url = await uploadMyAvatar(profile.id, file);
 
-          const updated = await updateMyProfile({
-            display_name: nameInput.value.trim() || undefined,
-            bio: bioInput.value.trim() || " ",
-            avatar_url,
-            clearAvatar: !file && removeAvatarCheckbox.checked,
+          // Los picks de La Granja van por su propia función. Es importante
+          // NO mandarlos dentro de updateMyProfile: sus banderas clear* dejarían
+          // en blanco los picks de La Casa cada vez que guardas desde La Granja.
+          if (isGranja()) {
+            await updateMyGranjaPicks({
+              favorite: favSelect.value ? Number(favSelect.value) : null,
+              hated: hatedSelect.value ? Number(hatedSelect.value) : null,
+              surprise: surpriseSelect.value ? Number(surpriseSelect.value) : null,
+              disappointment: disappointmentSelect.value ? Number(disappointmentSelect.value) : null,
+              favS1: t1Select.value ? Number(t1Select.value) : null,
+              hatedS1: t1HatedSelect.value ? Number(t1HatedSelect.value) : null,
+              surpriseS1: t1SurpriseSelect.value ? Number(t1SurpriseSelect.value) : null,
+              disappointmentS1: t1DisappointmentSelect.value ? Number(t1DisappointmentSelect.value) : null,
+            });
+          }
+
+          const casaFields = isGranja()
+            ? {}
+            : {
             favorite_participant_id: favSelect.value ? Number(favSelect.value) : undefined,
             clearFavorite: !favSelect.value,
             hated_participant_id: hatedSelect.value ? Number(hatedSelect.value) : undefined,
@@ -771,6 +807,14 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
             clearDisappointmentSeason2: !t2DisappointmentSelect.value,
             disappointment_season3_id: t3DisappointmentSelect.value ? Number(t3DisappointmentSelect.value) : undefined,
             clearDisappointmentSeason3: !t3DisappointmentSelect.value,
+              };
+
+          const updated = await updateMyProfile({
+            display_name: nameInput.value.trim() || undefined,
+            bio: bioInput.value.trim() || " ",
+            avatar_url,
+            clearAvatar: !file && removeAvatarCheckbox.checked,
+            ...casaFields,
             accent_color: selectedAccent,
             theme_mode: selectedThemeMode,
           });
@@ -807,8 +851,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [surpriseSelect]),
     h("label", {}, "Decepción"),
     h("div", { style: "margin-bottom:14px" }, [disappointmentSelect]),
-    h("label", {}, "Cuarto favorito"),
-    h("div", { style: "margin-bottom:14px" }, [roomSelect]),
+    ...(isGranja() ? [] : [h("label", {}, "Cuarto favorito"), h("div", { style: "margin-bottom:14px" }, [roomSelect])]),
     h("label", {}, "Favorito de Temporada 1"),
     h("div", { style: "margin-bottom:14px" }, [t1Select]),
     h("label", {}, "Funado de Temporada 1"),
@@ -817,6 +860,9 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [t1SurpriseSelect]),
     h("label", {}, "Decepción de Temporada 1"),
     h("div", { style: "margin-bottom:14px" }, [t1DisappointmentSelect]),
+    ...(isGranja()
+      ? []
+      : [
     h("label", {}, "Team de Temporada 1"),
     h("div", { style: "margin-bottom:14px" }, [t1RoomSelect]),
     h("label", {}, "Favorito de Temporada 2"),
@@ -839,6 +885,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
     h("div", { style: "margin-bottom:14px" }, [t3DisappointmentSelect]),
     h("label", {}, "Team de Temporada 3"),
     h("div", { style: "margin-bottom:14px" }, [t3RoomSelect]),
+        ]),
     h("label", {}, "Color de tema"),
     h("div", { style: "margin-bottom:18px" }, [swatchWrap]),
     h("label", {}, "Tema oscuro o claro"),
