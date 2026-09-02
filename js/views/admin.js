@@ -21,6 +21,9 @@ import {
   confirmEliminations,
   getEliminationsForWeek,
   getExilesForWeek,
+  getPeonesForWeek,
+  addPeon,
+  removePeon,
   getGranjaWeekDynamics,
   saveGranjaDuel,
   removeGranjaDuel,
@@ -261,13 +264,14 @@ async function renderParticipantsAdmin(sub) {
 // SEMANAS
 // ============================================================
 async function renderWeekDetail(container, week, allParticipants) {
-  const [nominations, immunities, nominationVotes, weekEliminations, weekExiles, dynamics] = await Promise.all([
+  const [nominations, immunities, nominationVotes, weekEliminations, weekExiles, dynamics, weekPeones] = await Promise.all([
     getNominationsForWeek(week.id),
     getImmunitiesForWeek(week.id),
     getNominationVotesForWeek(week.id),
     getEliminationsForWeek(week.id),
     getExilesForWeek(week.id),
     isGranja() ? getGranjaWeekDynamics(week.id) : Promise.resolve({ duel: null, betrayal: null, legacy: null }),
+    isGranja() ? getPeonesForWeek(week.id) : Promise.resolve([]),
   ]);
   const nominatedIds = new Set(nominations.map((n) => n.participant_id));
   const immuneIds = new Set(immunities.map((i) => i.participant_id));
@@ -532,6 +536,43 @@ async function renderWeekDetail(container, week, allParticipants) {
       },
     },
     "Mandar al exilio"
+  );
+
+  // --- Peones de la semana (solo La Granja) ---
+  const peonIds = new Set(weekPeones.map((e) => e.participant_id));
+  const peonChips = weekPeones.map((e) =>
+    h("span", { class: "chip-select" }, [
+      e.participants.name,
+      h(
+        "button",
+        {
+          onclick: async () => {
+            await removePeon(week.id, e.participant_id);
+            await refresh();
+          },
+        },
+        h("i", { class: "fa-solid fa-xmark" })
+      ),
+    ])
+  );
+  const peonSelect = h(
+    "select",
+    {},
+    [h("option", { value: "" }, "Elige granjero…")].concat(
+      allParticipants.filter((p) => !peonIds.has(p.id)).map((p) => h("option", { value: p.id }, p.name))
+    )
+  );
+  const addPeonBtn = h(
+    "button",
+    {
+      class: "btn small",
+      onclick: async () => {
+        if (!peonSelect.value) return;
+        await addPeon(week.id, Number(peonSelect.value));
+        await refresh();
+      },
+    },
+    "Marcar peón"
   );
 
   // --- Duelo, traición y El Legado (solo La Granja) ---
@@ -951,6 +992,18 @@ async function renderWeekDetail(container, week, allParticipants) {
             h("div", {}, exileChips.length ? exileChips : [h("span", { class: "muted" }, "Nadie todavía")]),
             h("div", { class: "row-flex", style: "margin-top:8px" }, [exileSelect, addExileBtn]),
           ]),
+      ...(isGranja()
+        ? [
+            h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Peones de la semana")),
+            h(
+              "p",
+              { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+              "Quiénes quedaron como peones esta semana. Marcarlos aquí también los deja marcados como peones en Granjeros; cuando dejen de serlo, quítales la marca desde esa pestaña."
+            ),
+            h("div", {}, peonChips.length ? peonChips : [h("span", { class: "muted" }, "Nadie todavía")]),
+            h("div", { class: "row-flex", style: "margin-top:8px" }, [peonSelect, addPeonBtn]),
+          ]
+        : []),
       ...(isGranja() ? granjaDynamicsBlock() : []),
       h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "¿Quién nominó a quién?")),
       h(

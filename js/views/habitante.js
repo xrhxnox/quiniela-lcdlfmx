@@ -62,6 +62,10 @@ function granjaBadges(weekId, dyn, id) {
 
   // El legado se registra en la semana en que salió quien lo dejó, pero al
   // nominado le pega en la siguiente: por eso se nombra la semana en el texto.
+  if (dyn.peones?.some((x) => x.week_id === weekId && x.participant_id === id)) {
+    out.push(badge("Peón", "fa-person-digging", BROWN));
+  }
+
   const legFrom = dyn.legacies.find((l) => l.week_id === weekId && l.from_participant_id === id);
   if (legFrom) out.push(badge("Dejó El Legado", "fa-ghost", CRIMSON));
   const legTo = dyn.legacies.find((l) => l.week_id === weekId && l.to_participant_id === id);

@@ -136,6 +136,33 @@ export async function updateMyGranjaPicks({
 // Duelo, traición y El Legado solo existen en La Granja, así que las tablas se
 // nombran directo (sin pasar por tbl()) y estas funciones solo deben llamarse
 // cuando el show activo es ese.
+// Peones de una semana. Como el exilio en La Casa, agregar a alguien también
+// prende su bandera global is_peon (la que pinta la insignia). Quitarlo de la
+// lista NO la apaga: fue peón esa semana aunque hoy ya no lo sea, y el estado
+// de hoy se maneja desde la pestaña de Granjeros.
+export async function getPeonesForWeek(weekId) {
+  return unwrap(
+    await supabase
+      .from("granja_peones")
+      .select(`week_id, participant_id, ${emb("participants", "*")}`)
+      .eq("week_id", weekId)
+  );
+}
+
+export async function addPeon(weekId, participantId) {
+  const row = unwrap(
+    await supabase.from("granja_peones").insert({ week_id: weekId, participant_id: participantId }).select()
+  );
+  unwrap(await supabase.from("granja_participants").update({ is_peon: true }).eq("id", participantId).select());
+  return row;
+}
+
+export async function removePeon(weekId, participantId) {
+  return unwrap(
+    await supabase.from("granja_peones").delete().eq("week_id", weekId).eq("participant_id", participantId)
+  );
+}
+
 export async function getGranjaWeekDynamics(weekId) {
   const [duel, betrayal, legacy] = await Promise.all([
     supabase.from("granja_duels").select("*").eq("week_id", weekId).maybeSingle(),
@@ -151,12 +178,18 @@ export async function getGranjaWeekDynamics(weekId) {
 // Todas las dinámicas de todas las semanas, para pintarlas en la ficha del
 // granjero y en el historial sin una consulta por semana.
 export async function getAllGranjaDynamics() {
-  const [duels, betrayals, legacies] = await Promise.all([
+  const [duels, betrayals, legacies, peones] = await Promise.all([
     supabase.from("granja_duels").select("*"),
     supabase.from("granja_betrayals").select("*"),
     supabase.from("granja_legacies").select("*"),
+    supabase.from("granja_peones").select("week_id, participant_id"),
   ]);
-  return { duels: unwrap(duels), betrayals: unwrap(betrayals), legacies: unwrap(legacies) };
+  return {
+    duels: unwrap(duels),
+    betrayals: unwrap(betrayals),
+    legacies: unwrap(legacies),
+    peones: unwrap(peones),
+  };
 }
 
 // El perdedor del duelo "sale nominado directamente", así que al guardarlo se
