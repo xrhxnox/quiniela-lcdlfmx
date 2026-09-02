@@ -35,7 +35,10 @@
 }
 
 :root[data-show="granja"] {
-  --font-title: "Bitter", Georgia, "Times New Roman", serif;
+  --font-title: "Staatliches", "Oswald", Impact, sans-serif;
+  /* Staatliches viene en un solo grosor: pedirle 700 haría que el navegador se
+     invente una negrita deformada. */
+  --font-title-weight: 400;
   /* Tablones: la línea gruesa separa tabla de tabla, la fina es la veta. */
   --plank: rgba(255, 255, 255, 0.035);
   --grain: rgba(255, 255, 255, 0.022);
@@ -79,13 +82,11 @@
   background-image: var(--texture);
 }
 
-/* La Bitter tiene una x-height alta y remates rectos: en mayúsculas aguanta
-   más tamaño que la Oswald sin sentirse apretada, pero necesita algo de aire
-   entre letras para no verse compacta. */
+/* Staatliches es condensada como la Oswald, así que ocupa un ancho parecido y
+   puede quedarse en el mismo tamaño que en La Casa. Solo pide algo más de aire
+   entre letras: sus astas son muy verticales y sin él se apelmaza. */
 :root[data-show="granja"] .section-title {
-  font-size: 1.5rem;
-  letter-spacing: 0.02em;
-  line-height: 1.3;
+  letter-spacing: 0.05em;
 }
 
 
@@ -330,9 +331,11 @@ main#app.fade-in { animation: fadeInUp 0.3s ease; }
 
 .section-title {
   font-family: var(--font-title);
+  /* El grosor sale de la variable porque no toda fuente trae negrita: la
+     declaración fija que había aquí la pisaba y el navegador terminaba
+     inventándose una. */
   font-weight: var(--font-title-weight);
   font-size: 1.7rem;
-  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin: 6px 0 18px;
