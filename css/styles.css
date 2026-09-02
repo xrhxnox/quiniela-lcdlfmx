@@ -22,13 +22,11 @@
 }
 
 /* ---------- Identidad por show ----------
-   --show es el color del programa en el que estás, aparte de --accent, que es
-   el color personal de cada jugador. Se marca con data-show en el <html>, así
-   que basta cambiar ese atributo para repintar toda la app. La Granja además
-   entibia los fondos: es un cambio pequeño en cada superficie pero constante
-   en pantalla, y eso es lo que hace que se note sin tener que leer nada. */
+   El color lo pone el jugador (--accent, y cada show guarda el suyo), así que
+   aquí no se fija ningún color de programa. Lo que cambia por show es el
+   ambiente: La Granja entibia los fondos y usa otra tipografía en los títulos.
+   Todo cuelga de data-show en el <html>. */
 :root {
-  --show: #e30613;
   /* Tipografía de los títulos grandes. La Granja usa una slab serif; el resto
      de la interfaz sigue en Oswald, que a 0.78rem y en mayúsculas se lee mejor
      que cualquier cosa con remates. */
@@ -37,7 +35,6 @@
 }
 
 :root[data-show="granja"] {
-  --show: #7fb069;
   --font-title: "Bitter", Georgia, "Times New Roman", serif;
   --bg: #1a1a16;
   --bg-elev: #23231c;
@@ -52,10 +49,6 @@
   --line: #dcdcd2;
 }
 
-/* La línea bajo el encabezado es la señal más grande y constante en pantalla:
-   roja en La Casa, verde en La Granja. */
-header.topbar { border-bottom-color: var(--show) !important; }
-
 /* Textura del encabezado de La Granja: tablones de madera hechos con
    gradientes, sin imágenes ni peticiones extra. Va por debajo del logo y a muy
    baja opacidad, lo justo para que la barra no se sienta lisa. */
@@ -63,8 +56,8 @@ header.topbar { border-bottom-color: var(--show) !important; }
   background-image:
     repeating-linear-gradient(
       90deg,
-      rgba(127, 176, 105, 0.05) 0px,
-      rgba(127, 176, 105, 0.05) 2px,
+      rgba(255, 255, 255, 0.035) 0px,
+      rgba(255, 255, 255, 0.035) 2px,
       transparent 2px,
       transparent 96px
     ),
