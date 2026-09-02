@@ -84,6 +84,14 @@ export async function getSavedCounts() {
   return map;
 }
 
+// Los picks de perfil (favorito, funado, sorpresa, decepción) son de La Casa
+// y viven en columnas de profiles que apuntan a participants. Por eso se leen
+// siempre contra esa tabla, aunque el usuario esté viendo La Granja; si no,
+// un id de La Casa se resolvería contra un granjero distinto con el mismo id.
+export async function getCasaParticipants() {
+  return unwrap(await supabase.from("participants").select("*").order("name"));
+}
+
 // ---------- Historial de un habitante ----------
 // Todo lo que le pasó semana por semana. Devuelve filas crudas con ids; la
 // vista resuelve los nombres contra la lista de participantes que ya carga,

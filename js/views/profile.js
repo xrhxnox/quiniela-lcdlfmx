@@ -1,5 +1,6 @@
 import {
   getParticipants,
+  getCasaParticipants,
   getMyPredictionHistory,
   getAllEliminationsWithWeeks,
   updateMyProfile,
@@ -268,7 +269,7 @@ export async function renderPublicProfile(container, username) {
 export async function renderEditProfile(container, viewerProfile, onUpdate) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
 
-  const [participants, legacyFavorites] = await Promise.all([getParticipants(), getLegacyFavorites()]);
+  const [casaParticipants, legacyFavorites] = await Promise.all([getCasaParticipants(), getLegacyFavorites()]);
 
   const refresh = async (updatedProfile) => {
     const nextProfile = updatedProfile || viewerProfile;
@@ -280,7 +281,7 @@ export async function renderEditProfile(container, viewerProfile, onUpdate) {
     container,
     h("div", {}, [
       h("div", { class: "section-title" }, "Editar Perfil"),
-      buildEditCard(viewerProfile, participants, legacyFavorites, refresh),
+      buildEditCard(viewerProfile, casaParticipants, legacyFavorites, refresh),
     ])
   );
 }
@@ -334,16 +335,18 @@ async function renderProfileInternal(container, username) {
   const eliminatedSet = new Set(eliminations.map((e) => `${e.week_id}:${e.participant_id}`));
   const rankIndex = leaderboard.findIndex((r) => r.player_id === target.id);
   const points = rankIndex >= 0 ? leaderboard[rankIndex].points : 0;
-  const favorite = participants.find((p) => p.id === target.favorite_participant_id) || null;
-  const hated = participants.find((p) => p.id === target.hated_participant_id) || null;
+  // Los cuatro picks son de La Casa: se resuelven contra su propia lista.
+  const casaParticipants = await getCasaParticipants();
+  const favorite = casaParticipants.find((p) => p.id === target.favorite_participant_id) || null;
+  const hated = casaParticipants.find((p) => p.id === target.hated_participant_id) || null;
   const favT1 = legacyFavorites.find((f) => f.id === target.fav_season1_id) || null;
   const favT2 = legacyFavorites.find((f) => f.id === target.fav_season2_id) || null;
   const favT3 = legacyFavorites.find((f) => f.id === target.fav_season3_id) || null;
   const hatedT1 = legacyFavorites.find((f) => f.id === target.hated_season1_id) || null;
   const hatedT2 = legacyFavorites.find((f) => f.id === target.hated_season2_id) || null;
   const hatedT3 = legacyFavorites.find((f) => f.id === target.hated_season3_id) || null;
-  const surprise = participants.find((p) => p.id === target.surprise_participant_id) || null;
-  const disappointment = participants.find((p) => p.id === target.disappointment_participant_id) || null;
+  const surprise = casaParticipants.find((p) => p.id === target.surprise_participant_id) || null;
+  const disappointment = casaParticipants.find((p) => p.id === target.disappointment_participant_id) || null;
   const surpriseT1 = legacyFavorites.find((f) => f.id === target.surprise_season1_id) || null;
   const surpriseT2 = legacyFavorites.find((f) => f.id === target.surprise_season2_id) || null;
   const surpriseT3 = legacyFavorites.find((f) => f.id === target.surprise_season3_id) || null;
