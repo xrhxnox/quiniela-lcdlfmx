@@ -98,7 +98,9 @@ function weekStatusBadges(week, hist, participantId, participant, dyn) {
   // salvó ya se ve arriba con la insignia "Salvado".
   if (week.salvation_participant_id === participantId) {
     out.push(
-      week.salvation_mode === "robo"
+      isGranja()
+        ? badge("Ganó la salvación", "fa-hand-holding-heart", TEAL)
+        : week.salvation_mode === "robo"
         ? badge("Robó la salvación", "fa-sack-dollar", TEAL)
         : badge("Conservó la salvación", "fa-hand-holding-heart", TEAL)
     );

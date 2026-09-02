@@ -144,7 +144,7 @@ async function buildHistoryCards() {
             }),
             " Salvación: ",
             salvationHolder.name,
-            week.salvation_mode === "robo" ? " (se la robó)" : " (la conservó)",
+            isGranja() ? " se salvó" : week.salvation_mode === "robo" ? " (se la robó)" : " (la conservó)",
           ])
         : null,
       ...granjaDynamicLines(week.id, dyn, nameOfP, "0.78rem"),
@@ -348,8 +348,14 @@ async function renderVotingWeek(container, week, profile) {
         }),
         " Salvación: ",
         h("strong", {}, salvationHolder.name),
-        week.salvation_mode === "robo" ? ` se la robó al ${getShow().leaderLabel.toLowerCase()}` : " la conservó",
-        ...(savedName ? [" y salvó a ", h("strong", {}, savedName)] : []),
+        // En La Granja la gana un nominado y se salva a sí mismo, así que no
+        // hay modo ni "salvó a": la frase se acaba en su nombre.
+        ...(isGranja()
+          ? [" se salvó"]
+          : [
+              week.salvation_mode === "robo" ? ` se la robó al ${getShow().leaderLabel.toLowerCase()}` : " la conservó",
+              ...(savedName ? [" y salvó a ", h("strong", {}, savedName)] : []),
+            ]),
       ])
     : null;
 

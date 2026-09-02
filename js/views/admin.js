@@ -447,6 +447,31 @@ async function renderWeekDetail(container, week, allParticipants) {
       label
     );
 
+  // En La Granja la salvación se compite SOLO entre los nominados y quien gana
+  // se salva a sí mismo: no hay "el capataz la conservó" ni robo, así que basta
+  // un select. Guardarlo hace las dos cosas a la vez —dejar constancia de quién
+  // la ganó y encender su flag "saved"— en una sola escritura por fila.
+  const granjaSalvationSelect = h(
+    "select",
+    {
+      style: "max-width:220px",
+      onchange: async (e) => {
+        const pid = e.target.value ? Number(e.target.value) : null;
+        for (const n of nominations) {
+          if (n.saved && n.participant_id !== pid) await setNominationSaved(week.id, n.participant_id, false);
+        }
+        if (pid) await setNominationSaved(week.id, pid, true);
+        // salvation_mode se queda en null: "conservó/robó" no aplica aquí.
+        await updateWeek(week.id, { salvation_participant_id: pid, salvation_mode: null });
+        await refresh();
+      },
+    },
+    [h("option", { value: "" }, "Nadie todavía")].concat(
+      nominations.map((n) => h("option", { value: n.participant_id }, n.participants.name))
+    )
+  );
+  granjaSalvationSelect.value = week.salvation_participant_id ?? "";
+
   // A quién salvó. No es una columna nueva: enciende el mismo flag "saved" de
   // nominations que ya usa el botón del escudo y alimenta "Salvado N veces".
   // Solo puede haber un salvado por semana, así que se comporta como radio.
@@ -882,22 +907,38 @@ async function renderWeekDetail(container, week, allParticipants) {
       h("div", {}, immuneChips.length ? immuneChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [immuneSelect, addImmuneBtn]),
       h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "La Salvación")),
-      h(
-        "p",
-        { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
-        `El ${getShow().leaderLabel.toLowerCase()} salva a un nominado, salvo que alguien más le robe la salvación. Primero registra quién terminó con ella (el ${getShow().leaderLabel.toLowerCase()} si nadie la robó) y luego a quién salvó — puede haberse salvado a sí mismo. Que se la roben no le quita la inmunidad al ${getShow().leaderLabel.toLowerCase()}: eso se sigue marcando arriba, aparte.`
-      ),
-      h("div", { class: "row-flex" }, [
-        salvationSelect,
-        salvationModeBtn("conservo", `La conservó el ${getShow().leaderLabel.toLowerCase()}`),
-        salvationModeBtn("robo", "Se la robaron"),
-      ]),
-      h("div", { class: "row-flex", style: "margin-top:8px" }, [
-        h("span", { class: "muted", style: "font-size:0.82rem" }, "Salvó a:"),
-        nominations.length
-          ? salvationSavedSelect
-          : h("span", { class: "muted", style: "font-size:0.82rem" }, "Agrega nominados primero."),
-      ]),
+      ...(isGranja()
+        ? [
+            h(
+              "p",
+              { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+              "La compiten solo los nominados; el capataz no participa. Quien gana queda salvado. El viernes puede traicionar: eso se registra abajo, aparte."
+            ),
+            h("div", { class: "row-flex" }, [
+              h("span", { class: "muted", style: "font-size:0.82rem" }, "La ganó:"),
+              nominations.length
+                ? granjaSalvationSelect
+                : h("span", { class: "muted", style: "font-size:0.82rem" }, "Agrega nominados primero."),
+            ]),
+          ]
+        : [
+            h(
+              "p",
+              { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+              `El ${getShow().leaderLabel.toLowerCase()} salva a un nominado, salvo que alguien más le robe la salvación. Primero registra quién terminó con ella (el ${getShow().leaderLabel.toLowerCase()} si nadie la robó) y luego a quién salvó — puede haberse salvado a sí mismo. Que se la roben no le quita la inmunidad al ${getShow().leaderLabel.toLowerCase()}: eso se sigue marcando arriba, aparte.`
+            ),
+            h("div", { class: "row-flex" }, [
+              salvationSelect,
+              salvationModeBtn("conservo", `La conservó el ${getShow().leaderLabel.toLowerCase()}`),
+              salvationModeBtn("robo", "Se la robaron"),
+            ]),
+            h("div", { class: "row-flex", style: "margin-top:8px" }, [
+              h("span", { class: "muted", style: "font-size:0.82rem" }, "Salvó a:"),
+              nominations.length
+                ? salvationSavedSelect
+                : h("span", { class: "muted", style: "font-size:0.82rem" }, "Agrega nominados primero."),
+            ]),
+          ]),
       ...(isGranja()
         ? []
         : [

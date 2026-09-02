@@ -105,7 +105,10 @@ function granjaCards() {
           " dos granjeros se enfrentan y el que pierde queda nominado directamente.",
         ]),
         h("li", {}, [h("strong", {}, "Miércoles — Asamblea:"), " los granjeros nominan."]),
-        h("li", {}, [h("strong", {}, "Jueves — Salvación:"), " quien gana la salvación se salva."]),
+        h("li", {}, [
+          h("strong", {}, "Jueves — Salvación:"),
+          " la compiten solo los nominados; el capataz no participa. Quien gana se salva.",
+        ]),
         h("li", {}, [
           h("strong", {}, "Viernes — Traición:"),
           " después de la salvación, quien tiene el poder puede traicionar e intercambiar a un nominado por uno que no lo esté. El intercambiado queda automáticamente en riesgo de eliminación.",
@@ -151,7 +154,7 @@ function granjaCards() {
 
     ruleCard("fa-shield-halved", "Capataz, nominados y salvación", [
       ul([
-        h("li", {}, "El capataz de la semana gana inmunidad y no puede ser nominado."),
+        h("li", {}, "El capataz de la semana gana inmunidad y no puede ser nominado, y por eso tampoco compite por la salvación."),
         h("li", {}, "Los nominados se muestran con los puntos con los que fueron nominados en la asamblea."),
         h("li", {}, "Al perdedor del duelo del martes lo verás ya nominado desde antes de la asamblea."),
         h("li", {}, [
