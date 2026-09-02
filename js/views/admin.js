@@ -213,7 +213,7 @@ async function renderParticipantsAdmin(sub) {
           ? h("span", { class: "badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "infiltrado")
           : null,
         p.is_exiliado ? h("span", { class: "badge black" }, "exiliado") : null,
-        p.is_abandono ? h("span", { class: "badge", style: "background:#94a3b826;color:#94a3b8;border:1px solid #94a3b8" }, "abandono") : null,
+        p.is_abandono ? h("span", { class: "badge red" }, "abandono") : null,
       ]),
       h("div", { class: "row-flex" }, [saveBtn, toggleBtn, infiltradoBtn, exiliadoBtn, abandonoBtn, delBtn]),
       itemErr,

@@ -18,16 +18,13 @@ const ORANGE = "background:#ff7a1a26;color:#ff7a1a;border:1px solid #ff7a1a";
 const BLUE = "background:#3b82f626;color:#3b82f6;border:1px solid #3b82f6";
 const PURPLE = "background:#a742f526;color:#a742f5;border:1px solid #a742f5";
 const TEAL = "background:#14b8a626;color:#14b8a6;border:1px solid #14b8a6";
-// El abandono es una salida como la eliminación, pero se distingue a la vista:
-// gris pizarra en vez del rojo, porque no lo sacó el público.
-const SLATE = "background:#94a3b826;color:#94a3b8;border:1px solid #94a3b8";
 
 // Estado global de hoy (lo que ya mostraba la tarjeta en la reja).
 function currentStatusBadges(p) {
   const out = [];
   if (p.is_winner) out.push(badge("Ganador", "fa-trophy", null, "badge gold status-badge"));
   else if (p.active) out.push(badge("En la casa", "fa-house", null, "badge green status-badge"));
-  else if (p.is_abandono) out.push(badge("Abandono", "fa-door-open", SLATE));
+  else if (p.is_abandono) out.push(badge("Abandono", "fa-door-open", null, "badge red status-badge"));
   else out.push(badge("Eliminado/a", "fa-skull", null, "badge red status-badge"));
   if (p.is_infiltrado) out.push(badge("Infiltrado", "fa-glasses", PURPLE));
   if (p.is_exiliado) out.push(badge("Exiliado/a", "fa-bug", null, "badge black status-badge"));
@@ -78,7 +75,7 @@ function weekStatusBadges(week, hist, participantId, participant) {
       elim.reverted_by_exile
         ? badge("Salió y volvió", "fa-rotate-left", null, "badge black status-badge")
         : participant.is_abandono
-        ? badge("Abandono", "fa-door-open", SLATE)
+        ? badge("Abandono", "fa-door-open", null, "badge red status-badge")
         : badge("Eliminado/a", "fa-skull", null, "badge red status-badge")
     );
   }
