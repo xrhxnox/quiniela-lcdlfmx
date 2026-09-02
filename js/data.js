@@ -1,5 +1,6 @@
 import { supabase } from "./supabaseClient.js";
 import { compressImage } from "./utils.js";
+import { tbl } from "./shows.js";
 
 function unwrap({ data, error }) {
   if (error) throw error;
@@ -8,23 +9,23 @@ function unwrap({ data, error }) {
 
 // ---------- Participants ----------
 export async function getParticipants({ activeOnly = false } = {}) {
-  let q = supabase.from("participants").select("*").order("name");
+  let q = supabase.from(tbl("participants")).select("*").order("name");
   if (activeOnly) q = q.eq("active", true);
   return unwrap(await q);
 }
 
 export async function createParticipant({ name, room, photo_url }) {
   return unwrap(
-    await supabase.from("participants").insert({ name, room, photo_url }).select().single()
+    await supabase.from(tbl("participants")).insert({ name, room, photo_url }).select().single()
   );
 }
 
 export async function updateParticipant(id, fields) {
-  return unwrap(await supabase.from("participants").update(fields).eq("id", id).select().single());
+  return unwrap(await supabase.from(tbl("participants")).update(fields).eq("id", id).select().single());
 }
 
 export async function deleteParticipant(id) {
-  return unwrap(await supabase.from("participants").delete().eq("id", id));
+  return unwrap(await supabase.from(tbl("participants")).delete().eq("id", id));
 }
 
 export async function uploadParticipantPhoto(file) {
@@ -56,28 +57,28 @@ export async function deleteLegacyFavorite(id) {
 }
 
 export async function getNominationCounts() {
-  const rows = unwrap(await supabase.from("nomination_counts").select("*"));
+  const rows = unwrap(await supabase.from(tbl("nomination_counts")).select("*"));
   const map = {};
   rows.forEach((r) => (map[r.participant_id] = r.times_nominated));
   return map;
 }
 
 export async function getImmunityCounts() {
-  const rows = unwrap(await supabase.from("immunity_counts").select("*"));
+  const rows = unwrap(await supabase.from(tbl("immunity_counts")).select("*"));
   const map = {};
   rows.forEach((r) => (map[r.participant_id] = r.times_leader));
   return map;
 }
 
 export async function getSpecialImmunityCounts() {
-  const rows = unwrap(await supabase.from("special_immunity_counts").select("*"));
+  const rows = unwrap(await supabase.from(tbl("special_immunity_counts")).select("*"));
   const map = {};
   rows.forEach((r) => (map[r.participant_id] = r.times_immune));
   return map;
 }
 
 export async function getSavedCounts() {
-  const rows = unwrap(await supabase.from("saved_counts").select("*"));
+  const rows = unwrap(await supabase.from(tbl("saved_counts")).select("*"));
   const map = {};
   rows.forEach((r) => (map[r.participant_id] = r.times_saved));
   return map;
@@ -91,12 +92,12 @@ export async function getSavedCounts() {
 // una pista distinta para cada lado).
 export async function getParticipantHistory(participantId) {
   const [nominations, immunities, eliminations, exiles, votesCast, votesReceived] = await Promise.all([
-    supabase.from("nominations").select("week_id, points, saved").eq("participant_id", participantId),
-    supabase.from("immunities").select("week_id, is_leader").eq("participant_id", participantId),
-    supabase.from("eliminations").select("week_id, reverted_by_exile, gift_all").eq("participant_id", participantId),
-    supabase.from("exiles").select("week_id").eq("participant_id", participantId),
-    supabase.from("nomination_votes").select("week_id, nominee_id").eq("nominator_id", participantId),
-    supabase.from("nomination_votes").select("week_id, nominator_id").eq("nominee_id", participantId),
+    supabase.from(tbl("nominations")).select("week_id, points, saved").eq("participant_id", participantId),
+    supabase.from(tbl("immunities")).select("week_id, is_leader").eq("participant_id", participantId),
+    supabase.from(tbl("eliminations")).select("week_id, reverted_by_exile, gift_all").eq("participant_id", participantId),
+    supabase.from(tbl("exiles")).select("week_id").eq("participant_id", participantId),
+    supabase.from(tbl("nomination_votes")).select("week_id, nominee_id").eq("nominator_id", participantId),
+    supabase.from(tbl("nomination_votes")).select("week_id, nominator_id").eq("nominee_id", participantId),
   ]);
   return {
     nominations: unwrap(nominations),
@@ -110,13 +111,13 @@ export async function getParticipantHistory(participantId) {
 
 // ---------- Weeks ----------
 export async function getWeeks() {
-  return unwrap(await supabase.from("weeks").select("*").order("week_number", { ascending: false }));
+  return unwrap(await supabase.from(tbl("weeks")).select("*").order("week_number", { ascending: false }));
 }
 
 export async function getVotingWeek() {
   const rows = unwrap(
     await supabase
-      .from("weeks")
+      .from(tbl("weeks"))
       .select("*")
       .eq("status", "voting_open")
       .order("week_number", { ascending: false })
@@ -128,7 +129,7 @@ export async function getVotingWeek() {
 export async function getLatestClosedWeek() {
   const rows = unwrap(
     await supabase
-      .from("weeks")
+      .from(tbl("weeks"))
       .select("*")
       .eq("status", "closed")
       .order("week_number", { ascending: false })
@@ -140,7 +141,7 @@ export async function getLatestClosedWeek() {
 export async function createWeek({ week_number, label, nomination_date, elimination_date }) {
   return unwrap(
     await supabase
-      .from("weeks")
+      .from(tbl("weeks"))
       .insert({ week_number, label, nomination_date, elimination_date })
       .select()
       .single()
@@ -148,18 +149,18 @@ export async function createWeek({ week_number, label, nomination_date, eliminat
 }
 
 export async function updateWeek(id, fields) {
-  return unwrap(await supabase.from("weeks").update(fields).eq("id", id).select().single());
+  return unwrap(await supabase.from(tbl("weeks")).update(fields).eq("id", id).select().single());
 }
 
 export async function deleteWeek(id) {
-  return unwrap(await supabase.from("weeks").delete().eq("id", id));
+  return unwrap(await supabase.from(tbl("weeks")).delete().eq("id", id));
 }
 
 // ---------- Nominations ----------
 export async function getNominationsForWeek(weekId) {
   return unwrap(
     await supabase
-      .from("nominations")
+      .from(tbl("nominations"))
       .select("week_id, participant_id, points, saved, participants(*)")
       .eq("week_id", weekId)
       .order("points", { ascending: false })
@@ -169,7 +170,7 @@ export async function getNominationsForWeek(weekId) {
 export async function setNomination(weekId, participantId, points) {
   return unwrap(
     await supabase
-      .from("nominations")
+      .from(tbl("nominations"))
       .upsert({ week_id: weekId, participant_id: participantId, points })
       .select()
       .single()
@@ -179,7 +180,7 @@ export async function setNomination(weekId, participantId, points) {
 export async function setNominationSaved(weekId, participantId, saved) {
   return unwrap(
     await supabase
-      .from("nominations")
+      .from(tbl("nominations"))
       .update({ saved })
       .eq("week_id", weekId)
       .eq("participant_id", participantId)
@@ -190,27 +191,27 @@ export async function setNominationSaved(weekId, participantId, saved) {
 
 export async function removeNomination(weekId, participantId) {
   return unwrap(
-    await supabase.from("nominations").delete().eq("week_id", weekId).eq("participant_id", participantId)
+    await supabase.from(tbl("nominations")).delete().eq("week_id", weekId).eq("participant_id", participantId)
   );
 }
 
 // ---------- Quién nominó a quién ----------
 export async function getNominationVotesForWeek(weekId) {
   return unwrap(
-    await supabase.from("nomination_votes").select("week_id, nominator_id, nominee_id").eq("week_id", weekId)
+    await supabase.from(tbl("nomination_votes")).select("week_id, nominator_id, nominee_id").eq("week_id", weekId)
   );
 }
 
 export async function addNominationVote(weekId, nominatorId, nomineeId) {
   return unwrap(
-    await supabase.from("nomination_votes").insert({ week_id: weekId, nominator_id: nominatorId, nominee_id: nomineeId }).select()
+    await supabase.from(tbl("nomination_votes")).insert({ week_id: weekId, nominator_id: nominatorId, nominee_id: nomineeId }).select()
   );
 }
 
 export async function removeNominationVote(weekId, nominatorId, nomineeId) {
   return unwrap(
     await supabase
-      .from("nomination_votes")
+      .from(tbl("nomination_votes"))
       .delete()
       .eq("week_id", weekId)
       .eq("nominator_id", nominatorId)
@@ -221,26 +222,26 @@ export async function removeNominationVote(weekId, nominatorId, nomineeId) {
 // ---------- Immunities ----------
 export async function getImmunitiesForWeek(weekId) {
   return unwrap(
-    await supabase.from("immunities").select("week_id, participant_id, is_leader, participants(*)").eq("week_id", weekId)
+    await supabase.from(tbl("immunities")).select("week_id, participant_id, is_leader, participants(*)").eq("week_id", weekId)
   );
 }
 
 export async function addImmunity(weekId, participantId, isLeader = false) {
   return unwrap(
-    await supabase.from("immunities").insert({ week_id: weekId, participant_id: participantId, is_leader: isLeader })
+    await supabase.from(tbl("immunities")).insert({ week_id: weekId, participant_id: participantId, is_leader: isLeader })
   );
 }
 
 export async function removeImmunity(weekId, participantId) {
   return unwrap(
-    await supabase.from("immunities").delete().eq("week_id", weekId).eq("participant_id", participantId)
+    await supabase.from(tbl("immunities")).delete().eq("week_id", weekId).eq("participant_id", participantId)
   );
 }
 
 // ---------- Exilio (por semana) ----------
 export async function getExilesForWeek(weekId) {
   return unwrap(
-    await supabase.from("exiles").select("week_id, participant_id, participants(*)").eq("week_id", weekId)
+    await supabase.from(tbl("exiles")).select("week_id, participant_id, participants(*)").eq("week_id", weekId)
   );
 }
 
@@ -249,22 +250,22 @@ export async function getExilesForWeek(weekId) {
 // pasó por el exilio y puede haber vuelto a la casa; ese estado se maneja a
 // mano desde la pestaña de Habitantes.
 export async function addExile(weekId, participantId) {
-  const row = unwrap(await supabase.from("exiles").insert({ week_id: weekId, participant_id: participantId }).select());
+  const row = unwrap(await supabase.from(tbl("exiles")).insert({ week_id: weekId, participant_id: participantId }).select());
   // Va con unwrap a propósito: si esta escritura falla (RLS, id inválido) tiene
   // que reventar y verse, no quedarse callada dejando el flag desincronizado.
-  unwrap(await supabase.from("participants").update({ is_exiliado: true }).eq("id", participantId).select());
+  unwrap(await supabase.from(tbl("participants")).update({ is_exiliado: true }).eq("id", participantId).select());
   return row;
 }
 
 export async function removeExile(weekId, participantId) {
-  return unwrap(await supabase.from("exiles").delete().eq("week_id", weekId).eq("participant_id", participantId));
+  return unwrap(await supabase.from(tbl("exiles")).delete().eq("week_id", weekId).eq("participant_id", participantId));
 }
 
 // ---------- Eliminations ----------
 export async function getEliminationsForWeek(weekId) {
   return unwrap(
     await supabase
-      .from("eliminations")
+      .from(tbl("eliminations"))
       .select("week_id, participant_id, reverted_by_exile, gift_all, participants(*)")
       .eq("week_id", weekId)
   );
@@ -273,7 +274,7 @@ export async function getEliminationsForWeek(weekId) {
 export async function getAllEliminationsWithWeeks() {
   return unwrap(
     await supabase
-      .from("eliminations")
+      .from(tbl("eliminations"))
       .select("week_id, participant_id, reverted_by_exile, gift_all, participants(*), weeks(*)")
       .order("week_id", { ascending: false })
   );
@@ -283,7 +284,7 @@ export async function getAllEliminationsWithWeeks() {
 export async function setEliminationOraculoMode(weekId, participantId, { reverted_by_exile, gift_all }) {
   return unwrap(
     await supabase
-      .from("eliminations")
+      .from(tbl("eliminations"))
       .update({ reverted_by_exile, gift_all })
       .eq("week_id", weekId)
       .eq("participant_id", participantId)
@@ -292,22 +293,22 @@ export async function setEliminationOraculoMode(weekId, participantId, { reverte
 }
 
 export async function confirmEliminations(weekId, participantIds) {
-  await supabase.from("eliminations").delete().eq("week_id", weekId);
+  await supabase.from(tbl("eliminations")).delete().eq("week_id", weekId);
   if (participantIds.length > 0) {
     unwrap(
       await supabase
-        .from("eliminations")
+        .from(tbl("eliminations"))
         .insert(participantIds.map((pid) => ({ week_id: weekId, participant_id: pid })))
     );
   }
-  await supabase.from("participants").update({ active: false }).in("id", participantIds);
-  return unwrap(await supabase.from("weeks").update({ status: "closed" }).eq("id", weekId).select().single());
+  await supabase.from(tbl("participants")).update({ active: false }).in("id", participantIds);
+  return unwrap(await supabase.from(tbl("weeks")).update({ status: "closed" }).eq("id", weekId).select().single());
 }
 
 // ---------- Predictions ----------
 export async function getMyPrediction(weekId, playerId) {
   const { data, error } = await supabase
-    .from("predictions")
+    .from(tbl("predictions"))
     .select("*")
     .eq("week_id", weekId)
     .eq("player_id", playerId)
@@ -319,7 +320,7 @@ export async function getMyPrediction(weekId, playerId) {
 export async function submitPrediction(weekId, playerId, participantId) {
   return unwrap(
     await supabase
-      .from("predictions")
+      .from(tbl("predictions"))
       .upsert({ week_id: weekId, player_id: playerId, participant_id: participantId, updated_at: new Date().toISOString() })
       .select()
       .single()
@@ -328,19 +329,19 @@ export async function submitPrediction(weekId, playerId, participantId) {
 
 export async function getPredictionsForWeek(weekId) {
   return unwrap(
-    await supabase.from("predictions").select("*, profiles(display_name, username)").eq("week_id", weekId)
+    await supabase.from(tbl("predictions")).select("*, profiles(display_name, username)").eq("week_id", weekId)
   );
 }
 
 export async function getVotedPlayerIds(weekId) {
-  const { data, error } = await supabase.rpc("get_voted_player_ids", { p_week_id: weekId });
+  const { data, error } = await supabase.rpc(tbl("get_voted_player_ids"), { p_week_id: weekId });
   if (error) throw error;
   return new Set(data.map((r) => r.player_id));
 }
 
 // ---------- Leaderboard ----------
 export async function getLeaderboard() {
-  return unwrap(await supabase.from("leaderboard").select("*"));
+  return unwrap(await supabase.from(tbl("leaderboard")).select("*"));
 }
 
 // ---------- Profiles (admin) ----------
@@ -475,7 +476,7 @@ export async function updateMyProfile({
 export async function getMyPredictionHistory(playerId) {
   return unwrap(
     await supabase
-      .from("predictions")
+      .from(tbl("predictions"))
       .select("week_id, participant_id, participants(name), weeks(week_number, label, status)")
       .eq("player_id", playerId)
       .order("week_id", { ascending: false })
@@ -486,14 +487,14 @@ export async function getMyPredictionHistory(playerId) {
 export async function getSecretAssignments() {
   return unwrap(
     await supabase
-      .from("secret_assignments")
+      .from(tbl("secret_assignments"))
       .select("player_id, participant_id, profiles(display_name, username), participants(name, photo_url, active, is_winner)")
   );
 }
 
 export async function getMySecretAssignment(playerId) {
   const { data, error } = await supabase
-    .from("secret_assignments")
+    .from(tbl("secret_assignments"))
     .select("participant_id, participants(name, photo_url, active, is_winner)")
     .eq("player_id", playerId)
     .maybeSingle();
@@ -522,23 +523,23 @@ export async function assignSecretHabitantesRandomly() {
     player_id: player.id,
     participant_id: shuffled[i % shuffled.length].id,
   }));
-  return unwrap(await supabase.from("secret_assignments").insert(rows).select());
+  return unwrap(await supabase.from(tbl("secret_assignments")).insert(rows).select());
 }
 
 export async function clearSecretAssignment(playerId) {
-  return unwrap(await supabase.from("secret_assignments").delete().eq("player_id", playerId).select());
+  return unwrap(await supabase.from(tbl("secret_assignments")).delete().eq("player_id", playerId).select());
 }
 
 export async function resetSecretAssignments() {
   return unwrap(
-    await supabase.from("secret_assignments").delete().neq("player_id", "00000000-0000-0000-0000-000000000000").select()
+    await supabase.from(tbl("secret_assignments")).delete().neq("player_id", "00000000-0000-0000-0000-000000000000").select()
   );
 }
 
 export async function reassignSecretHabitante(playerId, participantId) {
   return unwrap(
     await supabase
-      .from("secret_assignments")
+      .from(tbl("secret_assignments"))
       .upsert({ player_id: playerId, participant_id: participantId })
       .select()
       .single()
@@ -546,19 +547,19 @@ export async function reassignSecretHabitante(playerId, participantId) {
 }
 
 export async function markParticipantAsWinner(participantId) {
-  await supabase.from("participants").update({ is_winner: false }).eq("is_winner", true);
-  return unwrap(await supabase.from("participants").update({ is_winner: true }).eq("id", participantId).select().single());
+  await supabase.from(tbl("participants")).update({ is_winner: false }).eq("is_winner", true);
+  return unwrap(await supabase.from(tbl("participants")).update({ is_winner: true }).eq("id", participantId).select().single());
 }
 
 export async function clearWinner() {
-  return unwrap(await supabase.from("participants").update({ is_winner: false }).eq("is_winner", true).select());
+  return unwrap(await supabase.from(tbl("participants")).update({ is_winner: false }).eq("is_winner", true).select());
 }
 
 // ---------- Dinámica: Orden de salida ----------
 export async function getMyEliminationOrder(playerId) {
   return unwrap(
     await supabase
-      .from("elimination_order_predictions")
+      .from(tbl("elimination_order_predictions"))
       .select("position, participant_id, participants(name, photo_url)")
       .eq("player_id", playerId)
       .order("position")
@@ -566,21 +567,21 @@ export async function getMyEliminationOrder(playerId) {
 }
 
 export async function saveEliminationOrder(playerId, orderedParticipantIds) {
-  await supabase.from("elimination_order_predictions").delete().eq("player_id", playerId);
+  await supabase.from(tbl("elimination_order_predictions")).delete().eq("player_id", playerId);
   const rows = orderedParticipantIds.map((participant_id, i) => ({
     player_id: playerId,
     position: i + 1,
     participant_id,
   }));
-  const result = unwrap(await supabase.from("elimination_order_predictions").insert(rows).select());
-  await supabase.from("oraculo_auto_filled").delete().eq("player_id", playerId);
+  const result = unwrap(await supabase.from(tbl("elimination_order_predictions")).insert(rows).select());
+  await supabase.from(tbl("oraculo_auto_filled")).delete().eq("player_id", playerId);
   return result;
 }
 
 export async function getAllEliminationOrders() {
   return unwrap(
     await supabase
-      .from("elimination_order_predictions")
+      .from(tbl("elimination_order_predictions"))
       .select("player_id, position, participant_id, participants(name, photo_url, is_winner, is_infiltrado), profiles(display_name, username)")
       .order("player_id")
       .order("position")
@@ -588,22 +589,22 @@ export async function getAllEliminationOrders() {
 }
 
 export async function getEliminationOrderScores() {
-  return unwrap(await supabase.from("elimination_order_score").select("*"));
+  return unwrap(await supabase.from(tbl("elimination_order_score")).select("*"));
 }
 
 export async function isOraculoLocked() {
-  const { data, error } = await supabase.from("oraculo_settings").select("locked").limit(1).maybeSingle();
+  const { data, error } = await supabase.from(tbl("oraculo_settings")).select("locked").limit(1).maybeSingle();
   if (error) throw error;
   return data?.locked ?? false;
 }
 
 export async function setOraculoLocked(locked) {
-  return unwrap(await supabase.from("oraculo_settings").update({ locked }).eq("id", true).select().single());
+  return unwrap(await supabase.from(tbl("oraculo_settings")).update({ locked }).eq("id", true).select().single());
 }
 
 export async function resetOraculo() {
-  await supabase.from("elimination_order_predictions").delete().neq("player_id", "00000000-0000-0000-0000-000000000000");
-  await supabase.from("oraculo_auto_filled").delete().neq("player_id", "00000000-0000-0000-0000-000000000000");
+  await supabase.from(tbl("elimination_order_predictions")).delete().neq("player_id", "00000000-0000-0000-0000-000000000000");
+  await supabase.from(tbl("oraculo_auto_filled")).delete().neq("player_id", "00000000-0000-0000-0000-000000000000");
   return setOraculoLocked(false);
 }
 
@@ -614,7 +615,7 @@ export async function fillMissingOraculoPredictionsAlphabetically() {
   const [profiles, participants, predictionRows] = await Promise.all([
     getAllProfiles(),
     getParticipants(),
-    supabase.from("elimination_order_predictions").select("player_id"),
+    supabase.from(tbl("elimination_order_predictions")).select("player_id"),
   ]);
   if (predictionRows.error) throw predictionRows.error;
 
@@ -629,13 +630,13 @@ export async function fillMissingOraculoPredictionsAlphabetically() {
       rows.push({ player_id: player.id, position: i + 1, participant_id: participant.id });
     });
   });
-  const inserted = unwrap(await supabase.from("elimination_order_predictions").insert(rows).select());
-  await supabase.from("oraculo_auto_filled").upsert(missingPlayers.map((p) => ({ player_id: p.id })));
+  const inserted = unwrap(await supabase.from(tbl("elimination_order_predictions")).insert(rows).select());
+  await supabase.from(tbl("oraculo_auto_filled")).upsert(missingPlayers.map((p) => ({ player_id: p.id })));
   return inserted;
 }
 
 export async function getOraculoAutoFilledPlayerIds() {
-  const { data, error } = await supabase.from("oraculo_auto_filled").select("player_id");
+  const { data, error } = await supabase.from(tbl("oraculo_auto_filled")).select("player_id");
   if (error) throw error;
   return new Set(data.map((r) => r.player_id));
 }
