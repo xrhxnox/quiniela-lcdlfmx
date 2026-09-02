@@ -36,8 +36,12 @@
 
 :root[data-show="granja"] {
   --font-title: "Bitter", Georgia, "Times New Roman", serif;
-  --weave-light: rgba(255, 255, 255, 0.022);
-  --weave-dark: rgba(0, 0, 0, 0.055);
+  /* Tablones: la línea gruesa separa tabla de tabla, la fina es la veta. */
+  --plank: rgba(255, 255, 255, 0.035);
+  --grain: rgba(255, 255, 255, 0.022);
+  --texture:
+    repeating-linear-gradient(90deg, var(--plank) 0 2px, transparent 2px 96px),
+    repeating-linear-gradient(180deg, var(--grain) 0 1px, transparent 1px 7px);
   --bg: #1a1a16;
   --bg-elev: #23231c;
   --bg-card: #2a2a22;
@@ -45,56 +49,37 @@
 }
 
 :root[data-show="granja"][data-theme="light"] {
-  --weave-light: rgba(120, 96, 56, 0.05);
-  --weave-dark: rgba(0, 0, 0, 0.028);
+  --plank: rgba(120, 96, 56, 0.09);
+  --grain: rgba(120, 96, 56, 0.05);
   --bg: #f3f4ee;
   --bg-elev: #ffffff;
   --bg-card: #ffffff;
   --line: #dcdcd2;
 }
 
-/* Textura del fondo de La Granja: un tejido de costal, dos rayados cruzados a
-   45°. Va muy tenue porque cubre toda la pantalla y compite con el texto; la
-   intensidad se ajusta en --weave-light / --weave-dark. */
+/* El fondo lleva la misma textura de tablones que el encabezado, sobre los dos
+   resplandores del color del jugador. background-repeat va por capa: los
+   tablones se repiten, los resplandores no. */
 :root[data-show="granja"] html,
 :root[data-show="granja"] body {
   background-image:
-    repeating-linear-gradient(45deg, var(--weave-light) 0 1px, transparent 1px 5px),
-    repeating-linear-gradient(-45deg, var(--weave-dark) 0 1px, transparent 1px 5px),
+    var(--texture),
     radial-gradient(ellipse 1200px 800px at 50% -10%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%),
     radial-gradient(ellipse 1200px 800px at 50% 110%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%);
   background-repeat: repeat, repeat, no-repeat, no-repeat;
   background-attachment: fixed;
 }
 
-/* Las tarjetas llevan el mismo tejido, más marcado por ir sobre una superficie
-   más clara, para que no floten sobre el fondo como si fueran de otro material. */
+/* Las tarjetas también, para que no floten sobre el fondo como si fueran de
+   otro material. */
 :root[data-show="granja"] .card,
 :root[data-show="granja"] .nominee-card {
-  background-image:
-    repeating-linear-gradient(45deg, var(--weave-light) 0 1px, transparent 1px 6px),
-    repeating-linear-gradient(-45deg, var(--weave-dark) 0 1px, transparent 1px 6px);
+  background-image: var(--texture);
 }
 
-/* Textura del encabezado de La Granja: tablones de madera hechos con
-   gradientes, sin imágenes ni peticiones extra. Va por debajo del logo y a muy
-   baja opacidad, lo justo para que la barra no se sienta lisa. */
+/* Y el encabezado, que es donde nació el patrón. */
 :root[data-show="granja"] header.topbar {
-  background-image:
-    repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.035) 0px,
-      rgba(255, 255, 255, 0.035) 2px,
-      transparent 2px,
-      transparent 96px
-    ),
-    repeating-linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.022) 0px,
-      rgba(255, 255, 255, 0.022) 1px,
-      transparent 1px,
-      transparent 7px
-    );
+  background-image: var(--texture);
 }
 
 /* La Bitter tiene una x-height alta y remates rectos: en mayúsculas aguanta
