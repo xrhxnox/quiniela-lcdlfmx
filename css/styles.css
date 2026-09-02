@@ -70,13 +70,6 @@
   background-attachment: fixed;
 }
 
-/* Las tarjetas también, para que no floten sobre el fondo como si fueran de
-   otro material. */
-:root[data-show="granja"] .card,
-:root[data-show="granja"] .nominee-card {
-  background-image: var(--texture);
-}
-
 /* Y el encabezado, que es donde nació el patrón. */
 :root[data-show="granja"] header.topbar {
   background-image: var(--texture);
