@@ -36,6 +36,8 @@
 
 :root[data-show="granja"] {
   --font-title: "Bitter", Georgia, "Times New Roman", serif;
+  --weave-light: rgba(255, 255, 255, 0.022);
+  --weave-dark: rgba(0, 0, 0, 0.055);
   --bg: #1a1a16;
   --bg-elev: #23231c;
   --bg-card: #2a2a22;
@@ -43,10 +45,35 @@
 }
 
 :root[data-show="granja"][data-theme="light"] {
+  --weave-light: rgba(120, 96, 56, 0.05);
+  --weave-dark: rgba(0, 0, 0, 0.028);
   --bg: #f3f4ee;
   --bg-elev: #ffffff;
   --bg-card: #ffffff;
   --line: #dcdcd2;
+}
+
+/* Textura del fondo de La Granja: un tejido de costal, dos rayados cruzados a
+   45°. Va muy tenue porque cubre toda la pantalla y compite con el texto; la
+   intensidad se ajusta en --weave-light / --weave-dark. */
+:root[data-show="granja"] html,
+:root[data-show="granja"] body {
+  background-image:
+    repeating-linear-gradient(45deg, var(--weave-light) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(-45deg, var(--weave-dark) 0 1px, transparent 1px 5px),
+    radial-gradient(ellipse 1200px 800px at 50% -10%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 1200px 800px at 50% 110%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%);
+  background-repeat: repeat, repeat, no-repeat, no-repeat;
+  background-attachment: fixed;
+}
+
+/* Las tarjetas llevan el mismo tejido, más marcado por ir sobre una superficie
+   más clara, para que no floten sobre el fondo como si fueran de otro material. */
+:root[data-show="granja"] .card,
+:root[data-show="granja"] .nominee-card {
+  background-image:
+    repeating-linear-gradient(45deg, var(--weave-light) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(-45deg, var(--weave-dark) 0 1px, transparent 1px 6px);
 }
 
 /* Textura del encabezado de La Granja: tablones de madera hechos con
