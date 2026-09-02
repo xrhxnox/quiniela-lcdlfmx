@@ -13,6 +13,7 @@ import { renderOrdenSalida } from "./views/orden.js";
 import { renderJugadores } from "./views/jugadores.js";
 import { h, clearAndAppend } from "./utils.js";
 import { initAccent, syncAccentFromProfile, initThemeMode, syncThemeModeFromProfile } from "./theme.js";
+import { SHOWS, getShow, getShowKey, setShow } from "./shows.js";
 
 initAccent();
 initThemeMode();
@@ -22,8 +23,37 @@ const appHeaderWrap = document.getElementById("appHeaderWrap");
 const tabsEl = document.getElementById("tabs");
 const userChip = document.getElementById("userChip");
 const appFooter = document.getElementById("appFooter");
+const showSwitchEl = document.getElementById("showSwitch");
 
-appFooter.textContent = `LCDLFMX4 · ${new Date().getFullYear()} · Designed by Rick`;
+function updateFooter() {
+  appFooter.textContent = `${getShow().label} · ${new Date().getFullYear()} · Designed by Rick`;
+}
+updateFooter();
+
+// Botón que salta al OTRO show. No hay dos links: el show activo se guarda por
+// navegador, así que el mismo URL abre el último que cada quien haya visto.
+function renderShowSwitch() {
+  const other = getShowKey() === "casa" ? SHOWS.granja : SHOWS.casa;
+  showSwitchEl.innerHTML = "";
+  showSwitchEl.appendChild(
+    h(
+      "button",
+      {
+        class: "btn small secondary",
+        title: `Cambiar a ${other.label}`,
+        onclick: () => {
+          if (!setShow(other.key)) return;
+          updateFooter();
+          // Vuelve al inicio a propósito: una ruta como #/habitante/5 apunta a
+          // un id que en el otro show es otra persona.
+          if (location.hash && location.hash !== "#/") location.hash = "#/";
+          else renderRoute();
+        },
+      },
+      [h("i", { class: `fa-solid ${other.icon}` }), " " + other.short]
+    )
+  );
+}
 
 let currentProfile = null;
 
@@ -56,15 +86,20 @@ const ROUTES = [
 
 function renderNav() {
   tabsEl.innerHTML = "";
+  renderShowSwitch();
+  const show = getShow();
   const hash = location.hash || "#/";
   ROUTES.filter((r) => !r.adminOnly || currentProfile?.role === "admin").forEach((r) => {
     const isActive =
       hash === r.path ||
       (r.path === "#/perfil" && hash.startsWith("#/perfil/")) ||
       (r.path === "#/participantes" && hash.startsWith("#/habitante/"));
+    // "Habitantes" en La Casa, "Granjeros" en La Granja.
+    const label = r.path === "#/participantes" ? show.memberPlural : r.label;
+    const icon = r.path === "#/participantes" ? show.icon : r.icon;
     const a = h("a", { href: r.path, class: isActive ? "active" : "" }, [
-      h("i", { class: `fa-solid ${r.icon}` }),
-      h("span", {}, r.label),
+      h("i", { class: `fa-solid ${icon}` }),
+      h("span", {}, label),
     ]);
     tabsEl.appendChild(a);
   });

@@ -103,6 +103,13 @@ header.topbar {
   gap: 12px;
 }
 
+header.topbar .show-switch {
+  grid-column: 1;
+  justify-self: start;
+  display: flex;
+  align-items: center;
+}
+
 header.topbar .brand {
   display: flex;
   align-items: center;
@@ -587,6 +594,7 @@ footer.app-footer {
 
 @media (max-width: 640px) {
   header.topbar { padding: 14px 12px; grid-template-columns: auto; justify-items: center; }
+  header.topbar .show-switch { grid-column: 1; justify-self: center; order: -1; }
   header.topbar .brand { grid-column: 1; }
   header.topbar .user-chip { grid-column: 1; justify-self: center; justify-content: center; }
 }
