@@ -12,7 +12,7 @@ import { renderReglas } from "./views/reglas.js";
 import { renderOrdenSalida } from "./views/orden.js";
 import { renderJugadores } from "./views/jugadores.js";
 import { h, clearAndAppend } from "./utils.js";
-import { initAccent, syncAccentFromProfile, initThemeMode, syncThemeModeFromProfile, applyAccent, getAccentKey } from "./theme.js";
+import { initAccent, syncAccentFromProfile, initThemeMode, syncThemeModeFromProfile } from "./theme.js";
 import { SHOWS, getShow, getShowKey, setShow } from "./shows.js";
 
 initAccent();
@@ -62,9 +62,6 @@ function renderShowSwitch() {
         title: `Cambiar a ${other.label}`,
         onclick: () => {
           if (!setShow(other.key)) return;
-          // El color personal es por show: al saltar, se repinta con el del
-          // show al que llegas (el del perfil si lo tiene, si no el guardado).
-          syncAccentFromProfile(currentProfile);
           updateBranding();
           updateFooter();
           // Vuelve al inicio a propósito: una ruta como #/habitante/5 apunta a
