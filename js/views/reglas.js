@@ -82,7 +82,8 @@ function granjaCards() {
         h("li", {}, [h("strong", {}, "Lunes:"), " se anuncia el capataz de la semana (inmunidad)."]),
         h("li", {}, [h("strong", {}, "Martes:"), " el perdedor del duelo queda nominado."]),
         h("li", {}, [h("strong", {}, "Miércoles:"), " asamblea: se publican los nominados y se abre la votación."]),
-        h("li", {}, [h("strong", {}, "Jueves y viernes:"), " se confirma la salvación y, si la hubo, la traición."]),
+        h("li", {}, [h("strong", {}, "Jueves:"), " se confirma la salvación."]),
+          h("li", {}, [h("strong", {}, "Viernes:"), " se lleva a cabo la traición."]),
         h("li", {}, [h("strong", {}, "Domingo:"), " se cierra la votación y se confirma quién salió."]),
         h("li", { style: "margin-bottom:0" }, [
           h("i", { class: "fa-solid fa-hourglass-half" }),
