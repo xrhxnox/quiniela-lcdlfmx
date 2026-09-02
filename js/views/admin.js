@@ -175,6 +175,17 @@ async function renderParticipantsAdmin(sub) {
       },
       p.is_exiliado ? "Quitar exilio" : "Marcar exiliado"
     );
+    const abandonoBtn = h(
+      "button",
+      {
+        class: "btn small secondary",
+        onclick: async () => {
+          await updateParticipant(p.id, { is_abandono: !p.is_abandono });
+          await renderParticipantsAdmin(sub);
+        },
+      },
+      p.is_abandono ? "Quitar abandono" : "Marcar abandono"
+    );
     const delBtn = h(
       "button",
       {
@@ -202,8 +213,9 @@ async function renderParticipantsAdmin(sub) {
           ? h("span", { class: "badge", style: "background:#a742f526;color:#a742f5;border:1px solid #a742f5" }, "infiltrado")
           : null,
         p.is_exiliado ? h("span", { class: "badge black" }, "exiliado") : null,
+        p.is_abandono ? h("span", { class: "badge red" }, "abandono") : null,
       ]),
-      h("div", { class: "row-flex" }, [saveBtn, toggleBtn, infiltradoBtn, exiliadoBtn, delBtn]),
+      h("div", { class: "row-flex" }, [saveBtn, toggleBtn, infiltradoBtn, exiliadoBtn, abandonoBtn, delBtn]),
       itemErr,
     ]);
   });

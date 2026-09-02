@@ -24,6 +24,7 @@ function currentStatusBadges(p) {
   const out = [];
   if (p.is_winner) out.push(badge("Ganador", "fa-trophy", null, "badge gold status-badge"));
   else if (p.active) out.push(badge("En la casa", "fa-house", null, "badge green status-badge"));
+  else if (p.is_abandono) out.push(badge("Abandono", "fa-door-open", null, "badge red status-badge"));
   else out.push(badge("Eliminado/a", "fa-skull", null, "badge red status-badge"));
   if (p.is_infiltrado) out.push(badge("Infiltrado", "fa-glasses", PURPLE));
   if (p.is_exiliado) out.push(badge("Exiliado/a", "fa-bug", null, "badge black status-badge"));
@@ -33,7 +34,7 @@ function currentStatusBadges(p) {
 // Estado en UNA semana concreta. Puede devolver más de una insignia (por
 // ejemplo nominado y luego salvado), y solo cae en "En la casa" si no pasó
 // nada más esa semana.
-function weekStatusBadges(week, hist, participantId) {
+function weekStatusBadges(week, hist, participantId, participant) {
   const weekId = week.id;
   const out = [];
   const elim = hist.eliminations.find((e) => e.week_id === weekId);
@@ -73,6 +74,8 @@ function weekStatusBadges(week, hist, participantId) {
     out.push(
       elim.reverted_by_exile
         ? badge("Salió y volvió", "fa-rotate-left", null, "badge black status-badge")
+        : participant.is_abandono
+        ? badge("Abandono", "fa-door-open", null, "badge red status-badge")
         : badge("Eliminado/a", "fa-skull", null, "badge red status-badge")
     );
   }
@@ -198,7 +201,7 @@ export async function renderHabitante(container, participantId) {
       w.elimination_date
         ? h("div", { class: "muted", style: "font-size:0.75rem;margin-top:2px" }, fmtDate(w.elimination_date))
         : null,
-      h("div", { style: "display:flex;flex-wrap:wrap;gap:6px;margin-top:8px" }, weekStatusBadges(w, hist, p.id)),
+      h("div", { style: "display:flex;flex-wrap:wrap;gap:6px;margin-top:8px" }, weekStatusBadges(w, hist, p.id, p)),
       votesRow("Nominó a", cast),
       votesRow("Lo/la nominaron", received),
     ]);

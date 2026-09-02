@@ -497,6 +497,13 @@ alter table public.participants add column if not exists is_infiltrado boolean n
 -- No afecta puntajes ni ninguna dinámica, es solo informativo.
 alter table public.participants add column if not exists is_exiliado boolean not null default false;
 
+-- Abandono: la salida no fue por votación, el habitante se fue por su cuenta
+-- (salud, motivos personales). Para el juego cuenta EXACTAMENTE igual que una
+-- eliminación —su fila en eliminations es una salida normal y ocupa su lugar en
+-- El Oráculo—; esta marca solo cambia la insignia que se muestra, de
+-- "Eliminado/a" a "Abandono".
+alter table public.participants add column if not exists is_abandono boolean not null default false;
+
 create table if not exists public.secret_assignments (
   player_id uuid primary key references public.profiles(id) on delete cascade,
   participant_id bigint not null references public.participants(id) on delete cascade,

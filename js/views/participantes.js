@@ -68,6 +68,8 @@ export async function renderParticipantes(container) {
               ? h("span", { class: "badge gold status-badge" }, [h("i", { class: "fa-solid fa-trophy" }), " GANADOR"])
               : p.active
               ? h("span", { class: "badge green status-badge" }, [h("i", { class: "fa-solid fa-house" }), " En la casa"])
+              : p.is_abandono
+              ? h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-door-open" }), " Abandono"])
               : h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-skull" }), " Eliminado/a"]),
             p.is_infiltrado
               ? h(

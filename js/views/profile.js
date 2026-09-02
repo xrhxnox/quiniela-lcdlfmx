@@ -75,6 +75,8 @@ function participantPickCard(label, participant, type, counts, currentNomination
           ? h("span", { class: "badge gold status-badge" }, [h("i", { class: "fa-solid fa-trophy" }), " GANADOR"])
           : participant.active
           ? h("span", { class: "badge green status-badge" }, [h("i", { class: "fa-solid fa-house" }), " En la casa"])
+          : participant.is_abandono
+          ? h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-door-open" }), " Abandono"])
           : h("span", { class: "badge red status-badge" }, [h("i", { class: "fa-solid fa-skull" }), " Eliminado/a"]),
         participant.is_infiltrado
           ? h(
