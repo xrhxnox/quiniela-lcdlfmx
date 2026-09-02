@@ -791,6 +791,7 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
               hatedS1: t1HatedSelect.value ? Number(t1HatedSelect.value) : null,
               surpriseS1: t1SurpriseSelect.value ? Number(t1SurpriseSelect.value) : null,
               disappointmentS1: t1DisappointmentSelect.value ? Number(t1DisappointmentSelect.value) : null,
+              accentColor: selectedAccent,
             });
           }
 
@@ -845,7 +846,9 @@ function buildEditCard(profile, participants, legacyFavorites, refresh) {
             avatar_url,
             clearAvatar: !file && removeAvatarCheckbox.checked,
             ...casaFields,
-            accent_color: selectedAccent,
+            // El color es por show; en La Granja ya se guardó arriba en su
+            // propia columna, y aquí no debe pisar el de La Casa.
+            accent_color: isGranja() ? undefined : selectedAccent,
             theme_mode: selectedThemeMode,
           });
           successMsg.textContent = "¡Cambios guardados!";

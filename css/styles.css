@@ -79,12 +79,6 @@
   line-height: 1.3;
 }
 
-/* El botón de cambio se pinta del color del show al que lleva, para que se lea
-   como "allá vas" y no como un botón más de la barra. */
-header.topbar .show-switch .btn {
-  border-color: var(--show-other);
-  color: var(--show-other);
-}
 
 :root[data-theme="light"] {
   --bg: #f4f4f5;

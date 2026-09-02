@@ -1,3 +1,5 @@
+import { isGranja } from "./shows.js";
+
 export const ACCENTS = {
   rojo: { label: "Rojo", accent: "#ff1f3d", dim: "#8a0e1c", text: "#ffffff" },
   celeste: { label: "Celeste", accent: "#00aaff", dim: "#0a4d73", text: "#1a1a1a" },
@@ -10,13 +12,26 @@ export const ACCENTS = {
   blanco: { label: "Blanco", accent: "#e8e8e8", dim: "#c4c4c4", text: "#1a1a1a" },
 };
 
-// El color de acento es de la cuenta, no del show: el mismo en La Casa y en
-// La Granja. Lo que sí cambia por show es --show, el color del programa.
+// Cada show guarda su propio color: el jugador es el mismo, pero puede querer
+// La Casa en rojo y La Granja en verde. Se guarda por separado en el navegador
+// y en el perfil, así que elegir en un show nunca pisa el otro.
 const STORAGE_KEY = "lcdlfmx_accent";
+const GRANJA_STORAGE_KEY = "lcdlfmx_accent_granja";
+
+function storageKey() {
+  return isGranja() ? GRANJA_STORAGE_KEY : STORAGE_KEY;
+}
+
+// Columna de profiles donde vive el color del show activo.
+export function accentField() {
+  return isGranja() ? "granja_accent_color" : "accent_color";
+}
 
 export function getAccentKey() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  return ACCENTS[saved] ? saved : "rojo";
+  const saved = localStorage.getItem(storageKey());
+  if (ACCENTS[saved]) return saved;
+  // Arranque por show, mientras el jugador no elija: La Granja en verde.
+  return isGranja() ? "verde" : "rojo";
 }
 
 export function applyAccent(key) {
@@ -27,7 +42,7 @@ export function applyAccent(key) {
   root.style.setProperty("--accent", useBlackInLight ? "#000000" : theme.accent);
   root.style.setProperty("--accent-dim", useBlackInLight ? "#3a3a3a" : theme.dim);
   root.style.setProperty("--accent-text", useBlackInLight ? "#ffffff" : theme.text);
-  localStorage.setItem(STORAGE_KEY, key);
+  localStorage.setItem(storageKey(), key);
 }
 
 export function initAccent() {
@@ -37,9 +52,9 @@ export function initAccent() {
 // Si la cuenta ya tiene un color guardado en el servidor, ese manda
 // sobre lo que haya localmente (para que se vea igual en cualquier dispositivo).
 export function syncAccentFromProfile(profile) {
-  if (profile?.accent_color && ACCENTS[profile.accent_color]) {
-    applyAccent(profile.accent_color);
-  }
+  const saved = profile?.[accentField()];
+  if (saved && ACCENTS[saved]) applyAccent(saved);
+  else applyAccent(getAccentKey());
 }
 
 const THEME_MODE_KEY = "lcdlfmx_theme_mode";

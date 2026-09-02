@@ -109,6 +109,7 @@ export async function updateMyGranjaPicks({
   hatedS1,
   surpriseS1,
   disappointmentS1,
+  accentColor,
 }) {
   const { data, error } = await supabase.rpc("update_my_granja_picks", {
     p_favorite: favorite ?? null,
@@ -127,6 +128,7 @@ export async function updateMyGranjaPicks({
     p_clear_surprise_s1: surpriseS1 === null,
     p_disappointment_s1: disappointmentS1 ?? null,
     p_clear_disappointment_s1: disappointmentS1 === null,
+    p_accent_color: accentColor ?? null,
   });
   if (error) throw error;
   return data;

@@ -17,7 +17,6 @@ export const SHOWS = {
     short: "LA CASA",
     icon: "fa-house",
     logo: "assets/logo-casa.png",
-    color: "#e30613",
     // Cómo se llama a la gente dentro del show, para no decir "habitantes" en
     // La Granja ni "granjeros" en La Casa.
     memberSingular: "habitante",
@@ -36,7 +35,6 @@ export const SHOWS = {
     short: "LA GRANJA",
     icon: "fa-wheat-awn",
     logo: "assets/logo-granja.png",
-    color: "#7fb069",
     memberSingular: "granjero",
     memberPlural: "Granjeros",
     leaderLabel: "Capataz",

@@ -30,11 +30,9 @@ const faviconEl = document.getElementById("favicon");
 // Logo de la barra y del favicon, según el show activo.
 function updateBranding() {
   const show = getShow();
-  const other = getShowKey() === "casa" ? SHOWS.granja : SHOWS.casa;
-  // data-show repinta la app entera desde el CSS; --show-other colorea el
-  // botón de cambio con el color del show al que lleva.
+  // data-show cambia fondos y tipografía de títulos desde el CSS. El color de
+  // acento no vive aquí: lo elige el jugador, y cada show guarda el suyo.
   document.documentElement.setAttribute("data-show", show.key);
-  document.documentElement.style.setProperty("--show-other", other.color);
   if (brandLogoEl) {
     brandLogoEl.src = show.logo;
     brandLogoEl.alt = show.label;
@@ -62,6 +60,9 @@ function renderShowSwitch() {
         title: `Cambiar a ${other.label}`,
         onclick: () => {
           if (!setShow(other.key)) return;
+          // El color es por show: al saltar se repinta con el del show al que
+          // llegas (el guardado en el perfil, o el de arranque si no eligió).
+          syncAccentFromProfile(currentProfile);
           updateBranding();
           updateFooter();
           // Vuelve al inicio a propósito: una ruta como #/habitante/5 apunta a
