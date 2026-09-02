@@ -60,7 +60,11 @@
 /* El fondo lleva la misma textura de tablones que el encabezado, sobre los dos
    resplandores del color del jugador. background-repeat va por capa: los
    tablones se repiten, los resplandores no. */
-:root[data-show="granja"] html,
+/* Ojo con el selector: :root YA es el <html>, así que ":root[...] html"
+   pediría un <html> dentro de otro y no coincide con nada. El <html> se
+   selecciona con :root a secas, y es el que pinta el lienzo completo cuando el
+   contenido no llega al alto de la ventana. */
+:root[data-show="granja"],
 :root[data-show="granja"] body {
   background-image:
     var(--texture),
