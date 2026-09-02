@@ -27,10 +27,17 @@
    que basta cambiar ese atributo para repintar toda la app. La Granja además
    entibia los fondos: es un cambio pequeño en cada superficie pero constante
    en pantalla, y eso es lo que hace que se note sin tener que leer nada. */
-:root { --show: #e30613; }
+:root {
+  --show: #e30613;
+  /* Tipografía de los títulos grandes. La Granja la cambia por una de cartel
+     de rancho; el resto de la interfaz sigue en Oswald, que a 0.78rem y en
+     mayúsculas se lee mucho mejor que una decorativa. */
+  --font-title: var(--font-display);
+}
 
 :root[data-show="granja"] {
   --show: #7fb069;
+  --font-title: "Rye", "Oswald", Georgia, serif;
   --bg: #1a1a16;
   --bg-elev: #23231c;
   --bg-card: #2a2a22;
@@ -47,6 +54,34 @@
 /* La línea bajo el encabezado es la señal más grande y constante en pantalla:
    roja en La Casa, verde en La Granja. */
 header.topbar { border-bottom-color: var(--show) !important; }
+
+/* Textura del encabezado de La Granja: tablones de madera hechos con
+   gradientes, sin imágenes ni peticiones extra. Va por debajo del logo y a muy
+   baja opacidad, lo justo para que la barra no se sienta lisa. */
+:root[data-show="granja"] header.topbar {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(127, 176, 105, 0.05) 0px,
+      rgba(127, 176, 105, 0.05) 2px,
+      transparent 2px,
+      transparent 96px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.022) 0px,
+      rgba(255, 255, 255, 0.022) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+}
+
+/* En La Granja el título respira distinto: la Rye es más ancha y más alta. */
+:root[data-show="granja"] .section-title {
+  font-size: 1.35rem;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+}
 
 /* El botón de cambio se pinta del color del show al que lleva, para que se lea
    como "allá vas" y no como un botón más de la barra. */
@@ -295,7 +330,7 @@ main#app {
 main#app.fade-in { animation: fadeInUp 0.3s ease; }
 
 .section-title {
-  font-family: var(--font-display);
+  font-family: var(--font-title);
   font-size: 1.7rem;
   font-weight: 700;
   text-transform: uppercase;
