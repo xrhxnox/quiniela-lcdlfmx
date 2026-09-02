@@ -1,6 +1,5 @@
 import { login } from "../auth.js";
 import { h, clearAndAppend } from "../utils.js";
-import { getShow } from "../shows.js";
 
 export function renderLogin(container, onSuccess) {
   const errorEl = h("div", { class: "error-msg" });
@@ -38,7 +37,7 @@ export function renderLogin(container, onSuccess) {
   );
 
   const wrap = h("div", { class: "login-wrap" }, [
-    h("img", { class: "logo", src: getShow().logo, alt: getShow().label }),
+    h("img", { class: "logo", src: "assets/logo-app.png", alt: "TrashTV App" }),
     form,
   ]);
 
