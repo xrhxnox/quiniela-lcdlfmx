@@ -8,19 +8,24 @@ import {
   getImmunitiesForWeek,
   getNominationsForWeek,
   getPeonesForWeek,
+  getPeonCounts,
+  getBetrayedCounts,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
 import { getShow, isGranja } from "../shows.js";
 
 export async function renderParticipantes(container) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
-  const [participants, counts, leaderCounts, immuneCounts, savedCounts, votingWeek] = await Promise.all([
+  const [participants, counts, leaderCounts, immuneCounts, savedCounts, votingWeek, peonCounts, betrayedCounts] =
+    await Promise.all([
     getParticipants(),
     getNominationCounts(),
     getImmunityCounts(),
     getSpecialImmunityCounts(),
     getSavedCounts(),
     getVotingWeek(),
+    isGranja() ? getPeonCounts() : Promise.resolve({}),
+    isGranja() ? getBetrayedCounts() : Promise.resolve({}),
   ]);
   const [currentImmunities, currentNominations, currentPeones] = votingWeek
     ? await Promise.all([
@@ -121,6 +126,8 @@ export async function renderParticipantes(container) {
           h("div", { class: "points" }, `Inmune ${immuneCounts[p.id] || 0} veces`),
           h("div", { class: "points" }, `Salvado ${savedCounts[p.id] || 0} veces`),
           h("div", { class: "points" }, `Nominado ${counts[p.id] || 0} veces`),
+          isGranja() ? h("div", { class: "points" }, `Peón ${peonCounts[p.id] || 0} veces`) : null,
+          isGranja() ? h("div", { class: "points" }, `Traicionado ${betrayedCounts[p.id] || 0} veces`) : null,
         ]),
       ]);
     });

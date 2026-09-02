@@ -6,6 +6,8 @@ import {
   getImmunityCounts,
   getSpecialImmunityCounts,
   getSavedCounts,
+  getPeonCounts,
+  getBetrayedCounts,
   getAllGranjaDynamics,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend, fmtDate } from "../utils.js";
@@ -156,7 +158,8 @@ function personChip(participant) {
 export async function renderHabitante(container, participantId) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
 
-  const [participants, weeks, hist, nomCounts, leaderCounts, immuneCounts, savedCounts, dyn] = await Promise.all([
+  const [participants, weeks, hist, nomCounts, leaderCounts, immuneCounts, savedCounts, dyn, peonCounts, betrayedCounts] =
+    await Promise.all([
     getParticipants(),
     getWeeks(),
     getParticipantHistory(participantId),
@@ -165,6 +168,8 @@ export async function renderHabitante(container, participantId) {
     getSpecialImmunityCounts(),
     getSavedCounts(),
     isGranja() ? getAllGranjaDynamics() : Promise.resolve(null),
+    isGranja() ? getPeonCounts() : Promise.resolve({}),
+    isGranja() ? getBetrayedCounts() : Promise.resolve({}),
   ]);
 
   const byId = new Map(participants.map((p) => [p.id, p]));
@@ -205,7 +210,10 @@ export async function renderHabitante(container, participantId) {
           "div",
           { class: "muted", style: "font-size:0.78rem;margin-top:10px;line-height:1.7" },
           `${getShow().leaderLabel} ${leaderCounts[p.id] || 0} veces · Inmune ${immuneCounts[p.id] || 0} veces · ` +
-            `Salvado ${savedCounts[p.id] || 0} veces · Nominado ${nomCounts[p.id] || 0} veces`
+            `Salvado ${savedCounts[p.id] || 0} veces · Nominado ${nomCounts[p.id] || 0} veces` +
+            (isGranja()
+              ? ` · Peón ${peonCounts[p.id] || 0} veces · Traicionado ${betrayedCounts[p.id] || 0} veces`
+              : "")
         ),
       ]),
     ]),

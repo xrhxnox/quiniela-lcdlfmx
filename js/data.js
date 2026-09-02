@@ -275,6 +275,22 @@ export async function getParticipantHistory(participantId) {
   };
 }
 
+// Contadores propios de La Granja: veces que alguien fue peón y veces que lo
+// traicionaron (lo metieron a riesgo). Solo existen para ese show.
+export async function getPeonCounts() {
+  const rows = unwrap(await supabase.from("granja_peon_counts").select("*"));
+  const map = {};
+  rows.forEach((r) => (map[r.participant_id] = r.times_peon));
+  return map;
+}
+
+export async function getBetrayedCounts() {
+  const rows = unwrap(await supabase.from("granja_betrayed_counts").select("*"));
+  const map = {};
+  rows.forEach((r) => (map[r.participant_id] = r.times_betrayed));
+  return map;
+}
+
 // ---------- Weeks ----------
 export async function getWeeks() {
   return unwrap(await supabase.from(tbl("weeks")).select("*").order("week_number", { ascending: false }));

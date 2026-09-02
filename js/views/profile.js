@@ -16,6 +16,8 @@ import {
   getVotingWeek,
   getNominationsForWeek,
   getPeonesForWeek,
+  getPeonCounts,
+  getBetrayedCounts,
   getImmunitiesForWeek,
   getMySecretAssignment,
   getMyEliminationOrder,
@@ -56,6 +58,8 @@ function participantPickCard(label, participant, type, counts, currentNomination
     ? h("div", { class: "photo", style: `background-image:url('${esc(participant.photo_url)}')` })
     : h("div", { class: "photo" }, initials(participant.name));
   const timesNominated = counts?.nomination?.[participant.id] || 0;
+  const timesPeon = counts?.peon?.[participant.id] || 0;
+  const timesBetrayed = counts?.betrayed?.[participant.id] || 0;
   const timesLeader = counts?.immunity?.[participant.id] || 0;
   const timesImmune = counts?.specialImmunity?.[participant.id] || 0;
   const timesSaved = counts?.saved?.[participant.id] || 0;
@@ -121,6 +125,8 @@ function participantPickCard(label, participant, type, counts, currentNomination
       h("div", { class: "points" }, `Inmune ${timesImmune} veces`),
       h("div", { class: "points" }, `Salvado ${timesSaved} veces`),
       h("div", { class: "points" }, `Nominado ${timesNominated} veces`),
+      isGranja() ? h("div", { class: "points" }, `Peón ${timesPeon} veces`) : null,
+      isGranja() ? h("div", { class: "points" }, `Traicionado ${timesBetrayed} veces`) : null,
     ]),
   ]);
 }
@@ -342,7 +348,17 @@ async function renderProfileInternal(container, username) {
     getMyEliminationOrder(target.id),
     getWeeks(),
   ]);
-  const counts = { nomination: nominationCounts, immunity: immunityCounts, specialImmunity: specialImmunityCounts, saved: savedCounts };
+  const [peonCounts, betrayedCounts] = isGranja()
+    ? await Promise.all([getPeonCounts(), getBetrayedCounts()])
+    : [{}, {}];
+  const counts = {
+    nomination: nominationCounts,
+    immunity: immunityCounts,
+    specialImmunity: specialImmunityCounts,
+    saved: savedCounts,
+    peon: peonCounts,
+    betrayed: betrayedCounts,
+  };
   const currentNominations = votingWeek ? await getNominationsForWeek(votingWeek.id) : [];
   const currentNominationMap = {};
   currentNominations.forEach((n) => (currentNominationMap[n.participant_id] = n));
