@@ -25,7 +25,6 @@ const userChip = document.getElementById("userChip");
 const appFooter = document.getElementById("appFooter");
 const showSwitchEl = document.getElementById("showSwitch");
 const brandLogoEl = document.getElementById("brandLogo");
-const faviconEl = document.getElementById("favicon");
 
 // Antes de iniciar sesión todavía no hay show elegido, así que la marca que
 // se muestra es la de la app entera y no la de uno de los dos programas.
@@ -41,7 +40,8 @@ function showIdentity() {
   return { key: show.key, label: show.label, title: `Quiniela ${show.label}`, logo: show.logo };
 }
 
-// Marca visible: logo de la barra, favicon, título de la pestaña y pie.
+// Marca visible: logo de la barra, título de la pestaña y pie. El favicon no
+// entra: es el de la app y se queda fijo en el HTML.
 function applyIdentity(identity) {
   // data-show cambia fondos y tipografía de títulos desde el CSS. El color de
   // acento no vive aquí: lo elige el jugador, y cada show guarda el suyo.
@@ -51,7 +51,6 @@ function applyIdentity(identity) {
     brandLogoEl.src = identity.logo;
     brandLogoEl.alt = identity.label;
   }
-  if (faviconEl) faviconEl.href = identity.logo;
   document.title = identity.title;
   appFooter.textContent = `${identity.label} · ${new Date().getFullYear()} · Designed by Rick`;
 }
