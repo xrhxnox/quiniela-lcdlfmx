@@ -11,6 +11,7 @@ import {
   getWeeks,
 } from "../data.js";
 import { h, esc, initials, fmtDate, clearAndAppend } from "../utils.js";
+import { getShow } from "../shows.js";
 
 function officialVoteButton() {
   return h(
@@ -433,7 +434,7 @@ export async function renderHome(container, profile) {
     container,
     h("div", {}, [
       h("div", { class: "empty-state" }, [
-        h("img", { src: "assets/logo.png", class: "brand-logo", style: "max-width:220px;margin:0 auto 36px" }),
+        h("img", { src: getShow().logo, class: "brand-logo", style: "max-width:220px;margin:0 auto 36px" }),
         h("p", {}, "Todavía no hay semanas abiertas. El líder de la semana se anuncia los lunes y los nominados se publican los miércoles."),
         h("div", { style: "margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap" }, [historyBtn]),
       ]),

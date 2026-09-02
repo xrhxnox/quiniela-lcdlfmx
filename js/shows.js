@@ -16,6 +16,7 @@ export const SHOWS = {
     label: "La Casa de los Famosos MX",
     short: "LA CASA",
     icon: "fa-house",
+    logo: "assets/logo-casa.png",
     // Cómo se llama a la gente dentro del show, para no decir "habitantes" en
     // La Granja ni "granjeros" en La Casa.
     memberSingular: "habitante",
@@ -30,6 +31,7 @@ export const SHOWS = {
     label: "La Granja VIP",
     short: "LA GRANJA",
     icon: "fa-wheat-awn",
+    logo: "assets/logo-granja.png",
     memberSingular: "granjero",
     memberPlural: "Granjeros",
     leaderLabel: "Capataz",

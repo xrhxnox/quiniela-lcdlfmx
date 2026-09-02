@@ -24,6 +24,20 @@ const tabsEl = document.getElementById("tabs");
 const userChip = document.getElementById("userChip");
 const appFooter = document.getElementById("appFooter");
 const showSwitchEl = document.getElementById("showSwitch");
+const brandLogoEl = document.getElementById("brandLogo");
+const faviconEl = document.getElementById("favicon");
+
+// Logo de la barra y del favicon, según el show activo.
+function updateBranding() {
+  const show = getShow();
+  if (brandLogoEl) {
+    brandLogoEl.src = show.logo;
+    brandLogoEl.alt = show.label;
+  }
+  if (faviconEl) faviconEl.href = show.logo;
+  document.title = `Quiniela ${show.label}`;
+}
+updateBranding();
 
 function updateFooter() {
   appFooter.textContent = `${getShow().label} · ${new Date().getFullYear()} · Designed by Rick`;
@@ -43,6 +57,7 @@ function renderShowSwitch() {
         title: `Cambiar a ${other.label}`,
         onclick: () => {
           if (!setShow(other.key)) return;
+          updateBranding();
           updateFooter();
           // Vuelve al inicio a propósito: una ruta como #/habitante/5 apunta a
           // un id que en el otro show es otra persona.
