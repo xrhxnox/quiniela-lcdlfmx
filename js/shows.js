@@ -21,6 +21,8 @@ export const SHOWS = {
     memberSingular: "habitante",
     memberPlural: "Habitantes",
     leaderLabel: "Líder",
+    homeLabel: "la casa",
+    seasonLabel: "Temporada 4",
   },
   granja: {
     key: "granja",
@@ -31,6 +33,8 @@ export const SHOWS = {
     memberSingular: "granjero",
     memberPlural: "Granjeros",
     leaderLabel: "Capataz",
+    homeLabel: "la granja",
+    seasonLabel: "La Granja VIP",
   },
 };
 

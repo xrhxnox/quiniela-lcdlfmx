@@ -50,7 +50,7 @@ function renderShowSwitch() {
           else renderRoute();
         },
       },
-      [h("i", { class: `fa-solid ${other.icon}` }), " " + other.short]
+      [h("i", { class: `fa-solid ${other.icon}` }), " IR A " + other.short]
     )
   );
 }
