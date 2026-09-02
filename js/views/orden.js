@@ -9,6 +9,7 @@ import {
   getOraculoAutoFilledPlayerIds,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
+import { getShow, isGranja } from "../shows.js";
 
 function photoOrInitials(p) {
   if (p.photo_url) {
@@ -144,7 +145,7 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
       h("div", { class: "card" }, [
         h("p", { style: "margin-top:0" }, [
           h("i", { class: "fa-solid fa-hat-wizard" }),
-          " Ordena a los habitantes del que crees que GANARÁ (arriba, posición 1) al que crees que saldrá PRIMERO (abajo). Por cada posición que aciertes, +1 punto.",
+          ` Ordena a los ${getShow().memberPlural.toLowerCase()} del que crees que GANARÁ (arriba, posición 1) al que crees que saldrá PRIMERO (abajo). Por cada posición que aciertes, +1 punto.`,
         ]),
         h("p", { class: "muted", style: "font-size:0.82rem;margin-bottom:4px" }, [
           h("i", { class: "fa-solid fa-grip-lines" }),
@@ -289,7 +290,9 @@ function renderRevealPhase(container, profile, allOrders, scores, eliminationsWi
               h("strong", { style: "color:var(--text)" }, "✕ "),
               giftedExits.map((e) => e.participants.name).join(", "),
               giftedExits.length === 1 ? " salió " : " salieron ",
-              "de la casa después de volver del exilio. Como nadie pudo preverlo, no ocupa lugar en el orden y suma +1 a todos.",
+              isGranja()
+                ? "de forma imprevista. Como nadie pudo preverlo, no ocupa lugar en el orden y suma +1 a todos."
+                : "de la casa después de volver del exilio. Como nadie pudo preverlo, no ocupa lugar en el orden y suma +1 a todos.",
             ])
           : null,
       ]),
