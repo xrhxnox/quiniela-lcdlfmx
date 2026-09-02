@@ -27,25 +27,36 @@ const showSwitchEl = document.getElementById("showSwitch");
 const brandLogoEl = document.getElementById("brandLogo");
 const faviconEl = document.getElementById("favicon");
 
-// Logo de la barra y del favicon, según el show activo.
-function updateBranding() {
+// Antes de iniciar sesión todavía no hay show elegido, así que la marca que
+// se muestra es la de la app entera y no la de uno de los dos programas.
+const APP_IDENTITY = {
+  key: null,
+  label: "TrashTV App",
+  title: "TrashTV App",
+  logo: "assets/logo-app.png",
+};
+
+function showIdentity() {
   const show = getShow();
+  return { key: show.key, label: show.label, title: `Quiniela ${show.label}`, logo: show.logo };
+}
+
+// Marca visible: logo de la barra, favicon, título de la pestaña y pie.
+function applyIdentity(identity) {
   // data-show cambia fondos y tipografía de títulos desde el CSS. El color de
   // acento no vive aquí: lo elige el jugador, y cada show guarda el suyo.
-  document.documentElement.setAttribute("data-show", show.key);
+  if (identity.key) document.documentElement.setAttribute("data-show", identity.key);
+  else document.documentElement.removeAttribute("data-show");
   if (brandLogoEl) {
-    brandLogoEl.src = show.logo;
-    brandLogoEl.alt = show.label;
+    brandLogoEl.src = identity.logo;
+    brandLogoEl.alt = identity.label;
   }
-  if (faviconEl) faviconEl.href = show.logo;
-  document.title = `Quiniela ${show.label}`;
+  if (faviconEl) faviconEl.href = identity.logo;
+  document.title = identity.title;
+  appFooter.textContent = `${identity.label} · ${new Date().getFullYear()} · Designed by Rick`;
 }
-updateBranding();
 
-function updateFooter() {
-  appFooter.textContent = `${getShow().label} · ${new Date().getFullYear()} · Designed by Rick`;
-}
-updateFooter();
+applyIdentity(APP_IDENTITY);
 
 // Botón que salta al OTRO show. No hay dos links: el show activo se guarda por
 // navegador, así que el mismo URL abre el último que cada quien haya visto.
@@ -63,8 +74,7 @@ function renderShowSwitch() {
           // El color es por show: al saltar se repinta con el del show al que
           // llegas (el guardado en el perfil, o el de arranque si no eligió).
           syncAccentFromProfile(currentProfile);
-          updateBranding();
-          updateFooter();
+          applyIdentity(showIdentity());
           // Vuelve al inicio a propósito: una ruta como #/habitante/5 apunta a
           // un id que en el otro show es otra persona.
           if (location.hash && location.hash !== "#/") location.hash = "#/";
@@ -107,6 +117,8 @@ const ROUTES = [
 
 function renderNav() {
   tabsEl.innerHTML = "";
+  // Ya hay sesión: a partir de aquí manda la marca del show activo.
+  applyIdentity(showIdentity());
   renderShowSwitch();
   const show = getShow();
   const hash = location.hash || "#/";
@@ -217,6 +229,7 @@ async function boot() {
   const session = await getSession();
   if (!session) {
     appHeaderWrap.style.display = "none";
+    applyIdentity(APP_IDENTITY);
     renderLogin(app, async () => {
       currentProfile = await getMyProfile();
       syncAccentFromProfile(currentProfile);
