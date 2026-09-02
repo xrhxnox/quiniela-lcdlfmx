@@ -2,6 +2,12 @@ import { supabase } from "./supabaseClient.js";
 import { compressImage } from "./utils.js";
 import { tbl } from "./shows.js";
 
+// Al embeber una tabla, PostgREST necesita su nombre real (granja_participants),
+// pero todas las vistas leen row.participants y row.weeks. El alias deja el
+// prefijo del lado de la consulta y la respuesta conserva la misma forma en los
+// dos shows: emb("participants", "*") -> "participants:granja_participants(*)".
+const emb = (name, cols) => `${name}:${tbl(name)}(${cols})`;
+
 function unwrap({ data, error }) {
   if (error) throw error;
   return data;
@@ -291,7 +297,7 @@ export async function getNominationsForWeek(weekId) {
   return unwrap(
     await supabase
       .from(tbl("nominations"))
-      .select("week_id, participant_id, points, saved, participants(*)")
+      .select(`week_id, participant_id, points, saved, ${emb("participants", "*")}`)
       .eq("week_id", weekId)
       .order("points", { ascending: false })
   );
@@ -352,7 +358,7 @@ export async function removeNominationVote(weekId, nominatorId, nomineeId) {
 // ---------- Immunities ----------
 export async function getImmunitiesForWeek(weekId) {
   return unwrap(
-    await supabase.from(tbl("immunities")).select("week_id, participant_id, is_leader, participants(*)").eq("week_id", weekId)
+    await supabase.from(tbl("immunities")).select(`week_id, participant_id, is_leader, ${emb("participants", "*")}`).eq("week_id", weekId)
   );
 }
 
@@ -371,7 +377,7 @@ export async function removeImmunity(weekId, participantId) {
 // ---------- Exilio (por semana) ----------
 export async function getExilesForWeek(weekId) {
   return unwrap(
-    await supabase.from(tbl("exiles")).select("week_id, participant_id, participants(*)").eq("week_id", weekId)
+    await supabase.from(tbl("exiles")).select(`week_id, participant_id, ${emb("participants", "*")}`).eq("week_id", weekId)
   );
 }
 
@@ -396,7 +402,7 @@ export async function getEliminationsForWeek(weekId) {
   return unwrap(
     await supabase
       .from(tbl("eliminations"))
-      .select("week_id, participant_id, reverted_by_exile, gift_all, participants(*)")
+      .select(`week_id, participant_id, reverted_by_exile, gift_all, ${emb("participants", "*")}`)
       .eq("week_id", weekId)
   );
 }
@@ -405,7 +411,7 @@ export async function getAllEliminationsWithWeeks() {
   return unwrap(
     await supabase
       .from(tbl("eliminations"))
-      .select("week_id, participant_id, reverted_by_exile, gift_all, participants(*), weeks(*)")
+      .select(`week_id, participant_id, reverted_by_exile, gift_all, ${emb("participants", "*")}, ${emb("weeks", "*")}`)
       .order("week_id", { ascending: false })
   );
 }
@@ -607,7 +613,7 @@ export async function getMyPredictionHistory(playerId) {
   return unwrap(
     await supabase
       .from(tbl("predictions"))
-      .select("week_id, participant_id, participants(name), weeks(week_number, label, status)")
+      .select(`week_id, participant_id, ${emb("participants", "name")}, ${emb("weeks", "week_number, label, status")}`)
       .eq("player_id", playerId)
       .order("week_id", { ascending: false })
   );
@@ -618,14 +624,14 @@ export async function getSecretAssignments() {
   return unwrap(
     await supabase
       .from(tbl("secret_assignments"))
-      .select("player_id, participant_id, profiles(display_name, username), participants(name, photo_url, active, is_winner)")
+      .select(`player_id, participant_id, profiles(display_name, username), ${emb("participants", "name, photo_url, active, is_winner")}`)
   );
 }
 
 export async function getMySecretAssignment(playerId) {
   const { data, error } = await supabase
     .from(tbl("secret_assignments"))
-    .select("participant_id, participants(name, photo_url, active, is_winner)")
+    .select(`participant_id, ${emb("participants", "name, photo_url, active, is_winner")}`)
     .eq("player_id", playerId)
     .maybeSingle();
   if (error) throw error;
@@ -690,7 +696,7 @@ export async function getMyEliminationOrder(playerId) {
   return unwrap(
     await supabase
       .from(tbl("elimination_order_predictions"))
-      .select("position, participant_id, participants(name, photo_url)")
+      .select(`position, participant_id, ${emb("participants", "name, photo_url")}`)
       .eq("player_id", playerId)
       .order("position")
   );
@@ -712,7 +718,7 @@ export async function getAllEliminationOrders() {
   return unwrap(
     await supabase
       .from(tbl("elimination_order_predictions"))
-      .select("player_id, position, participant_id, participants(name, photo_url, is_winner, is_infiltrado), profiles(display_name, username)")
+      .select(`player_id, position, participant_id, ${emb("participants", "name, photo_url, is_winner, is_infiltrado")}, profiles(display_name, username)`)
       .order("player_id")
       .order("position")
   );
