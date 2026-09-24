@@ -10,9 +10,12 @@ import {
   getNominationVotesForWeek,
   getWeeks,
   getAllGranjaDynamics,
+  getMyFinalPrediction,
+  saveFinalPrediction,
 } from "../data.js";
 import { h, esc, initials, fmtDate, clearAndAppend } from "../utils.js";
 import { getShow, isGranja } from "../shows.js";
+import { renderOrderableList } from "./ordenable.js";
 
 // Renglón con icono, del mismo estilo que los de Capataz e Inmune.
 function infoLine(icon, children, size = "0.82rem") {
@@ -228,6 +231,69 @@ function countdownNode(closesAt, onClosed) {
   render();
   setTimeout(tick, 1000);
   return el;
+}
+
+// En la semana final el pick deja de ser "quién sale" y pasa a ser el orden
+// completo: de la primera salida al ganador. Se reusa la lista arrastrable de
+// El Oráculo, pero con el sentido invertido — ahí la posición 1 es el ganador,
+// aquí es el primero en salir.
+async function renderFinalWeek(container, week, profile) {
+  const [participants, existingOrder, yaSalieron] = await Promise.all([
+    getParticipants(),
+    getMyFinalPrediction(week.id, profile.id),
+    getEliminationsForWeek(week.id),
+  ]);
+
+  // La lista de finalistas tiene que ser la misma toda la semana. Si solo se
+  // tomaran los activos, cada salida que el admin registra encogería la lista y
+  // quien abriera Votar a media final vería un orden incompleto. Por eso se
+  // incluye también a quienes ya salieron en esta misma semana final.
+  const salieronAqui = new Set(yaSalieron.map((e) => e.participant_id));
+  const finalistas = participants.filter((p) => !p.is_infiltrado && (p.active || salieronAqui.has(p.id)));
+  if (finalistas.length === 0) {
+    clearAndAppend(container, h("div", { class: "empty-state" }, "Todavía no hay finalistas definidos."));
+    return;
+  }
+
+  const wrap = h("div", {});
+  renderOrderableList(wrap, {
+    participants: finalistas,
+    existingOrder,
+    title: week.label || `Semana ${week.week_number}`,
+    rowBadge: (i, n) =>
+      i === n - 1
+        ? h("span", { class: "badge gold status-badge" }, "Ganador")
+        : h("span", { class: "badge red status-badge" }, `${i + 1}ª salida`),
+    saveLabel: "Guardar mi orden",
+    savedMessage: "¡Orden guardado! Puedes cambiarlo mientras la votación siga abierta.",
+    onSave: (ids) => saveFinalPrediction(week.id, profile.id, ids),
+    intro: [
+      h("p", { style: "margin-top:0" }, [
+        h("i", { class: "fa-solid fa-flag-checkered", style: "color:var(--accent)" }),
+        " ",
+        h("strong", {}, "Semana final."),
+        ` Esta semana van saliendo varios a lo largo de los días. Ordena a los ${finalistas.length} finalistas del PRIMERO en salir (arriba) al GANADOR (abajo). `,
+        h("strong", {}, "Por cada posición que aciertes, +1 punto."),
+      ]),
+      week.elimination_date
+        ? h("p", { class: "muted", style: "font-size:0.82rem;margin-bottom:4px" }, [
+            h("i", { class: "fa-solid fa-calendar-days" }),
+            " Final: ",
+            h("strong", {}, fmtDate(week.elimination_date)),
+          ])
+        : null,
+    ].filter(Boolean),
+  });
+
+  const { btn: historyBtn, wrap: historyWrap } = buildHistoryToggle();
+  clearAndAppend(
+    container,
+    h("div", {}, [
+      wrap,
+      h("div", { style: "margin-top:16px;display:flex;justify-content:center" }, [historyBtn]),
+      historyWrap,
+    ])
+  );
 }
 
 async function renderVotingWeek(container, week, profile) {
@@ -490,7 +556,8 @@ export async function renderHome(container, profile) {
   clearAndAppend(container, h("div", { class: "loading" }, "Cargando…"));
   const votingWeek = await getVotingWeek();
   if (votingWeek) {
-    await renderVotingWeek(container, votingWeek, profile);
+    if (votingWeek.is_final) await renderFinalWeek(container, votingWeek, profile);
+    else await renderVotingWeek(container, votingWeek, profile);
     return;
   }
   const closedWeek = await getLatestClosedWeek();

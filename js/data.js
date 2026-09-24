@@ -459,7 +459,7 @@ export async function getAllEliminationsWithWeeks() {
   return unwrap(
     await supabase
       .from(tbl("eliminations"))
-      .select(`week_id, participant_id, reverted_by_exile, gift_all, ${emb("participants", "*")}, ${emb("weeks", "*")}`)
+      .select(`week_id, participant_id, reverted_by_exile, gift_all, exit_order, ${emb("participants", "*")}, ${emb("weeks", "*")}`)
       .order("week_id", { ascending: false })
   );
 }
@@ -487,6 +487,62 @@ export async function confirmEliminations(weekId, participantIds) {
   }
   await supabase.from(tbl("participants")).update({ active: false }).in("id", participantIds);
   return unwrap(await supabase.from(tbl("weeks")).update({ status: "closed" }).eq("id", weekId).select().single());
+}
+
+// ---------- Semana final ----------
+// En la final salen varios a lo largo de la semana, en un orden conocido. El
+// admin registra cada salida con su exit_order y el jugador, en vez de elegir
+// a uno, arma el orden completo: de la primera salida al ganador.
+export async function addFinalExit(weekId, participantId, exitOrder) {
+  return unwrap(
+    await supabase
+      .from(tbl("eliminations"))
+      .insert({ week_id: weekId, participant_id: participantId, exit_order: exitOrder })
+      .select()
+  );
+}
+
+export async function removeFinalExit(weekId, participantId) {
+  return unwrap(
+    await supabase.from(tbl("eliminations")).delete().eq("week_id", weekId).eq("participant_id", participantId)
+  );
+}
+
+export async function getMyFinalPrediction(weekId, playerId) {
+  return unwrap(
+    await supabase
+      .from(tbl("final_predictions"))
+      .select("position, participant_id")
+      .eq("week_id", weekId)
+      .eq("player_id", playerId)
+      .order("position")
+  );
+}
+
+// Se borra y se reinserta completo: el orden es una unidad, no filas sueltas.
+export async function saveFinalPrediction(weekId, playerId, orderedParticipantIds) {
+  await supabase.from(tbl("final_predictions")).delete().eq("week_id", weekId).eq("player_id", playerId);
+  if (orderedParticipantIds.length === 0) return [];
+  return unwrap(
+    await supabase.from(tbl("final_predictions")).insert(
+      orderedParticipantIds.map((participant_id, i) => ({
+        week_id: weekId,
+        player_id: playerId,
+        position: i + 1,
+        participant_id,
+      }))
+    ).select()
+  );
+}
+
+export async function getFinalPredictionsForWeek(weekId) {
+  return unwrap(
+    await supabase
+      .from(tbl("final_predictions"))
+      .select("player_id, position, participant_id, profiles(display_name, username)")
+      .eq("week_id", weekId)
+      .order("position")
+  );
 }
 
 // ---------- Predictions ----------

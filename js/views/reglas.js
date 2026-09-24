@@ -190,6 +190,23 @@ export async function renderReglas(container) {
 
       ...(isGranja() ? granjaCards() : casaCards()),
 
+      ruleCard("fa-flag-checkered", "La semana final", [
+        ul([
+          h("li", {}, `En la última semana no sale una sola persona: van saliendo varias a lo largo de los días hasta quedar el ganador.`),
+          h("li", {}, [
+            "Esa semana, en Votar no eliges a uno: ",
+            h("strong", {}, "ordenas a todos los finalistas"),
+            ` del primero en salir al ganador. `,
+            h("strong", {}, "Por cada posición que aciertes, +1 punto."),
+          ]),
+          h("li", { style: "margin-bottom:0" }, [
+            "El Oráculo también se pone más exigente esa semana: como el orden de las salidas sí se conoce, ",
+            h("strong", {}, "cada salida ocupa su propia posición"),
+            " en vez de contar como un solo bloque.",
+          ]),
+        ]),
+      ]),
+
       ruleCard("fa-trophy", "Puntaje y Ranking", [
         ul([
           h("li", {}, "El Ranking muestra el puntaje total de todos los jugadores, de mayor a menor."),

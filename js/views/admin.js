@@ -21,6 +21,8 @@ import {
   confirmEliminations,
   getEliminationsForWeek,
   getExilesForWeek,
+  addFinalExit,
+  removeFinalExit,
   getPeonesForWeek,
   addPeon,
   removePeon,
@@ -709,6 +711,84 @@ async function renderWeekDetail(container, week, allParticipants) {
     dynErr,
   ];
 
+  // --- Semana final ---
+  // En la final no se confirma un eliminado y se cierra: van saliendo varios a
+  // lo largo de la semana. Por eso las salidas se registran de una en una, en
+  // orden, y la semana se cierra aparte cuando ya salieron todos.
+  const finalExits = [...weekEliminations]
+    .filter((e) => e.exit_order != null)
+    .sort((a, b) => a.exit_order - b.exit_order);
+  const finalExitIds = new Set(finalExits.map((e) => e.participant_id));
+  const finalErr = h("div", { class: "error-msg" });
+
+  const finalRows = finalExits.map((e) =>
+    h("div", { class: "list-item" }, [
+      h("div", { class: "row-flex" }, [
+        h("strong", { style: "min-width:1.6em" }, `${e.exit_order}.`),
+        h("span", {}, e.participants.name),
+        h(
+          "button",
+          {
+            class: "btn small secondary",
+            title: "Quitar esta salida",
+            onclick: async () => {
+              finalErr.textContent = "";
+              try {
+                await removeFinalExit(week.id, e.participant_id);
+                await updateParticipant(e.participant_id, { active: true });
+                await refresh();
+              } catch (err) {
+                finalErr.textContent = "No se pudo quitar. " + (err.message || "");
+              }
+            },
+          },
+          h("i", { class: "fa-solid fa-xmark" })
+        ),
+      ]),
+    ])
+  );
+
+  const finalSelect = h(
+    "select",
+    { style: "max-width:220px" },
+    [h("option", { value: "" }, "¿Quién salió?")].concat(
+      allParticipants
+        .filter((p) => !finalExitIds.has(p.id) && !p.is_winner)
+        .map((p) => h("option", { value: p.id }, p.name))
+    )
+  );
+  const addFinalBtn = h(
+    "button",
+    {
+      class: "btn small",
+      onclick: async () => {
+        if (!finalSelect.value) return;
+        finalErr.textContent = "";
+        try {
+          const pid = Number(finalSelect.value);
+          await addFinalExit(week.id, pid, finalExits.length + 1);
+          await updateParticipant(pid, { active: false });
+          await refresh();
+        } catch (err) {
+          finalErr.textContent = "No se pudo registrar. " + (err.message || "");
+        }
+      },
+    },
+    "Registrar salida"
+  );
+
+  const finalBlock = () => [
+    h("p", { style: "margin:14px 0 4px" }, h("strong", {}, "Salidas de la final")),
+    h(
+      "p",
+      { class: "muted", style: "font-size:0.82rem;margin-bottom:6px" },
+      `Regístralas en el orden en que ocurran, una por una. Al ganador NO lo registres aquí: márcalo como ganador de la temporada desde ${getShow().memberPlural}. Cuando ya hayan salido todos, cierra la semana.`
+    ),
+    h("div", {}, finalRows.length ? finalRows : [h("span", { class: "muted" }, "Todavía no sale nadie.")]),
+    h("div", { class: "row-flex", style: "margin-top:8px" }, [finalSelect, addFinalBtn]),
+    finalErr,
+  ];
+
   // --- Quién nominó a quién ---
   const votesByNominator = {};
   nominationVotes.forEach((v) => {
@@ -932,6 +1012,27 @@ async function renderWeekDetail(container, week, allParticipants) {
             : h("p", { class: "muted", style: "font-size:0.82rem;margin:6px 0 0" }, "Define primero la fecha de eliminación."),
         ]),
       ]),
+      h("div", { class: "row-flex", style: "margin:12px 0" }, [
+        h(
+          "button",
+          {
+            class: `btn small${week.is_final ? "" : " secondary"}`,
+            onclick: async () => {
+              await updateWeek(week.id, { is_final: !week.is_final });
+              await refresh();
+            },
+          },
+          week.is_final ? "Es la semana final" : "Marcar como semana final"
+        ),
+        h(
+          "span",
+          { class: "muted", style: "font-size:0.82rem" },
+          week.is_final
+            ? "En Votar se pide el orden completo de salida; cada salida cuenta aparte en El Oráculo."
+            : "Márcala solo si en esta semana van saliendo varios a lo largo de los días."
+        ),
+      ]),
+      ...(week.is_final ? finalBlock() : []),
       h("p", { style: "margin:10px 0 4px" }, h("strong", {}, "Nominados")),
       h("div", {}, nomineeChips.length ? nomineeChips : [h("span", { class: "muted" }, "Ninguno todavía")]),
       h("div", { class: "row-flex", style: "margin-top:8px" }, [nomineeSelect, pointsInput, addNomBtn]),

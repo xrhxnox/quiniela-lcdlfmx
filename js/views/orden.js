@@ -9,158 +9,31 @@ import {
   getOraculoAutoFilledPlayerIds,
 } from "../data.js";
 import { h, esc, initials, clearAndAppend } from "../utils.js";
+import { renderOrderableList, photoOrInitials } from "./ordenable.js";
 import { getShow, isGranja } from "../shows.js";
 
-function photoOrInitials(p) {
-  if (p.photo_url) {
-    return h("div", { class: "photo", style: `background-image:url('${esc(p.photo_url)}')` });
-  }
-  return h("div", { class: "photo" }, initials(p.name));
-}
 
 function renderBuildPhase(container, profile, participants, existingOrder) {
-  let order;
-  if (existingOrder.length > 0) {
-    order = existingOrder.map((row) => participants.find((p) => p.id === row.participant_id)).filter(Boolean);
-    const orderedIds = new Set(order.map((p) => p.id));
-    participants.forEach((p) => {
-      if (!orderedIds.has(p.id)) order.push(p);
-    });
-  } else {
-    order = [...participants];
-  }
-
-  const errMsg = h("div", { class: "error-msg" });
-  const successMsg = h("div", { class: "success-msg" });
-  const listWrap = h("div", { class: "card" });
-
-  let dragging = null; // { fromIndex, startY, rowEl }
-
-  function clearDragStyles(el) {
-    el.style.position = "";
-    el.style.zIndex = "";
-    el.style.opacity = "";
-    el.style.transform = "";
-    el.style.boxShadow = "";
-  }
-
-  function applyDragStyles(el) {
-    el.style.position = "relative";
-    el.style.zIndex = "5";
-    el.style.opacity = "0.9";
-    el.style.boxShadow = "0 6px 18px rgba(0,0,0,0.35)";
-  }
-
-  function onPointerMove(e) {
-    if (!dragging) return;
-    const deltaY = e.clientY - dragging.startY;
-    dragging.rowEl.style.transform = `translateY(${deltaY}px)`;
-
-    const rowsEls = [...listWrap.firstElementChild.children];
-    const hoveredIndex = rowsEls.findIndex((el) => {
-      if (el === dragging.rowEl) return false;
-      const rect = el.getBoundingClientRect();
-      return e.clientY >= rect.top && e.clientY <= rect.bottom;
-    });
-    if (hoveredIndex !== -1 && hoveredIndex !== dragging.fromIndex) {
-      const [moved] = order.splice(dragging.fromIndex, 1);
-      order.splice(hoveredIndex, 0, moved);
-      dragging.fromIndex = hoveredIndex;
-      dragging.startY = e.clientY;
-      renderList(hoveredIndex);
-    }
-  }
-
-  function onPointerUp() {
-    if (dragging) clearDragStyles(dragging.rowEl);
-    dragging = null;
-    window.removeEventListener("pointermove", onPointerMove);
-    window.removeEventListener("pointerup", onPointerUp);
-    window.removeEventListener("pointercancel", onPointerUp);
-  }
-
-  function renderList(reacquireIndex) {
-    const rows = order.map((p, i) => {
-      const isFirst = i === 0;
-      const handle = h("i", {
-        class: "fa-solid fa-grip-lines",
-        style: "cursor:grab;color:var(--text-dim);padding:4px 10px;touch-action:none",
-      });
-      const rowEl = h("div", { class: "list-item" }, [
-        h("div", { class: "row-flex" }, [
-          handle,
-          h("strong", { style: "min-width:1.6em;display:inline-block" }, `${String(i + 1).padStart(2, "0")}.`),
-          h("span", { class: `badge status-badge ${isFirst ? "gold" : "red"}` }, isFirst ? "Ganador" : "Eliminado"),
-          photoOrInitials(p),
-          p.name,
-        ]),
-      ]);
-
-      handle.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        dragging = { fromIndex: i, startY: e.clientY, rowEl };
-        applyDragStyles(rowEl);
-        window.addEventListener("pointermove", onPointerMove);
-        window.addEventListener("pointerup", onPointerUp);
-        window.addEventListener("pointercancel", onPointerUp);
-      });
-
-      if (dragging && reacquireIndex === i) {
-        dragging.rowEl = rowEl;
-        applyDragStyles(rowEl);
-      }
-
-      return rowEl;
-    });
-    clearAndAppend(listWrap, h("div", {}, rows));
-  }
-  renderList();
-
-  const saveBtn = h(
-    "button",
-    {
-      class: "btn",
-      onclick: async () => {
-        errMsg.textContent = "";
-        saveBtn.disabled = true;
-        saveBtn.textContent = "Guardando…";
-        try {
-          await saveEliminationOrder(profile.id, order.map((p) => p.id));
-          successMsg.textContent = "¡Orden guardado! Puedes seguir reordenando hasta que el admin cierre El Oráculo.";
-        } catch (e) {
-          errMsg.textContent = "No se pudo guardar. Intenta de nuevo.";
-        } finally {
-          saveBtn.disabled = false;
-          saveBtn.textContent = "Guardar mi orden";
-        }
-      },
-    },
-    "Guardar mi orden"
-  );
-
-  clearAndAppend(
-    container,
-    h("div", {}, [
-      h("div", { class: "section-title" }, "El Oráculo"),
-      h("div", { class: "card" }, [
-        h("p", { style: "margin-top:0" }, [
-          h("i", { class: "fa-solid fa-hat-wizard" }),
-          ` Ordena a los ${getShow().memberPlural.toLowerCase()} del que crees que GANARÁ (arriba, posición 1) al que crees que saldrá PRIMERO (abajo). Por cada posición que aciertes, +1 punto.`,
-        ]),
-        h("p", { class: "muted", style: "font-size:0.82rem;margin-bottom:4px" }, [
-          h("i", { class: "fa-solid fa-grip-lines" }),
-          " Arrastra desde el ícono para reordenar.",
-        ]),
-        h(
-          "p",
-          { class: "muted", style: "font-size:0.82rem;margin-bottom:0" },
-          "El admin cierra El Oráculo cuando decide — después de eso ya no se puede cambiar hasta que lo reinicie."
-        ),
+  renderOrderableList(container, {
+    participants,
+    existingOrder,
+    title: "El Oráculo",
+    rowBadge: (i) =>
+      h("span", { class: `badge status-badge ${i === 0 ? "gold" : "red"}` }, i === 0 ? "Ganador" : "Eliminado"),
+    savedMessage: "¡Orden guardado! Puedes seguir reordenando hasta que el admin cierre El Oráculo.",
+    onSave: (ids) => saveEliminationOrder(profile.id, ids),
+    intro: [
+      h("p", { style: "margin-top:0" }, [
+        h("i", { class: "fa-solid fa-hat-wizard" }),
+        ` Ordena a los ${getShow().memberPlural.toLowerCase()} del que crees que GANARÁ (arriba, posición 1) al que crees que saldrá PRIMERO (abajo). Por cada posición que aciertes, +1 punto.`,
       ]),
-      listWrap,
-      h("div", { style: "margin-top:16px;display:flex;gap:10px;align-items:center" }, [saveBtn, successMsg, errMsg]),
-    ])
-  );
+      h(
+        "p",
+        { class: "muted", style: "font-size:0.82rem;margin-bottom:4px" },
+        "El admin cierra El Oráculo cuando decide — después de eso ya no se puede cambiar hasta que lo reinicie."
+      ),
+    ],
+  });
 }
 
 // Posición 1 = predicho ganador (nunca aparece en "eliminations"). Posiciones 2+ =
@@ -169,11 +42,19 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
 // el momento en que se confirma, sin importar cuántas eliminaciones falten para el
 // resto de la temporada (misma fórmula que la vista SQL elimination_order_score).
 function buildBlocks(eliminationsWithWeeks, totalParticipants) {
-  const weekNumbers = [...new Set(eliminationsWithWeeks.map((e) => e.weeks.week_number))].sort((a, b) => a - b);
+  // Normalmente un bloque es una semana entera y el orden dentro da igual. En la
+  // semana final sí se conoce el orden exacto, así que cada salida forma su
+  // propio bloque. Misma regla que la vista elimination_order_score.
+  const keyOf = (e) => `${e.weeks.week_number}|${e.weeks.is_final ? e.exit_order ?? 0 : 0}`;
+  const keys = [...new Set(eliminationsWithWeeks.map(keyOf))].sort((a, b) => {
+    const [aw, ao] = a.split("|").map(Number);
+    const [bw, bo] = b.split("|").map(Number);
+    return aw - bw || ao - bo;
+  });
   const blocks = [];
   let fwdCursor = 1;
-  weekNumbers.forEach((wn) => {
-    const ids = eliminationsWithWeeks.filter((e) => e.weeks.week_number === wn).map((e) => e.participant_id);
+  keys.forEach((k) => {
+    const ids = eliminationsWithWeeks.filter((e) => keyOf(e) === k).map((e) => e.participant_id);
     const fwdStart = fwdCursor;
     const fwdEnd = fwdCursor + ids.length - 1;
     blocks.push({ start: totalParticipants - fwdEnd + 1, end: totalParticipants - fwdStart + 1, ids: new Set(ids) });
