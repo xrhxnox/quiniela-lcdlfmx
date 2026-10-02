@@ -766,7 +766,7 @@ async function renderWeekDetail(container, week, allParticipants) {
         finalErr.textContent = "";
         try {
           const pid = Number(finalSelect.value);
-          await addFinalExit(week.id, pid, finalExits.length + 1);
+          await addFinalExit(week.id, pid);
           await updateParticipant(pid, { active: false });
           await refresh();
         } catch (err) {

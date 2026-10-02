@@ -29,6 +29,10 @@ export function renderOrderableList(container, options) {
     saveLabel = "Guardar mi orden",
     savedMessage = "¡Orden guardado!",
     onSave,
+    // Cuando ya no se puede cambiar: se sigue viendo el orden guardado, pero sin
+    // asa de arrastre ni botón, para no ofrecer una acción que va a fallar.
+    locked = false,
+    lockedNote = null,
   } = options;
 
   // Se respeta lo que el jugador ya había guardado y se anexa al final a quien
@@ -95,10 +99,12 @@ export function renderOrderableList(container, options) {
 
   function renderList(reacquireIndex) {
     const rows = order.map((p, i) => {
-      const handle = h("i", {
-        class: "fa-solid fa-grip-lines",
-        style: "cursor:grab;color:var(--text-dim);padding:4px 10px;touch-action:none",
-      });
+      const handle = locked
+        ? h("i", { class: "fa-solid fa-lock", style: "color:var(--text-dim);padding:4px 10px" })
+        : h("i", {
+            class: "fa-solid fa-grip-lines",
+            style: "cursor:grab;color:var(--text-dim);padding:4px 10px;touch-action:none",
+          });
       const rowEl = h("div", { class: "list-item" }, [
         h("div", { class: "row-flex" }, [
           handle,
@@ -109,6 +115,7 @@ export function renderOrderableList(container, options) {
         ]),
       ]);
 
+      if (!locked)
       handle.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         dragging = { fromIndex: i, startY: e.clientY, rowEl };
@@ -158,13 +165,17 @@ export function renderOrderableList(container, options) {
       h("div", { class: "section-title" }, title),
       h("div", { class: "card" }, [
         ...intro,
-        h("p", { class: "muted", style: "font-size:0.82rem;margin-bottom:0" }, [
-          h("i", { class: "fa-solid fa-grip-lines" }),
-          " Arrastra desde el ícono para reordenar.",
-        ]),
+        locked
+          ? lockedNote
+          : h("p", { class: "muted", style: "font-size:0.82rem;margin-bottom:0" }, [
+              h("i", { class: "fa-solid fa-grip-lines" }),
+              " Arrastra desde el ícono para reordenar.",
+            ]),
       ]),
       listWrap,
-      h("div", { style: "margin-top:16px;display:flex;gap:10px;align-items:center" }, [saveBtn, successMsg, errMsg]),
+      locked
+        ? null
+        : h("div", { style: "margin-top:16px;display:flex;gap:10px;align-items:center" }, [saveBtn, successMsg, errMsg]),
     ])
   );
 }

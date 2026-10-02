@@ -17,6 +17,7 @@ import {
   getNominationsForWeek,
   getPeonesForWeek,
   getPeonCounts,
+  getFinalWeekResult,
   getBetrayedCounts,
   getImmunitiesForWeek,
   getMySecretAssignment,
@@ -348,6 +349,7 @@ async function renderProfileInternal(container, username) {
     getMyEliminationOrder(target.id),
     getWeeks(),
   ]);
+  const finalResult = await getFinalWeekResult(target.id).catch(() => null);
   const [peonCounts, betrayedCounts] = isGranja()
     ? await Promise.all([getPeonCounts(), getBetrayedCounts()])
     : [{}, {}];
@@ -526,6 +528,64 @@ async function renderProfileInternal(container, username) {
     ]);
   });
 
+  // La semana final no cabe en la tabla de arriba: ahí cada semana es una fila
+  // con un solo pick, y aquí el pick son N posiciones. Va en su propia tarjeta,
+  // marcando cada posición contra el orden real hasta donde va la final.
+  function buildFinalCard() {
+    if (!finalResult || finalResult.mine.length === 0) return null;
+    const { week, realOrder, mine, participants: lista } = finalResult;
+    const nombre = (id) => lista.find((x) => x.id === id)?.name || "—";
+    const realPorPos = new Map(realOrder.map((r) => [r.position, r.participant_id]));
+
+    let aciertos = 0;
+    const filas = mine.map((row) => {
+      const real = realPorPos.get(row.position);
+      let badge;
+      if (real === undefined) {
+        badge = h("span", { class: "badge gray" }, "Pendiente");
+      } else if (real === row.participant_id) {
+        aciertos++;
+        badge = h("span", { class: "badge green" }, "Acierto");
+      } else {
+        badge = h("span", { class: "badge red" }, "Fallido");
+      }
+      const esGanador = row.position === mine.length;
+      return h("tr", {}, [
+        h("td", {}, esGanador ? "Ganador" : `${row.position}ª salida`),
+        h("td", {}, nombre(row.participant_id)),
+        h("td", {}, real === undefined ? h("span", { class: "muted" }, "—") : nombre(real)),
+        h("td", {}, badge),
+      ]);
+    });
+
+    const resueltas = mine.filter((r) => realPorPos.has(r.position)).length;
+    return h("div", {}, [
+      h(
+        "div",
+        { class: "section-title", style: "font-size:1.1rem;margin-top:24px" },
+        week.label || `Semana ${week.week_number}`
+      ),
+      h("div", { class: "card table-wrap" }, [
+        h(
+          "p",
+          { class: "muted", style: "margin-top:0;font-size:0.85rem" },
+          resueltas === 0
+            ? "Todavía no sale nadie. Aquí vas a ver cada posición marcada conforme avance la final."
+            : `${aciertos} de ${resueltas} posiciones resueltas acertadas. Cada acierto vale 1 punto.`
+        ),
+        h("table", { class: "data" }, [
+          h(
+            "thead",
+            {},
+            h("tr", {}, [h("th", {}, "Posición"), h("th", {}, "Tu pick"), h("th", {}, "Real"), h("th", {}, "Resultado")])
+          ),
+          h("tbody", {}, filas),
+        ]),
+      ]),
+    ]);
+  }
+  const finalCard = buildFinalCard();
+
   const historyCard = h("div", { class: "card table-wrap" }, [
     history.length === 0
       ? h("p", { class: "muted" }, "Todavía no hay picks para mostrar.")
@@ -542,6 +602,7 @@ async function renderProfileInternal(container, username) {
       ...cards,
       h("div", { class: "section-title", style: "font-size:1.1rem;margin-top:24px" }, "Historial de picks"),
       historyCard,
+      finalCard,
     ])
   );
 }

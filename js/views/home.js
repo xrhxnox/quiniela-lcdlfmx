@@ -255,8 +255,17 @@ async function renderFinalWeek(container, week, profile) {
     return;
   }
 
+  // La votación de la final se cierra sola a la hora que puso el admin. Sin
+  // esto, el jugador arrastraba, guardaba y recibía el error crudo de RLS.
+  const cerrada = week.voting_closes_at && new Date(week.voting_closes_at) <= new Date();
+
   const wrap = h("div", {});
   renderOrderableList(wrap, {
+    locked: cerrada,
+    lockedNote: h("p", { class: "muted", style: "font-size:0.82rem;margin-bottom:0" }, [
+      h("i", { class: "fa-solid fa-lock" }),
+      " La votación ya cerró. Este es el orden con el que te quedaste.",
+    ]),
     participants: finalistas,
     existingOrder,
     title: week.label || `Semana ${week.week_number}`,
@@ -281,6 +290,13 @@ async function renderFinalWeek(container, week, profile) {
             " Final: ",
             h("strong", {}, fmtDate(week.elimination_date)),
           ])
+        : null,
+      // Mismo contador en vivo que la semana normal, para que nadie se entere
+      // del cierre hasta que le truena el guardado.
+      !cerrada && week.voting_closes_at
+        ? countdownNode(week.voting_closes_at, () => {
+            renderFinalWeek(container, week, profile);
+          })
         : null,
     ].filter(Boolean),
   });

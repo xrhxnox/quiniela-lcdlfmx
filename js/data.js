@@ -450,7 +450,7 @@ export async function getEliminationsForWeek(weekId) {
   return unwrap(
     await supabase
       .from(tbl("eliminations"))
-      .select(`week_id, participant_id, reverted_by_exile, gift_all, ${emb("participants", "*")}`)
+      .select(`week_id, participant_id, reverted_by_exile, gift_all, exit_order, ${emb("participants", "*")}`)
       .eq("week_id", weekId)
   );
 }
@@ -493,19 +493,52 @@ export async function confirmEliminations(weekId, participantIds) {
 // En la final salen varios a lo largo de la semana, en un orden conocido. El
 // admin registra cada salida con su exit_order y el jugador, en vez de elegir
 // a uno, arma el orden completo: de la primera salida al ganador.
-export async function addFinalExit(weekId, participantId, exitOrder) {
+// El lugar que le toca lo decide esta función leyendo la base, no quien la
+// llama: si se toma de lo que había pintado en pantalla, dos salidas seguidas
+// terminan con el mismo exit_order y El Oráculo deja de recorrerlas.
+export async function addFinalExit(weekId, participantId) {
+  const last = unwrap(
+    await supabase
+      .from(tbl("eliminations"))
+      .select("exit_order")
+      .eq("week_id", weekId)
+      .not("exit_order", "is", null)
+      .order("exit_order", { ascending: false })
+      .limit(1)
+  );
+  const nextOrder = (last[0]?.exit_order ?? 0) + 1;
   return unwrap(
     await supabase
       .from(tbl("eliminations"))
-      .insert({ week_id: weekId, participant_id: participantId, exit_order: exitOrder })
+      .insert({ week_id: weekId, participant_id: participantId, exit_order: nextOrder })
       .select()
   );
 }
 
+// Al quitar una salida se renumeran las que quedan, para que la lista siga
+// siendo 1, 2, 3… y no 1, 3, 4.
 export async function removeFinalExit(weekId, participantId) {
-  return unwrap(
-    await supabase.from(tbl("eliminations")).delete().eq("week_id", weekId).eq("participant_id", participantId)
+  await supabase.from(tbl("eliminations")).delete().eq("week_id", weekId).eq("participant_id", participantId);
+  const rest = unwrap(
+    await supabase
+      .from(tbl("eliminations"))
+      .select("participant_id, exit_order")
+      .eq("week_id", weekId)
+      .not("exit_order", "is", null)
+      .order("exit_order")
   );
+  for (let i = 0; i < rest.length; i++) {
+    if (rest[i].exit_order === i + 1) continue;
+    unwrap(
+      await supabase
+        .from(tbl("eliminations"))
+        .update({ exit_order: i + 1 })
+        .eq("week_id", weekId)
+        .eq("participant_id", rest[i].participant_id)
+        .select()
+    );
+  }
+  return rest;
 }
 
 export async function getMyFinalPrediction(weekId, playerId) {
@@ -533,6 +566,39 @@ export async function saveFinalPrediction(weekId, playerId, orderedParticipantId
       }))
     ).select()
   );
+}
+
+// Todo lo que hace falta para evaluar la final de un jugador: la semana, el
+// orden REAL hasta donde va (salidas por exit_order y, si ya se definió, el
+// ganador al final) y el orden que ese jugador predijo. Devuelve null si
+// todavía no hay semana final, para que la vista simplemente no pinte nada.
+export async function getFinalWeekResult(playerId) {
+  const weeks = unwrap(
+    await supabase.from(tbl("weeks")).select("*").eq("is_final", true).order("week_number", { ascending: false }).limit(1)
+  );
+  const week = weeks[0];
+  if (!week) return null;
+
+  const [exits, mine, participants] = await Promise.all([
+    supabase
+      .from(tbl("eliminations"))
+      .select("participant_id, exit_order")
+      .eq("week_id", week.id)
+      .not("exit_order", "is", null)
+      .order("exit_order"),
+    getMyFinalPrediction(week.id, playerId),
+    supabase.from(tbl("participants")).select("id, name, photo_url, is_winner"),
+  ]);
+  if (exits.error) throw exits.error;
+  if (participants.error) throw participants.error;
+
+  const realOrder = exits.data.map((e, i) => ({ position: i + 1, participant_id: e.participant_id }));
+  // El ganador no tiene fila en eliminations: ocupa la posición siguiente a la
+  // última salida, y solo cuando el admin ya lo marcó.
+  const winner = participants.data.find((p) => p.is_winner);
+  if (winner) realOrder.push({ position: realOrder.length + 1, participant_id: winner.id });
+
+  return { week, realOrder, mine, participants: participants.data };
 }
 
 export async function getFinalPredictionsForWeek(weekId) {
