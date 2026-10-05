@@ -866,7 +866,7 @@ export async function getMyEliminationOrder(playerId) {
   return unwrap(
     await supabase
       .from(tbl("elimination_order_predictions"))
-      .select(`position, participant_id, ${emb("participants", "name, photo_url")}`)
+      .select(`position, participant_id, forced, ${emb("participants", "name, photo_url")}`)
       .eq("player_id", playerId)
       .order("position")
   );

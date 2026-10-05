@@ -402,7 +402,10 @@ async function renderProfileInternal(container, username) {
   const disappointmentT3 = lf("disappointment_season3_id");
   const secretHabitante = secretAssignment ? participants.find((p) => p.id === secretAssignment.participant_id) || null : null;
   const stats = computeStats(history, eliminatedSet);
-  const winnerPick = eliminationOrder.find((r) => r.position === 1) || null;
+  // La posición 1 no siempre es del jugador: cuando alguien reingresa a la casa
+  // el admin le mete ese cupo arriba a todos, porque nadie podía preverlo. El
+  // ganador que el jugador eligió es el primero que NO puso el admin.
+  const winnerPick = eliminationOrder.find((r) => !r.forced) || null;
   const winnerHabitante = winnerPick ? participants.find((p) => p.id === winnerPick.participant_id) || null : null;
   const seasonWinnerDecided = participants.some((p) => p.is_winner);
   const vidente = winnerHabitante?.is_winner === true;
