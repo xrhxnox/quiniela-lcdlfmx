@@ -37,13 +37,22 @@ export function renderOrderableList(container, options) {
 
   // Se respeta lo que el jugador ya había guardado y se anexa al final a quien
   // haya entrado después (o a quien nunca ordenó).
+  // Se reparte por CANTIDAD de cupos, no por "ya está / no está": quien
+  // reingresó aparece dos veces en la lista y tiene que conservar sus dos
+  // lugares. Lo que el jugador no haya ordenado se anexa al final.
   let order;
   if (existingOrder.length > 0) {
-    order = existingOrder.map((row) => participants.find((p) => p.id === row.participant_id)).filter(Boolean);
-    const orderedIds = new Set(order.map((p) => p.id));
+    const porId = new Map();
     participants.forEach((p) => {
-      if (!orderedIds.has(p.id)) order.push(p);
+      if (!porId.has(p.id)) porId.set(p.id, []);
+      porId.get(p.id).push(p);
     });
+    order = [];
+    existingOrder.forEach((row) => {
+      const cupos = porId.get(row.participant_id);
+      if (cupos && cupos.length > 0) order.push(cupos.shift());
+    });
+    porId.forEach((cupos) => cupos.forEach((p) => order.push(p)));
   } else {
     order = [...participants];
   }

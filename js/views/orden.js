@@ -36,6 +36,19 @@ function renderBuildPhase(container, profile, participants, existingOrder) {
   });
 }
 
+// Quien reingresó a la casa ocupa MÁS DE UN cupo en el orden: ya salió una vez
+// y va a volver a salir (o a ganar). Por eso aparece repetido en la lista y el
+// total de cupos deja de ser el número de personas.
+function oraculoSlots(participants) {
+  const slots = [];
+  participants
+    .filter((p) => !p.is_infiltrado)
+    .forEach((p) => {
+      for (let i = 0; i <= (p.reentries || 0); i++) slots.push(p);
+    });
+  return slots;
+}
+
 // Posición 1 = predicho ganador (nunca aparece en "eliminations"). Posiciones 2+ =
 // orden de salida en reversa: posición = totalParticipants + 1 - lugar cronológico
 // real de salida. Así, el primero en salir SIEMPRE cae en la última posición desde
@@ -190,8 +203,7 @@ export async function renderOrdenSalida(container, profile) {
 
   if (!locked) {
     const [participants, existingOrder] = await Promise.all([getParticipants(), getMyEliminationOrder(profile.id)]);
-    const eligibleParticipants = participants.filter((p) => !p.is_infiltrado);
-    renderBuildPhase(container, profile, eligibleParticipants, existingOrder);
+    renderBuildPhase(container, profile, oraculoSlots(participants), existingOrder);
     return;
   }
 
@@ -202,6 +214,6 @@ export async function renderOrdenSalida(container, profile) {
     getParticipants(),
     getOraculoAutoFilledPlayerIds(),
   ]);
-  const totalParticipants = participants.filter((p) => !p.is_infiltrado).length;
+  const totalParticipants = oraculoSlots(participants).length;
   renderRevealPhase(container, profile, allOrders, scores, eliminationsWithWeeks, totalParticipants, autoFilledIds);
 }
