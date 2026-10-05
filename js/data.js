@@ -888,7 +888,7 @@ export async function getAllEliminationOrders() {
   return unwrap(
     await supabase
       .from(tbl("elimination_order_predictions"))
-      .select(`player_id, position, participant_id, ${emb("participants", "name, photo_url, is_winner, is_infiltrado")}, profiles(display_name, username)`)
+      .select(`player_id, position, participant_id, forced, ${emb("participants", "name, photo_url, is_winner, is_infiltrado")}, profiles(display_name, username)`)
       .order("player_id")
       .order("position")
   );

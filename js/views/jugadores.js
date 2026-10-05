@@ -58,9 +58,11 @@ export async function renderJugadores(container) {
   const profileMap = {};
   profiles.forEach((p) => (profileMap[p.id] = p));
 
+  // La posición 1 puede ser un cupo que el admin le metió a todos por un
+  // reingreso. El ganador del jugador es el primero que SÍ eligió él.
   const winnerPickMap = {};
   allOrders.forEach((row) => {
-    if (row.position === 1) winnerPickMap[row.player_id] = row.participants;
+    if (!row.forced && !winnerPickMap[row.player_id]) winnerPickMap[row.player_id] = row.participants;
   });
 
   const secretMap = {};
